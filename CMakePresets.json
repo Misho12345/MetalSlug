@@ -1,0 +1,44 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 30,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Default",
+      "description": "Multi-config build with Ninja Multi-Config",
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "YES",
+        "CMAKE_TOOLCHAIN_FILE": "/home/mihal/.vcpkg-clion/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      },
+      "warnings": {
+        "dev": false
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "Debug",
+      "configurePreset": "default",
+      "description": "Build Debug",
+      "configuration": "Debug",
+      "targets": [ "all" ],
+      "jobs": 4
+    },
+    {
+      "name": "Release",
+      "configurePreset": "default",
+      "description": "Build Release",
+      "configuration": "Release",
+      "targets": [ "all" ],
+      "jobs": 4
+    }
+  ]
+}
