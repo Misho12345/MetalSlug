@@ -69,7 +69,9 @@ namespace mse::gl
         {
             case BufferType::Uniform: target = GL_UNIFORM_BUFFER; break;
             case BufferType::Storage: target = GL_SHADER_STORAGE_BUFFER; break;
-            default: assert(false && "Unsupported buffer type for binding");
+            default:
+                // you cannot bind vertex and instance buffers
+                assert(false && "Unsupported buffer type for binding");
         }
 
         glBindBufferBase(target, binding, id_);
@@ -92,7 +94,7 @@ namespace mse::gl
         if (old_mapped_ptr)
         {
             create_persistent_(type_, new_size, flags_);
-            std::memcpy(mapped_ptr_, old_mapped_ptr, copy_size);
+            memcpy(mapped_ptr_, old_mapped_ptr, copy_size);
         }
         else
         {

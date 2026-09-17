@@ -1,23 +1,44 @@
 #pragma once
-#include <cstring>
 
+#include <cstring>
 #include "string.hpp"
 
 namespace mse
 {
+    /**
+     * @brief A non-owning view over a string
+     *
+     * Example:
+     * @code
+     * string str = "12345789";
+     * string_view sv = "Hello";
+     * string_view sv2 = str;
+     * string_view sv3 = { str.data() + 3, 4 };
+     * @endcode
+     */
     class MSC_API string_view final
     {
     public:
+        /// @brief Construct a string view from a string literal
         template <size_t N>
         string_view(const char (&data)[N]) : data_{ data }, size_{ N } {}
+
+        /// @brief Construct a string view from a pointer and a size
         string_view(const char* data, const size_t size) : data_{ data }, size_{ size } {}
+
+        /// @brief Construct a string view from a pointer
+        /// @note Make sure the pointer is valid and points to a null-terminated string
         string_view(const char* data) : data_{ data }, size_{ strlen(data) } {}
+
+        /// @brief Construct a string view from a string
         string_view(const string& str) : data_{ str.data() }, size_{ str.size() } {}
 
         ~string_view() = default;
 
         operator bool() const { return data_; }
 
+        /// @brief Access an element in the string view
+        /// @note No out-of-bounds checks are made, make sure the index is within bounds
         const char& operator[](const size_t idx) const { return data_[idx]; }
 
         const char* data() const { return data_; }

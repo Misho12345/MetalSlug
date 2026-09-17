@@ -3,7 +3,11 @@
 
 namespace mse
 {
-    enum class Key : std::int32_t
+    /**
+     * @brief Enumeration of keyboard keys
+     * @note don't use Key::_COUNT
+     */
+    enum class Key
     {
         A = GLFW_KEY_A,
         B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
@@ -64,14 +68,26 @@ namespace mse
         RBracket = GLFW_KEY_RIGHT_BRACKET,
         GraveAccent = GLFW_KEY_GRAVE_ACCENT,
 
-        Count = RSuper + 1
+        _COUNT = RSuper + 1
     };
 
+    struct PrivCtx;
+
+    /**
+     * @brief Class for handling input
+     * @details The class is for keyboard-only input because the game will not require mouse input
+     * @note Owned by PrivCtx, not constructable by anything else and not movable or copyable
+     */
     class MSE_API Input final
     {
     public:
-        static void init();
-        static void update();
+        Input(const Input&)            = delete;
+        Input(Input&&)                 = delete;
+        Input& operator=(const Input&) = delete;
+        Input& operator=(Input&&)      = delete;
+
+        void init();
+        void update();
 
         static bool up(Key key);
         static bool down(Key key);
@@ -82,18 +98,15 @@ namespace mse
     private:
         Input() = default;
 
-        static Input& instance()
-        {
-            static Input input;
-            return input;
-        }
+        static constexpr size_t key_byte_count = (static_cast<size_t>(Key::_COUNT) + 7) / 8;
 
-        static constexpr size_t key_byte_count = (static_cast<size_t>(Key::Count) + 7) / 8;
+        char up_down_[key_byte_count]; // false = down; true = up
+        char pressed_released_[key_byte_count]; // true = pressed if down, released if up, false = nothing
 
-        char up_down_[key_byte_count];
-        char pressed_released_[key_byte_count];
-
+        // flags is either up_down_ or pressed_released_
         static void set(char* flags, Key key, bool value);
         static bool get(const char* flags, Key key);
+
+        friend ::mse::PrivCtx;
     };
 }

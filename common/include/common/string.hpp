@@ -4,13 +4,30 @@
 
 namespace mse
 {
+    /// @brief Defines a dynamic character array
     class MSC_API string final
     {
     public:
+        /**
+         * @brief Constructs a string from a null-terminated character array
+         * @param data The null-terminated character array to initialize the string with
+         */
         string(const char* data = nullptr);
         ~string();
 
+        /**
+         * @brief Constructs a string with a specified initial capacity
+         * @param init_cap The initial capacity of the string
+         * @note If you want to construct a string with an initial size,
+         * use the constructor that takes a size and a fill character.
+         */
         explicit string(size_t init_cap);
+
+        /**
+         * @brief Constructs a string with a specified initial size and fill character
+         * @param size The initial size of the string
+         * @param fill The character to fill the string with
+         */
         string(size_t size, char fill);
 
         string(const string& other);
@@ -18,10 +35,29 @@ namespace mse
         string& operator=(const string& other);
         string& operator=(string&& other) noexcept;
 
+        /**
+         * @brief Accesses the character at the specified index
+         * @param idx The index of the character to access
+         * @return A reference to the character at the specified index
+         * @note This operator does not perform bounds checking.
+         */
         char& operator[](const size_t idx) { return data_[idx]; }
+
+        /**
+         * @brief Accesses the character at the specified index
+         * @param idx The index of the character to access
+         * @return A const reference to the character at the specified index
+         * @note This operator does not perform bounds checking.
+         */
         const char& operator[](const size_t idx) const { return data_[idx]; }
 
+        /**
+         * @brief Resets the string to an empty state
+         * @note This function does deallocate memory.
+         */
         void reset();
+
+
         bool empty() const { return size_ == 0 || data_ == nullptr || data_[0] == '\0'; }
 
         char* data() { return data_; }
@@ -40,7 +76,23 @@ namespace mse
         void pop(size_t idx);
         void pop_back();
 
+        /**
+         * @brief Reallocates the string's buffer to the specified capacity
+         * @param new_cap New capacity
+         * @note The method always makes a new allocation for the string's data
+         * Make sure you don't keep a pointer to the string's data after calling this method
+         */
         void reserve(size_t new_cap);
+
+        /**
+         * @brief Resizes the string to the specified size
+         * @details
+         * Doubles the string's capacity until the new size is smaller than it
+         * If the new size is smaller than the current capacity / 4, the string's buffer is downsized in half
+         * @param new_size New size
+         * @note The method may make a reallocation for the string's data,
+         * don't keep a pointer to the string's data after calling this method
+         */
         void resize(size_t new_size);
 
         string operator+(const string& other) const;
@@ -50,7 +102,6 @@ namespace mse
         string& operator+=(const char* other);
 
         operator bool() const { return data_; }
-        operator char*() { return data_; }
 
     private:
         size_t size_{ 0 };

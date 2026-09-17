@@ -1,3 +1,6 @@
+# the texture packer assembles all the sprite images into texture atlases
+# it also generates a header file with the sprite enums and their corresponding ids for use in the game code
+
 add_executable(MSTexturePacker)
 
 file(GLOB_RECURSE TEXTURE_LOADER_SOURCES CONFIGURE_DEPENDS
@@ -12,8 +15,12 @@ target_sources(MSTexturePacker PRIVATE ${TEXTURE_LOADER_SOURCES})
 target_link_libraries(MSTexturePacker PUBLIC STB MSCommon nlohmann_json::nlohmann_json)
 target_include_directories(MSTexturePacker PRIVATE ${CMAKE_SOURCE_DIR}/engine/include/)
 
+
+# stamp file to prevent unnecessary rebuilds of the texture packer output
 set(stamp_file "${texture_packer_out_dir}/stamp.txt")
 
+# checks if a directory contains only files and no subdirectories
+# only such directories are considered an animation pack for 1 sprite
 function(is_leaf_dir dir out)
     file(GLOB children "${dir}/*")
     set(is_leaf TRUE)
@@ -26,10 +33,12 @@ function(is_leaf_dir dir out)
     set(${out} ${is_leaf} PARENT_SCOPE)
 endfunction()
 
+
 function(get_images dir out)
     file(GLOB images "${dir}/*.png" "${dir}/*.jpg")
     set(${out} ${images} PARENT_SCOPE)
 endfunction()
+
 
 function(snake_to_pascal_case str out)
     string(REPLACE "_" ";" word_list "${str}")
@@ -53,16 +62,23 @@ function(snake_to_pascal_case str out)
 endfunction()
 
 set(args)
-set(anim_header "#pragma once
+set(anim_header "// Automatically generated enums for sprite animations
+
+#pragma once
 #include <type_traits>
+#include <concepts>
+#include <cstdint>
 
 namespace mse::anim {
+    // sprite_id is a template variable that maps an enum type to its corresponding sprite id
+    // if the enum type is not a valid sprite enum, sprite_id will be -1
     template <typename E>
     inline constexpr int sprite_id{ -1 };
 ")
 
 set(sprites_dir "${CMAKE_SOURCE_DIR}/assets/images/sprites")
 
+# Gather all directories that contain sprite images (leaf directories)
 file(GLOB_RECURSE all_items CONFIGURE_DEPENDS LIST_DIRECTORIES true "${sprites_dir}/*")
 
 set(leaf_dirs)
@@ -77,10 +93,11 @@ endforeach ()
 
 set(sprites_paths)
 
-set(idx 0)
-set(anim_count 0)
-set(sprites_names)
+set(idx 0) # sprite id counter
+set(anim_count 0) # total animation count
+set(sprites_names) # list of sprite enum names
 
+# Process each leaf directory to gather images and generate enum names
 foreach (dir IN LISTS leaf_dirs)
     get_images("${dir}" images)
     if (NOT images)
@@ -89,7 +106,42 @@ foreach (dir IN LISTS leaf_dirs)
 
     list(APPEND sprites_paths ${images})
     list(LENGTH images num_images)
-    list(APPEND args ${idx} ${num_images} ${images})
+    list(APPEND args ${idx} ${num_images})
+
+    foreach (img IN LISTS images)
+        list(APPEND args ${img})
+        cmake_path(GET img STEM LAST_ONLY frame_count)      # idle.4.png -> idle.4
+        cmake_path(GET frame_count EXTENSION frame_count)   # idle.4 -> .4
+        string(REPLACE "." "" frame_count "${frame_count}") # .4 -> 4
+        list(APPEND args ${frame_count})
+    endforeach ()
+
+    # get the needed info to construct the enum name and namespace
+    # for example this:
+    # assets/images/sprites
+    #├── enemy
+    #│   ├── idle.4.jpg
+    #│   ├── walking.4.jpg
+    #│   └── shooting.7.png
+    #└── player
+    #    ├── body
+    #    │   ├── idle.4.png
+    #    │   ├── drinking.15.png
+    #    │   └── falling.4.png
+    #    └── legs
+    #        ├── idle.4.png
+    #        ├── jumping.4.png
+    #        └── walking.4.png
+    # the enum will be:
+    # enum class Enemy { Idle, Walking, Shooting, _COUNT };
+    # namespace player
+    # {
+    #     enum class Body { Idle, Drinking, Falling, _COUNT };
+    # }
+    # namespace player
+    # {
+    #     enum class Legs { Idle, Jumping, Walking, _COUNT };
+    # }
 
     cmake_path(GET dir FILENAME leaf_name)
     snake_to_pascal_case("${leaf_name}" enum_name)
@@ -107,15 +159,19 @@ foreach (dir IN LISTS leaf_dirs)
 
     list(APPEND sprites_names "${full_enum_type}")
 
+    # generate the enum values for the images in this directory
     set(enum_values "")
     foreach (img IN LISTS images)
         cmake_path(GET img STEM img_stem)
+
         snake_to_pascal_case("${img_stem}" img_pascal)
         string(APPEND enum_values "        ${img_pascal},\n")
 
         math(EXPR anim_count "${anim_count} + 1")
     endforeach ()
 
+    # append the correct enum definition to the header file content
+    # depending on whether there is a need for a namespace
     if (NOT ns_prefix STREQUAL "")
         string(APPEND anim_header "
     namespace ${ns_prefix}
@@ -143,6 +199,7 @@ endforeach ()
 
 list(APPEND args "--out" ${texture_packer_out_dir})
 
+# Generate the switch cases for sprite_anim_count function
 set(sprite_anims_count_cases "")
 foreach (name IN LISTS sprites_names)
     string(APPEND sprite_anims_count_cases "
@@ -150,28 +207,35 @@ foreach (name IN LISTS sprites_names)
 endforeach ()
 
 string(APPEND anim_header "
+    // sprite_enum concept ensures that the type is an enum and
+    // has a valid sprite_id and not just a random enum type
     template <typename E>
     concept sprite_enum = std::is_enum_v<E> && requires
     {
         { anim::sprite_id<E> } -> std::convertible_to<int>;
     } && anim::sprite_id<E> >= 0;
 
-    struct Info { int sprite_id, anim_id; };
+    struct Info { int sprite_id; uint32_t anim_id; };
 
     template <sprite_enum E>
-    constexpr Info info(E e) { return { sprite_id<E>, static_cast<int>(e) }; }
+    constexpr Info info(E e) { return { sprite_id<E>, static_cast<uint32_t>(e) }; }
 
-    constexpr inline int sprite_count = ${idx};
-    constexpr inline int total_anim_count = ${anim_count};
+    constexpr inline uint32_t sprite_count = ${idx};
+    constexpr inline uint32_t total_anim_count = ${anim_count};
 
+    // helper function to get the number of animations for a given sprite id
     inline uint32_t sprite_anim_count(const int _sprite_id) noexcept
     {
         switch (_sprite_id)
         {${sprite_anims_count_cases}
         }
+
+        assert(false && \"Invalid sprite id\");
+        return 0;
     }
 }")
 
+# make a command and target to run the texture packer and generate the header file on build
 
 add_custom_command(
         OUTPUT ${stamp_file}

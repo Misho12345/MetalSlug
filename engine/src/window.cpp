@@ -3,15 +3,11 @@
 
 namespace mse
 {
-    static bool existing_win;
-
     bool Window::init(const WindowDesc& desc)
     {
-        assert(!existing_win && "Only one window is allowed");
-        existing_win = true;
-
         glfwInit();
 
+        // OpenGL 4.6 Core
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);

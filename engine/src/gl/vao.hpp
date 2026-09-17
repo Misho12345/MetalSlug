@@ -17,12 +17,21 @@ namespace mse::gl
             else if constexpr (std::same_as<T, uint32_t>) return GL_UNSIGNED_INT;
             else if constexpr (std::same_as<T, float>) return GL_FLOAT;
             else if constexpr (std::same_as<T, double>) return GL_DOUBLE;
-            else static_assert(0, "Unsupported type for OpenGL");
+            else static_assert(always_false<T>, "Unsupported type for OpenGL");
         }
     }
 
     struct VertexAttrib final
     {
+        /**
+         * @brief Creates a VertexAttrib from a type M, which can be a scalar or a glm vector/matrix.
+         * @tparam M The type of the attribute (scalar or glm vector/matrix)
+         * @param _rel_offset Offset of the attribute
+         * @param _attrib_idx Index of the attribute
+         * @param _binding_idx Index of the binding
+         * @param _normalized Whether the attribute is normalized
+         * @return A new VertexAttrib instance
+         */
         template <typename M>
         static VertexAttrib make(
             const GLuint _rel_offset,
@@ -64,6 +73,7 @@ namespace mse::gl
         bool normalized;
     };
 
+    /// @brief A wrapper class for OpenGL Vertex Array Object (VAO).
     class VAO final
     {
     public:
@@ -76,6 +86,10 @@ namespace mse::gl
 
         VAO& operator=(VAO&& other) noexcept;
 
+        /**
+         * @brief Creates the VAO with the given vertex attributes.
+         * @param attribs The vertex attributes to use.
+         */
         void create(const vector<VertexAttrib>& attribs);
         void reset();
 

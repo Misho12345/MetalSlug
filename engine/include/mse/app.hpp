@@ -1,17 +1,30 @@
 #pragma once
 #include "pch.hpp"
+#include "input.hpp"
+#include "scene.hpp"
 
 namespace mse
 {
+    /**
+     * @brief Public engine systems accessible to game code.
+     * @details Acts as a service locator owned by App, avoiding the need for static singletons.
+     * High-level systems will be placed here that game code needs to access directly.
+     */
     struct GameCtx
     {
-        // SoundSystem,
-        // ParticleSystem,
-        // TilemapSystem,
+        Scene scene;
     };
 
+    /**
+     * @brief Internal engine context
+     * @see priv_ctx.hpp
+     */
     struct PrivCtx;
 
+
+    /**
+     * @brief Base class for the main application of the engine
+     */
     class MSE_API App
     {
     public:
@@ -22,17 +35,28 @@ namespace mse
         void shutdown();
 
         virtual void init() = 0;
-        virtual void tick(float dt) = 0;
+        virtual void update(float dt) = 0;
+        virtual void fixed_update() = 0;
 
         static App& instance() { return *instance_; }
 
+        /// @brief Access to public engine systems
         static GameCtx& ctx() { return *instance_->ctx_; }
+
+        /**
+        * @brief Access to internal engine systems
+        * @details Include priv_ctx.hpp for the definition of PrivCtx
+        * @note These are not intended to be accessed directly by game code.
+        * @see priv_ctx.hpp
+        */
         static PrivCtx& priv_ctx() { return *instance_->priv_ctx_; }
 
     protected:
         App();
 
     private:
+        // the extending class will ensure that there is only one instance
+        // maybe not the best design, but good enough
         static inline App* instance_;
 
         bool ok_{ true };

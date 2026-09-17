@@ -26,7 +26,7 @@ namespace mse
             return;
         }
 
-        Input::init();
+        priv_ctx_->input.init();
 
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         {
@@ -35,9 +35,13 @@ namespace mse
             return;
         }
 
-        if (!priv_ctx_->sprite_manager.init())
+        #ifndef NDEBUG
+        priv_ctx_->debug_ui.init();
+        #endif
+
+        if (!priv_ctx_->animation_system.init())
         {
-            printf("failed to init sprite manager\n");
+            printf("failed to init animation system\n");
             ok_ = false;
             return;
         }
@@ -51,7 +55,8 @@ namespace mse
 
         glViewport(0, 0, priv_ctx_->window.width(), priv_ctx_->window.height());
 
-        if (!priv_ctx_->renderer.init_sprite_objects())
+        // here and not in setup() because it has to have the animation frame counts set in App::init()
+        if (!priv_ctx_->rendering_system.init_sprite_objects(ctx_->scene))
         {
             printf("failed to init sprite objects\n");
             return;
@@ -61,21 +66,45 @@ namespace mse
 
         while (!priv_ctx_->window.should_close())
         {
-            Input::update();
+            priv_ctx_->input.update();
             priv_ctx_->window.poll_events();
+
+            #ifndef NDEBUG
+            priv_ctx_->debug_ui.begin_frame();
+            #endif
 
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
 
-            const float new_time = glfwGetTime();
+            const float new_time = static_cast<float>(glfwGetTime());
             const float dt = static_cast<float>(new_time - time);
             time = new_time;
 
-            priv_ctx_->sprite_manager.update(dt);
-            priv_ctx_->renderer.render_sprites();
+            update(dt);
+
+            static float accumulator = 0.0f;
+            accumulator += dt;
+
+            static bool debug_draw = false;
+            if (Input::down(Key::Ctrl) && Input::just_pressed(Key::B)) debug_draw = !debug_draw;
+
+            uint32_t c = PhysicsSystem::MAX_STEPS;
+            while (c && accumulator > PhysicsSystem::FIXED_TIME_STEP)
+            {
+                fixed_update();
+                priv_ctx_->physics_system.step(ctx_->scene, debug_draw);
+                accumulator -= PhysicsSystem::FIXED_TIME_STEP;
+                --c;
+            }
+
+            priv_ctx_->animation_system.update(ctx_->scene, dt);
+            priv_ctx_->rendering_system.render_sprites(ctx_->scene);
+
+            #ifndef NDEBUG
+            priv_ctx_->debug_ui.render();
+            #endif
 
             priv_ctx_->window.swap_buffers();
-            tick(dt);
         }
     }
 

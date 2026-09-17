@@ -4,16 +4,19 @@
 
 struct Box final
 {
-    Box(const char* image_path, int sprite_id, int anim_id);
+    Box(const char* image_path, int sprite_id, int anim_id, int frame_count);
     ~Box();
 
-    int x{}, y{}; // x sign bit is flag for rotated
+    const char* image_path;
+    uint32_t* data{};
+
+    int x{}, y{};
     int w{}, h{};
 
-    int sprite_id{}, anim_id{};
+    int sprite_id, anim_id;
+    int frame_count;
 
-    const char* image_path{};
-    uint32_t* data{};
+    bool rotated{ false };
 };
 
 class Atlas final

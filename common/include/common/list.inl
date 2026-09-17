@@ -1,5 +1,6 @@
 #pragma once
 #include <utility>
+#include "algorithm.hpp"
 
 namespace mse
 {
@@ -75,6 +76,7 @@ namespace mse
 
         node* n{ nullptr };
 
+        // chooses which end is faster to iterate through
         if (idx < size_ / 2)
         {
             for (n = head_; n && idx; n = n->next, --idx) {}
@@ -210,7 +212,13 @@ namespace mse
         if (n2->prev) n2->prev->next = n1;
         if (n2->next) n2->next->prev = n1;
 
-        std::swap(n1->prev, n2->prev);
-        std::swap(n1->next, n2->next);
+        swap(n1->prev, n2->prev);
+        swap(n1->next, n2->next);
+
+        if (head_ == n1) head_ = n2;
+        else if (head_ == n2) head_ = n1;
+
+        if (tail_ == n1) tail_ = n2;
+        else if (tail_ == n2) tail_ = n1;
     }
 }

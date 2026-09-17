@@ -11,12 +11,15 @@ target_link_libraries(MetalSlug PRIVATE MetalSlugEngine)
 
 set(asset_source_dir "${CMAKE_SOURCE_DIR}/assets")
 
+# make symlinks/junctions for assets and texture packer output in the build directory
+# that way the game can access them without needing to copy them over
 if (WIN32)
+    # junction because symlinks require admin privileges on Windows
     add_custom_command(TARGET MetalSlug POST_BUILD
             COMMAND powershell.exe -NoProfile -NonInteractive -Command
             "if (-not (Test-Path -LiteralPath '$<TARGET_FILE_DIR:MetalSlug>/assets'))  { [void](New-Item -ItemType Junction -Path '$<TARGET_FILE_DIR:MetalSlug>/assets'  -Value '${asset_source_dir}') };
              if (-not (Test-Path -LiteralPath '$<TARGET_FILE_DIR:MetalSlug>/texture_packer')) { [void](New-Item -ItemType Junction -Path '$<TARGET_FILE_DIR:MetalSlug>/texture_packer' -Value '${texture_packer_out_dir}') }"
-            COMMENT "Linking assets and shaders (Windows junctions)"
+            COMMENT "Creating junction for assets and texture packer output"
             VERBATIM
     )
 else()
@@ -24,7 +27,7 @@ else()
             COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:MetalSlug>"
             COMMAND bash -c "test -e '$<TARGET_FILE_DIR:MetalSlug>/assets' || ln -s '${asset_source_dir}' '$<TARGET_FILE_DIR:MetalSlug>/assets'"
             COMMAND bash -c "test -e '$<TARGET_FILE_DIR:MetalSlug>/texture_packer' || ln -s '${texture_packer_out_dir}' '$<TARGET_FILE_DIR:MetalSlug>/texture_packer'"
-            COMMENT "Linking assets and shaders (symlinks)"
+            COMMENT "Creating symlinks for assets and texture packer output"
             VERBATIM
     )
 endif()

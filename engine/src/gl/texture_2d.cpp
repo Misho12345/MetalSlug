@@ -75,7 +75,7 @@ namespace mse::gl
         return *this;
     }
 
-    bool Texture2D::create(const TextureDesc& desc, vector<string> paths, const bool force_array)
+    bool Texture2D::create(const TextureDesc& desc, const span<const string> paths, const bool force_array)
     {
         if (paths.empty()) return false;
 
@@ -102,10 +102,9 @@ namespace mse::gl
         glTextureParameteri(id_, GL_TEXTURE_MIN_FILTER, to_gl(desc.filter));
         glTextureParameteri(id_, GL_TEXTURE_MAG_FILTER, to_gl(desc.filter));
 
-        for (size_t i = 0; i < paths.size(); ++i)
+        GLint layer = 0;
+        for (const string& path : paths)
         {
-            const string_view path = paths[i];
-
             int w_, h_, c_;
             uint8_t* pixels = stbi_load(path.data(), &w_, &h_, &c_, format_size(desc.format));
 
@@ -119,7 +118,7 @@ namespace mse::gl
             {
                 glTextureSubImage3D(
                     id_,
-                    0, 0, 0, static_cast<GLint>(i),
+                    0, 0, 0, layer++,
                     w, h, 1,
                     to_gl_source_fmt(desc.format),
                     GL_UNSIGNED_BYTE,

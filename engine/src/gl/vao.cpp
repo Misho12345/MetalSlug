@@ -18,9 +18,8 @@ namespace mse::gl
         reset();
         glCreateVertexArrays(1, &id_);
 
-        for (size_t i = 0; i < attribs.size(); ++i)
+        for (const VertexAttrib& a : attribs)
         {
-            const VertexAttrib& a = attribs[i];
             glEnableVertexArrayAttrib(id_, a.attrib_idx);
             glVertexArrayAttribFormat(id_, a.attrib_idx, a.size, a.type, a.normalized, a.rel_offset);
             glVertexArrayAttribBinding(id_, a.attrib_idx, a.binding_idx);

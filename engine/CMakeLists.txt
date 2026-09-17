@@ -10,6 +10,7 @@ target_sources(MetalSlugEngine PRIVATE ${ENGINE_SOURCES})
 
 find_package(OpenGL REQUIRED)
 find_package(glad CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
@@ -21,6 +22,7 @@ target_link_libraries(MetalSlugEngine
         PRIVATE
         OpenGL::GL
         glad::glad
+        imgui::imgui
         glfw
         nlohmann_json::nlohmann_json
         STB

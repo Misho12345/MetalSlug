@@ -1,11 +1,18 @@
 #pragma once
+
 #include "app.hpp"
 
+/**
+ * @brief The main game class, derived from mse::App
+ * @note The user has to define Game::init and Game::tick
+ * @see app.hpp
+ */
 class Game final : public mse::App
 {
 public:
     void init() override;
-    void tick(float dt) override;
+    void update(float dt) override;
+    void fixed_update() override;
 
     static Game& instance()
     {

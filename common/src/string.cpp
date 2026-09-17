@@ -123,6 +123,7 @@ namespace mse
     void string::reserve(size_t new_cap)
     {
         if (new_cap == 0) new_cap = 1;
+        if (new_cap == capacity_) return;
 
         if (size_ >= new_cap)
         {
@@ -144,7 +145,9 @@ namespace mse
 
     void string::resize(const size_t new_size)
     {
-        if (new_size <= size_)
+        if (new_size == size_) return;
+
+        if (new_size < size_)
         {
             size_ = new_size;
             data_[size_] = '\0';

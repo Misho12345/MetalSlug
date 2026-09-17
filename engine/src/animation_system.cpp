@@ -1,15 +1,38 @@
-#include "sprite_manager.hpp"
+#include "mse/pch.hpp"
+#include "animation_system.hpp"
+
+#include "mse/components.hpp"
+#include "mse/app.hpp"
 
 #define ERR_MSG(MSG) "cannot load sprites, invalid json format - " MSG ";\n"
 
 namespace mse
 {
-    bool SpriteManager::init()
+    bool AnimationSystem::init()
     {
-        for (size_t i = 0; i < anim::sprite_count; ++i)
+        // allocate enough memory for all sprite animation data
+        for (int i = 0; i < anim::sprite_count; ++i)
         {
             sprite_anim_datas_[i].resize(anim::sprite_anim_count(i));
         }
+
+        /* JSON metadata format
+         * {
+         *   "atlases": [
+         *     [
+         *       {
+         *         "sprite_id": <uint>,
+         *         "anim_id": <uint>,
+         *         "frame_count": <uint>,
+         *         "x": <uint>,
+         *         "y": <uint>,
+         *         "w": <uint>,
+         *         "h": <uint>
+         *       }, { ... }, ...
+         *     ], [...], ...
+         *   ]
+         * }
+         */
 
         string s = FileIO::read("texture_packer/meta.json");
 
@@ -35,6 +58,7 @@ namespace mse
         }
 
         // "C++ is a strongly typed language, we shouldn't use auto"
+        // - Abhishek
         for (const decltype(j.items().begin())& atlas : j["atlases"].items())
         {
             ++atlas_count_;
@@ -51,6 +75,7 @@ namespace mse
 
                 if (!v.contains("sprite_id") || !v["sprite_id"].is_number_unsigned() ||
                     !v.contains("anim_id") || !v["anim_id"].is_number_unsigned() ||
+                    !v.contains("frame_count") || !v["frame_count"].is_number_unsigned() ||
                     !v.contains("x") || !v["x"].is_number_unsigned() ||
                     !v.contains("y") || !v["y"].is_number_unsigned() ||
                     !v.contains("w") || !v["w"].is_number_unsigned() ||
@@ -60,18 +85,13 @@ namespace mse
                     return false;
                 }
 
-                const uint32_t sprite_id = v["sprite_id"].get<uint32_t>();
-                const uint32_t anim_id   = v["anim_id"].get<uint32_t>();
-                const uint32_t x         = v["x"].get<uint32_t>();
-                const uint32_t y         = v["y"].get<uint32_t>();
-                const uint32_t w         = v["w"].get<uint32_t>();
-                const uint32_t h         = v["h"].get<uint32_t>();
+                SpriteAnimationData& anim_data = sprite_anim_datas_
+                        [v["sprite_id"].get<uint32_t>()]
+                        [v["anim_id"].get<uint32_t>()];
 
-                SpriteAnimationData& anim_data = sprite_anim_datas_[sprite_id][anim_id];
-
-                anim_data.offset      = { x, y };
-                anim_data.image_size  = { w, h };
-                anim_data.frame_count = 1;
+                anim_data.offset      = { v["x"].get<uint32_t>(), v["y"].get<uint32_t>() };
+                anim_data.image_size  = { v["w"].get<uint32_t>(), v["h"].get<uint32_t>() };
+                anim_data.frame_count = v["frame_count"].get<uint32_t>();
                 anim_data.atlas_idx   = std::stoi(atlas.key());
             }
         }
@@ -79,55 +99,15 @@ namespace mse
         return true;
     }
 
-    void SpriteManager::update(const float dt)
+    void AnimationSystem::update(Scene& scene, const float dt) const
     {
-        size_t i = 0;
-        for (list<Sprite>::node* n = sprites_.head(); n; n = n->next, ++i)
+        for (SpriteRenderer& sprite_renderer : scene.pool<SpriteRenderer>().components())
         {
-            n->data.update(dt);
-            if (n->data.dirty_) dirty_[i] = !(n->data.dirty_ = false);
+            sprite_renderer.update(dt, anim_data(sprite_renderer.info()).frame_count);
         }
     }
 
-    Sprite& SpriteManager::instantiate(int sprite_id, const SpriteDesc& desc)
-    {
-        sprites_.push_back({
-            sprite_id,
-            desc
-        });
-
-        dirty_.emplace_back(true);
-
-        return sprites_.back();
-    }
-
-    void SpriteManager::destroy(const Sprite& sprite)
-    {
-        uint32_t idx = 0;
-        for (list<Sprite>::node* n = sprites_.head(); n; n = n->next, ++idx)
-        {
-            if (&n->data == &sprite)
-            {
-                if (n != sprites_.tail())
-                {
-                    list<Sprite>::swap_elements(n, sprites_.tail());
-                    dirty_[idx] = true;
-                }
-
-                sprites_.pop_back();
-                return;
-            }
-        }
-
-        assert(false);
-    }
-
-    void SpriteManager::set_frame_count(const anim::Info info, const uint32_t count)
-    {
-        sprite_anim_datas_[info.sprite_id][info.anim_id].frame_count = count;
-    }
-
-    const SpriteAnimationData& SpriteManager::anim_data(const anim::Info info) const
+    const SpriteAnimationData& AnimationSystem::anim_data(const anim::Info info) const
     {
         return sprite_anim_datas_[info.sprite_id][info.anim_id];
     }

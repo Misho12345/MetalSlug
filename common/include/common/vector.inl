@@ -7,7 +7,7 @@
 
 namespace mse
 {
-    template <typename T>
+    template <typename T> requires (!std::same_as<T, void>)
     template <std::integral C>
     vector<T>::vector(const C size) :
         size_{ static_cast<size_t>(size) },
@@ -17,7 +17,7 @@ namespace mse
         for (size_t i = 0; i < size_; ++i) new(data_ + i) T{};
     }
 
-    template <typename T>
+    template <typename T> requires (!std::same_as<T, void>)
     template <typename... Args> requires (
         (std::convertible_to<Args, T> && ...) &&
         !(sizeof...(Args) == 1 && (std::integral<Args> && ...)))
@@ -30,23 +30,23 @@ namespace mse
         (new(data_ + idx++) T{ std::forward<Args>(args) }, ...);
     }
 
-    template <typename T>
+    template <typename T> requires (!std::same_as<T, void>)
     vector<T>::~vector() { reset(); }
 
-    template <typename T>
+    template <typename T> requires (!std::same_as<T, void>)
     vector<T>::vector(const vector& other) : size_{ other.size_ }, capacity_{ other.capacity_ }
     {
         data_ = static_cast<T*>(::operator new(sizeof(T) * other.capacity_));
         copy_mem(data_, other.data_, other.size_);
     }
 
-    template <typename T>
+    template <typename T> requires (!std::same_as<T, void>)
     vector<T>::vector(vector&& other) noexcept :
         size_{ std::exchange(other.size_, 0) },
         capacity_{ std::exchange(other.capacity_, 0) },
         data_{ std::exchange(other.data_, nullptr) } {}
 
-    template <typename T>
+    template <typename T> requires (!std::same_as<T, void>)
     vector<T>& vector<T>::operator=(const vector& other)
     {
         if (this == &other) return *this;
@@ -62,7 +62,7 @@ namespace mse
         return *this;
     }
 
-    template <typename T>
+    template <typename T> requires (!std::same_as<T, void>)
     vector<T>& vector<T>::operator=(vector&& other) noexcept
     {
         if (this == &other) return *this;
@@ -75,26 +75,32 @@ namespace mse
         return *this;
     }
 
-    template <typename T>
+    template <typename T> requires (!std::same_as<T, void>)
     void vector<T>::reset()
     {
-        for (size_t i = 0; i < size_; ++i) destroy_at(data_ + i);
+        clear();
         ::operator delete(data_);
 
         data_ = nullptr;
-        size_ = 0;
         capacity_ = 0;
     }
 
+    template <typename T> requires (!std::same_as<T, void>)
+    void vector<T>::clear()
+    {
+        for (size_t i = 0; i < size_; ++i) destroy_at(data_ + i);
+        size_ = 0;
+    }
 
-    template <typename T>
+
+    template <typename T> requires (!std::same_as<T, void>)
     template <typename... Args> requires std::constructible_from<T, Args...>
     void vector<T>::emplace_front(Args&&... args)
     {
         emplace(std::forward<Args>(args)..., 0);
     }
 
-    template <typename T>
+    template <typename T> requires (!std::same_as<T, void>)
     template <typename... Args> requires std::constructible_from<T, Args...>
     void vector<T>::emplace(size_t idx, Args&&... args)
     {
@@ -111,7 +117,7 @@ namespace mse
         }
     }
 
-    template <typename T>
+    template <typename T> requires (!std::same_as<T, void>)
     template <typename... Args> requires std::constructible_from<T, Args...>
     void vector<T>::emplace_back(Args&&... args)
     {
@@ -120,10 +126,10 @@ namespace mse
     }
 
 
-    template <typename T>
+    template <typename T> requires (!std::same_as<T, void>)
     void vector<T>::pop_front() { pop(0); }
 
-    template <typename T>
+    template <typename T> requires (!std::same_as<T, void>)
     void vector<T>::pop(size_t idx)
     {
         if (idx == size_ - 1) pop_back();
@@ -134,17 +140,18 @@ namespace mse
         }
     }
 
-    template <typename T>
+    template <typename T> requires (!std::same_as<T, void>)
     void vector<T>::pop_back()
     {
         destroy_at(data_ + --size_);
     }
 
 
-    template <typename T>
+    template <typename T> requires (!std::same_as<T, void>)
     void vector<T>::reserve(size_t new_cap)
     {
         if (new_cap == 0) new_cap = 1;
+        if (new_cap == capacity_) return;
 
         if (size_ > new_cap)
         {
@@ -161,10 +168,12 @@ namespace mse
         capacity_ = new_cap;
     }
 
-    template <typename T>
-    void vector<T>::resize(const size_t new_size)
+    template <typename T> requires (!std::same_as<T, void>)
+    void vector<T>::resize(const size_t new_size, T fill)
     {
-        if (new_size <= size_)
+        if (new_size == size_) return;
+
+        if (new_size < size_)
         {
             for (size_t i = new_size; i < size_; ++i) destroy_at(data_ + i);
             size_ = new_size;
@@ -179,11 +188,11 @@ namespace mse
             reserve(new_cap);
         }
 
-        for (size_t i = size_; i < new_size; ++i) new(data_ + i) T{};
+        for (size_t i = size_; i < new_size; ++i) new(data_ + i) T{ fill };
         size_ = new_size;
     }
 
-    template <typename T>
+    template <typename T> requires (!std::same_as<T, void>)
     void vector<T>::copy_mem(T* dest, const T* src, const size_t count)
     {
         if (!dest || !src || dest == src) return;
@@ -201,7 +210,7 @@ namespace mse
         }
     }
 
-    template <typename T>
+    template <typename T> requires (!std::same_as<T, void>)
     void vector<T>::move_mem(T* dest, T* src, const size_t count)
     {
         if (!dest || !src || dest == src) return;
@@ -229,14 +238,14 @@ namespace mse
         }
     }
 
-    template <typename T>
+    template <typename T> requires (!std::same_as<T, void>)
     void vector<T>::move_realloc(T* dest, T* src, const size_t count)
     {
         if (!dest || !src || dest == src) return;
 
         if constexpr (std::is_trivially_copyable_v<T>)
         {
-            std::memcpy(dest, src, sizeof(T) * count);
+            memcpy(dest, src, sizeof(T) * count);
         }
         else
         {

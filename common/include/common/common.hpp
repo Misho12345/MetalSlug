@@ -15,5 +15,4 @@
 
 #include "file_io.hpp"
 
-
 constexpr size_t operator ""_zu(const unsigned long long n) { return n; }

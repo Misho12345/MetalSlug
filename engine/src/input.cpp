@@ -6,6 +6,11 @@
 
 namespace mse
 {
+    namespace
+    {
+        Input& instance() { return App::priv_ctx().input; }
+    }
+
     void Input::init()
     {
         glfwSetKeyCallback(
@@ -13,23 +18,24 @@ namespace mse
             +[](GLFWwindow*, int k, int, const int action, int)
             {
                 const Key key = static_cast<Key>(k);
+                Input& inst = instance();
 
                 if (action == GLFW_PRESS)
                 {
-                    instance().set(instance().pressed_released_, key, true);
-                    instance().set(instance().up_down_, key, true);
+                    set(inst.pressed_released_, key, true);
+                    set(inst.up_down_, key, true);
                 }
                 else if (action == GLFW_RELEASE)
                 {
-                    instance().set(instance().pressed_released_, key, true);
-                    instance().set(instance().up_down_, key, false);
+                    set(inst.pressed_released_, key, true);
+                    set(inst.up_down_, key, false);
                 }
             });
     }
 
     void Input::update()
     {
-        memset(instance().pressed_released_, 0, sizeof(instance().pressed_released_));
+        memset(pressed_released_, 0, sizeof(pressed_released_));
     }
 
     bool Input::up(const Key key) { return !get(instance().up_down_, key); }
