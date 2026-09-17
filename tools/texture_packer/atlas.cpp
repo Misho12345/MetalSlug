@@ -31,7 +31,7 @@ void Atlas::add(Box* box)
 
 void Atlas::save(const char* path) const
 {
-    uint32_t* data = new uint32_t[SIZE * SIZE];
+    uint32_t* data = new uint32_t[SIZE * SIZE]();
 
     for (const Box* box : boxes_)
     {

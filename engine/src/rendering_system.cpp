@@ -68,7 +68,7 @@ namespace mse
             // that's why the scene layers are drawn in different draw calls -
             // to ensure proper order without manual sorting and to make alpha blending possible
 
-            if (layer.empty()) break;
+            if (layer.empty()) continue;
 
             glDrawArraysInstancedBaseInstance(GL_TRIANGLES,
                 0, 6,
@@ -145,7 +145,7 @@ namespace mse
 
         for (const vector<InstanceData>& instances_layer : instances_)
         {
-            if (instances_layer.empty()) break;
+            if (instances_layer.empty()) continue;
             memcpy(ptr, instances_layer.data(), instances_layer.size() * sizeof(InstanceData));
             ptr += instances_layer.size();
         }
@@ -174,7 +174,7 @@ namespace mse
 
         instance_data_.create_persistent<InstanceData>(
             gl::BufferType::Storage,
-            static_cast<GLsizeiptr>(min(sprite_pool.components().size(), 100_zu)));
+            static_cast<GLsizeiptr>(max(sprite_pool.components().size(), 100_zu)));
 
         update_instances_buffer(scene);
     }
