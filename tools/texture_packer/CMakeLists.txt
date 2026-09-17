@@ -15,6 +15,7 @@ target_sources(MSTexturePacker PRIVATE ${TEXTURE_LOADER_SOURCES})
 target_link_libraries(MSTexturePacker PUBLIC STB MSCommon nlohmann_json::nlohmann_json)
 target_include_directories(MSTexturePacker PRIVATE ${CMAKE_SOURCE_DIR}/engine/include/)
 
+enable_warnings(MSTexturePacker)
 
 # stamp file to prevent unnecessary rebuilds of the texture packer output
 set(stamp_file "${texture_packer_out_dir}/stamp.txt")

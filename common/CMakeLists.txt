@@ -12,3 +12,5 @@ file(GLOB_RECURSE COMMON_SOURCES CONFIGURE_DEPENDS
 target_sources(MSCommon PRIVATE ${COMMON_SOURCES})
 target_include_directories(MSCommon PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_definitions(MSCommon PRIVATE MS_COMMON_EXPORTS)
+
+enable_warnings(MSCommon)

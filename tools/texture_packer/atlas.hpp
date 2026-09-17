@@ -4,8 +4,13 @@
 
 struct Box final
 {
-    Box(const char* image_path, int sprite_id, int anim_id, int frame_count);
+    Box(const char* _image_path, int _sprite_id, int _anim_id, int _frame_count);
     ~Box();
+
+    Box(const Box&)            = delete;
+    Box(Box&&)                 = default;
+    Box& operator=(const Box&) = delete;
+    Box& operator=(Box&&)      = default;
 
     const char* image_path;
     uint32_t* data{};

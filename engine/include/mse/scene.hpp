@@ -18,7 +18,11 @@ namespace mse
         void      destroy_entity(entity_id entity);
 
         template <typename C, typename... Args>
-        C& set(entity_id entity, Args&&... args) { return pool<C>().set(entity, std::forward<Args>(args)...); }
+        C& set(entity_id entity, Args&&... args)
+        {
+            assert(valid(entity) && "Entity is not valid");
+            return pool<C>().set(entity, std::forward<Args>(args)...);
+        }
 
         template <typename C>
         C* try_get(entity_id entity)

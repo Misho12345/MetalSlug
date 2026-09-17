@@ -6,9 +6,13 @@
 
 namespace mse
 {
+    // just for the qsort lambda
+    static int32_t* s_layers;
+
     RenderingSystem::RenderingSystem() : instances_{ 5 }
     {
         layers_.reserve(5);
+        order_.reserve(5);
     }
 
 
@@ -61,14 +65,14 @@ namespace mse
         set_blending(true);
 
         size_t acc_size = 0;
-        for (const vector<InstanceData>& layer : instances_)
+        for (const size_t layer_idx : layers_)
         {
+            const vector<InstanceData>& layer = instances_[layer_idx];
+
             // there are 6 hardcoded vertices in the vertex shader for the quad
             // with depth testing there would be only alpha discarding, which is not what the assignment asks for
             // that's why the scene layers are drawn in different draw calls -
             // to ensure proper order without manual sorting and to make alpha blending possible
-
-            if (layer.empty()) continue;
 
             glDrawArraysInstancedBaseInstance(GL_TRIANGLES,
                 0, 6,
@@ -149,6 +153,25 @@ namespace mse
             memcpy(ptr, instances_layer.data(), instances_layer.size() * sizeof(InstanceData));
             ptr += instances_layer.size();
         }
+
+
+        order_.clear();
+        for (size_t i = 0; i < layers_.size(); ++i)
+        {
+            if (instances_[layers_[i]].empty()) continue;
+            order_.emplace_back(i);
+        }
+
+        s_layers = layers_.data();
+
+        qsort(order_.data(), order_.size(), sizeof(size_t),
+            [](const void* a, const void* b) -> int
+            {
+                const size_t idx_a = *static_cast<const size_t*>(a);
+                const size_t idx_b = *static_cast<const size_t*>(b);
+
+                return s_layers[idx_a] - s_layers[idx_b];
+            });
     }
 
 
@@ -186,12 +209,12 @@ namespace mse
         vector<SpriteAnimationData> anim_datas;
         anim_datas.reserve(anim::total_anim_count);
 
-        for (int i = 0; i < anim::sprite_count; ++i)
+        for (uint32_t i = 0; i < anim::sprite_count; ++i)
         {
             for (uint32_t j = 0; j < anim::sprite_anim_count(i); ++j)
             {
                 anim_datas.emplace_back(anim_sys.anim_data({
-                    .sprite_id = i,
+                    .sprite_id = static_cast<int>(i),
                     .anim_id = j
                 }));
             }

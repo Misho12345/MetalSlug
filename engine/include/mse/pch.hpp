@@ -60,8 +60,11 @@ namespace mse
 
     // might replace later with a 16.16 integer range
     using unit = float;
+}
 
-    #include "neo_geo_spec.hpp"
+#include "neo_geo_spec.hpp"
 
+namespace mse
+{
     using Target = NeoGeoSpec;
 }

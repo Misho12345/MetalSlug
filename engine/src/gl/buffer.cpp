@@ -6,8 +6,8 @@ namespace mse::gl
     Buffer::Buffer(Buffer&& other) noexcept :
         type_{ std::exchange(other.type_, BufferType::Vertex) },
         id_{ std::exchange(other.id_, 0u) },
-        mapped_ptr_{ std::exchange(other.mapped_ptr_, nullptr) },
-        size_{ std::exchange(other.size_, 0u) } {}
+        size_{ std::exchange(other.size_, 0u) },
+        mapped_ptr_{ std::exchange(other.mapped_ptr_, nullptr) } {}
 
     Buffer& Buffer::operator=(Buffer&& other) noexcept
     {

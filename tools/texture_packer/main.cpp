@@ -29,7 +29,7 @@ int main(const int argc, const char** argv)
 
     // get the number of actual image files to be packed into atlases
     size_t files_count = argc - 3;
-    for (size_t i = 2; i < argc - 2; )
+    for (size_t i = 2; i < argc - 2u; )
     {
         files_count -= 2;
         i += std::stoi(argv[i]) * 2 + 2;
@@ -53,7 +53,7 @@ int main(const int argc, const char** argv)
     box_ptrs.reserve(files_count);
     atlases.reserve(5);
 
-    for (size_t i = 1; i < argc - 3; )
+    for (size_t i = 1; i < argc - 3u; )
     {
         int sprite_id = std::stoi(argv[i]);
         int num_anim = std::stoi(argv[i + 1]);

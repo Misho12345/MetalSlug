@@ -9,6 +9,9 @@ project(MetalSlug LANGUAGES CXX)
 set(anim_header_path "${CMAKE_BINARY_DIR}/include/anim.hpp")
 set(texture_packer_out_dir "${CMAKE_BINARY_DIR}/texture_packer")
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include(CompilerWarnings)
+
 add_subdirectory(third_party/stb)
 add_subdirectory(common)
 add_subdirectory(tools/texture_packer)

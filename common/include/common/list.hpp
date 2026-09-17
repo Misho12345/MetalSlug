@@ -58,9 +58,9 @@ namespace mse
         struct node final
         {
             template <typename... Args> requires std::constructible_from<T, Args...>
-            node(node* prev, node* next, Args&&... args)
-                : prev{ prev },
-                  next{ next },
+            node(node* _prev, node* _next, Args&&... args)
+                : prev{ _prev },
+                  next{ _next },
                   data{ std::forward<Args>(args)... } {}
 
             node* prev{ nullptr };

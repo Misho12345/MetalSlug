@@ -8,11 +8,11 @@
 #include <stb_image_write.h>
 
 
-Box::Box(const char* image_path, const int sprite_id, const int anim_id, const int frame_count)
-    : image_path{ image_path },
-      sprite_id{ sprite_id },
-      anim_id{ anim_id },
-      frame_count{ frame_count }
+Box::Box(const char* _image_path, const int _sprite_id, const int _anim_id, const int _frame_count)
+    : image_path{ _image_path },
+      sprite_id{ _sprite_id },
+      anim_id{ _anim_id },
+      frame_count{ _frame_count }
 {
     int t;
     data = reinterpret_cast<uint32_t*>(stbi_load(image_path, &w, &h, &t, 4));

@@ -1,10 +1,19 @@
 #pragma once
 
-// NeoGeo emulation settings
-struct NeoGeoSpec final
+namespace mse
 {
-    glm::ivec2 resolution{ 304, 224 };
-    unit       frame_time{ 0.016896 };      // 264 / 15625
-    unit       pixel_aspect_ratio{ 1.0 };
-    glm::ivec2 tile_size{ 16, 16 };
-};
+    // NeoGeo emulation settings
+    struct NeoGeoSpec final
+    {
+        // MetalSlug doesn't use 8 pixels to the left and right of the screen
+        static constexpr glm::ivec2 RESOLUTION{ 304, 224 };
+
+        // 264 / 15625
+        static constexpr unit FRAME_TIME{ 0.016896 };
+
+        // pixel aspect ratio
+        static constexpr unit PAR{ 0.9333333 };
+
+        static constexpr glm::ivec2 TILE_SIZE{ 16, 16 };
+    };
+}

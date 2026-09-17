@@ -11,7 +11,7 @@ namespace mse
     bool AnimationSystem::init()
     {
         // allocate enough memory for all sprite animation data
-        for (int i = 0; i < anim::sprite_count; ++i)
+        for (uint32_t i = 0; i < anim::sprite_count; ++i)
         {
             sprite_anim_datas_[i].resize(anim::sprite_anim_count(i));
         }

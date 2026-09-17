@@ -28,7 +28,7 @@ namespace mse
 
         priv_ctx_->input.init();
 
-        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+        if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
         {
             printf("Failed to initialize GLAD\n");
             ok_ = false;
@@ -62,7 +62,7 @@ namespace mse
             return;
         }
 
-        double time = glfwGetTime();
+        float time = static_cast<float>(glfwGetTime());
 
         while (!priv_ctx_->window.should_close())
         {
@@ -77,7 +77,7 @@ namespace mse
             glClear(GL_COLOR_BUFFER_BIT);
 
             const float new_time = static_cast<float>(glfwGetTime());
-            const float dt = static_cast<float>(new_time - time);
+            const float dt = new_time - time;
             time = new_time;
 
             update(dt);

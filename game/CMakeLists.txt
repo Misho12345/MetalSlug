@@ -8,11 +8,16 @@ file(GLOB_RECURSE GAME_SOURCES CONFIGURE_DEPENDS
 
 target_sources(MetalSlug PRIVATE ${GAME_SOURCES})
 target_link_libraries(MetalSlug PRIVATE MetalSlugEngine)
+target_precompile_headers(MetalSlug REUSE_FROM MetalSlugEngine)
+
+enable_warnings(MetalSlug)
+
 
 set(asset_source_dir "${CMAKE_SOURCE_DIR}/assets")
 
 # make symlinks/junctions for assets and texture packer output in the build directory
 # that way the game can access them without needing to copy them over
+# copied from github.com/Misho12345/Boza (mine)
 if (WIN32)
     # junction because symlinks require admin privileges on Windows
     add_custom_command(TARGET MetalSlug POST_BUILD

@@ -70,6 +70,7 @@ namespace mse
 
         vector<vector<InstanceData>> instances_{};
         vector<int32_t> layers_{};
+        vector<size_t>  order_{};
 
         friend ::mse::PrivCtx;
     };
