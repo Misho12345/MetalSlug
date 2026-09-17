@@ -183,7 +183,7 @@ namespace mse
 
         if (new_size > capacity_)
         {
-            size_t new_cap = min(capacity_, static_cast<size_t>(1));
+            size_t new_cap = max(capacity_, static_cast<size_t>(1));
             while (new_size > new_cap) new_cap *= 2;
             reserve(new_cap);
         }

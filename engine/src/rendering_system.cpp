@@ -143,7 +143,7 @@ namespace mse
         // transfer the data into the persistent buffer
         size_t total_size = 0;
         for (const vector<InstanceData>& instances_layer : instances_) total_size += instances_layer.size();
-        instance_data_.increase_size(static_cast<GLsizeiptr>(total_size));
+        instance_data_.increase_size<InstanceData>(total_size);
 
 
         // get storage order for layers

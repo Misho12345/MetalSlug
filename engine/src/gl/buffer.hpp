@@ -71,7 +71,11 @@ namespace mse::gl
          * @note Allocates a new buffer with the specified new size and
          * copies the existing data to the new buffer if resize is needed.
          */
-        void increase_size(GLsizeiptr new_size);
+        template <typename T>
+        void increase_size(const size_t new_size)
+        {
+            increase_size_(static_cast<GLsizeiptr>(new_size) * sizeof(T));
+        }
 
         GLuint id() const { return id_; }
 
@@ -81,6 +85,8 @@ namespace mse::gl
         operator bool() const { return id_; }
 
     private:
+        void increase_size_(GLsizeiptr new_size);
+
         void create(BufferType type, const void* data, GLsizeiptr size);
 
         void create_persistent_(

@@ -37,6 +37,8 @@ Box& Box::operator=(Box&& other) noexcept
 {
     if (this == &other) return *this;
 
+    if (data) stbi_image_free(data);
+
     image_path = std::exchange(other.image_path, nullptr);
     data = std::exchange(other.data, nullptr);
 

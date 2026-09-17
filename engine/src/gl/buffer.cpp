@@ -77,7 +77,7 @@ namespace mse::gl
         glBindBufferBase(target, binding, id_);
     }
 
-    void Buffer::increase_size(const GLsizeiptr new_size)
+    void Buffer::increase_size_(const GLsizeiptr new_size)
     {
         if (new_size <= size_) return;
 
