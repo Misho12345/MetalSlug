@@ -8,9 +8,10 @@ struct Box final
     ~Box();
 
     Box(const Box&)            = delete;
-    Box(Box&&)                 = default;
     Box& operator=(const Box&) = delete;
-    Box& operator=(Box&&)      = default;
+
+    Box(Box&& other) noexcept;
+    Box& operator=(Box&& other) noexcept;
 
     const char* image_path;
     uint32_t* data{};

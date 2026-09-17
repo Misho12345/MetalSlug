@@ -65,7 +65,7 @@ namespace mse
         set_blending(true);
 
         size_t acc_size = 0;
-        for (const size_t layer_idx : layers_)
+        for (const size_t layer_idx : order_)
         {
             const vector<InstanceData>& layer = instances_[layer_idx];
 
@@ -145,16 +145,8 @@ namespace mse
         for (const vector<InstanceData>& instances_layer : instances_) total_size += instances_layer.size();
         instance_data_.increase_size(static_cast<GLsizeiptr>(total_size));
 
-        InstanceData* ptr = instance_data_.mapped_data<InstanceData>();
 
-        for (const vector<InstanceData>& instances_layer : instances_)
-        {
-            if (instances_layer.empty()) continue;
-            memcpy(ptr, instances_layer.data(), instances_layer.size() * sizeof(InstanceData));
-            ptr += instances_layer.size();
-        }
-
-
+        // get storage order for layers
         order_.clear();
         for (size_t i = 0; i < layers_.size(); ++i)
         {
@@ -172,6 +164,18 @@ namespace mse
 
                 return s_layers[idx_a] - s_layers[idx_b];
             });
+
+        // fill the buffer (sorted)
+        InstanceData* ptr = instance_data_.mapped_data<InstanceData>();
+
+        for (const size_t layer_idx : order_)
+        {
+            const vector<InstanceData>& instances_layer = instances_[layer_idx];
+
+            if (instances_layer.empty()) continue;
+            memcpy(ptr, instances_layer.data(), instances_layer.size() * sizeof(InstanceData));
+            ptr += instances_layer.size();
+        }
     }
 
 

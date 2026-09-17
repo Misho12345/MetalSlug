@@ -23,6 +23,34 @@ Box::~Box()
     if (data) stbi_image_free(data);
 }
 
+Box::Box(Box&& other) noexcept :
+    image_path{ std::exchange(other.image_path, nullptr) },
+    data{ std::exchange(other.data, nullptr) },
+    x{ other.x }, y{ other.y },
+    w{ other.w }, h{ other.h },
+    sprite_id{ other.sprite_id },
+    anim_id{ other.anim_id },
+    frame_count{ other.frame_count },
+    rotated{ other.rotated } {}
+
+Box& Box::operator=(Box&& other) noexcept
+{
+    if (this == &other) return *this;
+
+    image_path = std::exchange(other.image_path, nullptr);
+    data = std::exchange(other.data, nullptr);
+
+    x = other.x; y = other.y;
+    w = other.w; h = other.h;
+
+    sprite_id = other.sprite_id;
+    anim_id = other.anim_id;
+    frame_count = other.frame_count;
+    rotated = other.rotated;
+
+    return *this;
+}
+
 
 void Atlas::add(Box* box)
 {
