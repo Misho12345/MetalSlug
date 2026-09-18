@@ -95,6 +95,6 @@ void Game::fixed_update()
 
     if (input.x != 0.0f || input.y != 0.0f)
     {
-        s.get<Rigidbody>(player_legs).apply_force(input);
+        s.get<Rigidbody>(player_legs).apply_force(input * 100.0f);
     }
 }

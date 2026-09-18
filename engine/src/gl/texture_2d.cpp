@@ -80,7 +80,10 @@ namespace mse::gl
 
     void Texture2D::create(const glm::uvec3 size, const TextureDesc& desc, const bool force_array)
     {
+        reset();
+        
         size_ = size;
+        desc_ = desc;
 
         if (size_.z > 1 || force_array)
         {
@@ -148,7 +151,6 @@ namespace mse::gl
             stbi_image_free(pixels);
         }
 
-        desc_ = desc;
         return true;
     }
 

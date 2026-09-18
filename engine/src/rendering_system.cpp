@@ -104,7 +104,7 @@ namespace mse
                 continue;
 
             const Transform& transform = scene.get<Transform>(entities[i]);
-            if (!(transform.bounds() & App::priv_ctx().window.bounds())) continue;
+            if (!(transform.bounds() & aabb({}, Target::RESOLUTION))) continue;
 
             size_t idx = layers_.find(sprite.layer);
 
@@ -147,7 +147,7 @@ namespace mse
         order_.clear();
         for (size_t i = 0; i < layers_.size(); ++i)
         {
-            if (instances_[layers_[i]].empty()) continue;
+            if (instances_[i].empty()) continue;
             order_.emplace_back(i);
         }
 
