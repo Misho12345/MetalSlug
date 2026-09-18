@@ -3,6 +3,12 @@
 
 namespace mse
 {
+    Window::~Window()
+    {
+        glfwDestroyWindow(handle_);
+        glfwTerminate();
+    }
+
     bool Window::init(const WindowDesc& desc)
     {
         glfwInit();
@@ -49,20 +55,25 @@ namespace mse
             static_cast<int>((mode->width - desc.width) / 2),
             static_cast<int>((mode->height - desc.height) / 2));
 
-        glfwWindowHint(GLFW_RESIZABLE, GL_TRUE); // TODO: make resize callback
+        glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
         glfwMakeContextCurrent(handle_);
 
-        desc_ = desc;
+        glfwSetWindowUserPointer(handle_, this);
+        glfwSetWindowSizeCallback(handle_, [](GLFWwindow* window, const int width, const int height)
+        {
+            Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window));
+            if (!win) return;
+            win->width_  = static_cast<uint32_t>(width);
+            win->height_ = static_cast<uint32_t>(height);
+        });
+
+        width_ = desc.width;
+        height_ = desc.height;
+
         return true;
     }
 
     bool Window::should_close() const { return glfwWindowShouldClose(handle_); }
     void Window::poll_events() const { glfwPollEvents(); }
-    void Window::swap_buffers() { glfwSwapBuffers(handle_); }
-
-    Window::~Window()
-    {
-        glfwDestroyWindow(handle_);
-        glfwTerminate();
-    }
+    void Window::swap_buffers() const { glfwSwapBuffers(handle_); }
 }

@@ -35,10 +35,6 @@ namespace mse
             return;
         }
 
-        #ifndef NDEBUG
-        priv_ctx_->debug_ui.init();
-        #endif
-
         if (!priv_ctx_->animation_system.init())
         {
             printf("failed to init animation system\n");
@@ -46,14 +42,21 @@ namespace mse
             return;
         }
 
+
+        #ifndef NDEBUG
+        priv_ctx_->debug_ui.init();
+        #endif
+
+        priv_ctx_->post_processor.init(
+            "assets/shaders/post_processing.vert",
+            "assets/shaders/post_processing.frag");
+
         printf("finished setup\n");
     }
 
     void App::run()
     {
         if (!ok_) return;
-
-        glViewport(0, 0, priv_ctx_->window.width(), priv_ctx_->window.height());
 
         // here and not in setup() because it has to have the animation frame counts set in App::init()
         if (!priv_ctx_->rendering_system.init_sprite_objects(ctx_->scene))
@@ -67,14 +70,14 @@ namespace mse
         while (!priv_ctx_->window.should_close())
         {
             priv_ctx_->input.update();
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
             priv_ctx_->window.poll_events();
+            priv_ctx_->post_processor.bind();
 
             #ifndef NDEBUG
             priv_ctx_->debug_ui.begin_frame();
             #endif
-
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
 
             const float new_time = static_cast<float>(glfwGetTime());
             const float dt = new_time - time;
@@ -104,6 +107,7 @@ namespace mse
             priv_ctx_->debug_ui.render();
             #endif
 
+            priv_ctx_->post_processor.render(priv_ctx_->window);
             priv_ctx_->window.swap_buffers();
         }
     }

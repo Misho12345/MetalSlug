@@ -33,7 +33,7 @@ namespace mse
                    point.y >= min.y && point.y <= max.y;
         }
 
-        glm::vec2 center() const { return (min + max) / 2.0f; }
+        glm::vec2 center() const { return (min + max) * 0.5f; }
         glm::vec2 size() const { return max - min; }
     };
 }

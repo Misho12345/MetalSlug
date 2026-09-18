@@ -9,6 +9,7 @@ namespace mse::gl
         {
             switch (format)
             {
+                case TextureFormat::RGB8: return GL_RGB8;
                 case TextureFormat::RGBA8: return GL_RGBA8;
             }
 
@@ -19,6 +20,7 @@ namespace mse::gl
         {
             switch (format)
             {
+                case TextureFormat::RGB8: return GL_RGB;
                 case TextureFormat::RGBA8: return GL_RGBA;
             }
 
@@ -51,6 +53,7 @@ namespace mse::gl
         {
             switch (format)
             {
+                case TextureFormat::RGB8: return 3;
                 case TextureFormat::RGBA8: return 4;
             }
 
@@ -75,6 +78,27 @@ namespace mse::gl
         return *this;
     }
 
+    void Texture2D::create(const glm::uvec3 size, const TextureDesc& desc, const bool force_array)
+    {
+        size_ = size;
+
+        if (size_.z > 1 || force_array)
+        {
+            glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &id_);
+            glTextureStorage3D(id_, 1, to_gl(desc.format), size_.x, size_.y, size_.z);
+        }
+        else
+        {
+            glCreateTextures(GL_TEXTURE_2D, 1, &id_);
+            glTextureStorage2D(id_, 1, to_gl(desc.format), size_.x, size_.y);
+        }
+
+        glTextureParameteri(id_, GL_TEXTURE_WRAP_S, to_gl(desc.wrap));
+        glTextureParameteri(id_, GL_TEXTURE_WRAP_T, to_gl(desc.wrap));
+        glTextureParameteri(id_, GL_TEXTURE_MIN_FILTER, to_gl(desc.filter));
+        glTextureParameteri(id_, GL_TEXTURE_MAG_FILTER, to_gl(desc.filter));
+    }
+
     bool Texture2D::create(const TextureDesc& desc, const span<const string> paths, const bool force_array)
     {
         if (paths.empty()) return false;
@@ -83,24 +107,10 @@ namespace mse::gl
 
         int w, h, c;
         stbi_info(paths.front().data(), &w, &h, &c);
-        size_ = { w, h, paths.size() };
+
+        create({ w, h, paths.size() }, desc, force_array);
+
         const bool array = size_.z > 1 || force_array;
-
-        if (array)
-        {
-            glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &id_);
-            glTextureStorage3D(id_, 1, to_gl(desc.format), w, h, size_.z);
-        }
-        else
-        {
-            glCreateTextures(GL_TEXTURE_2D, 1, &id_);
-            glTextureStorage2D(id_, 1, to_gl(desc.format), w, h);
-        }
-
-        glTextureParameteri(id_, GL_TEXTURE_WRAP_S, to_gl(desc.wrap));
-        glTextureParameteri(id_, GL_TEXTURE_WRAP_T, to_gl(desc.wrap));
-        glTextureParameteri(id_, GL_TEXTURE_MIN_FILTER, to_gl(desc.filter));
-        glTextureParameteri(id_, GL_TEXTURE_MAG_FILTER, to_gl(desc.filter));
 
         GLint layer = 0;
         for (const string& path : paths)

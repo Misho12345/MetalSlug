@@ -10,8 +10,8 @@ namespace mse
         glm::vec2 scale{ 100.0f, 100.0f };
         float     rotation{ 0.0f };
 
-        constexpr glm::vec2 top_left() const { return position - scale / 2.0f; }
-        constexpr glm::vec2 bottom_right() const { return position + scale / 2.0f; }
+        constexpr glm::vec2 top_left() const { return position - scale * 0.5f; }
+        constexpr glm::vec2 bottom_right() const { return position + scale * 0.5f; }
 
         aabb bounds() const { return aabb{ top_left(), bottom_right() }; }
     };

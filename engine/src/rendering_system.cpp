@@ -80,9 +80,6 @@ namespace mse
 
             acc_size += layer.size();
         }
-
-        gl::VAO::unbind();
-        gl::Shader::unuse();
     }
 
 
@@ -185,9 +182,10 @@ namespace mse
         {
             .projection = glm::ortho(
                 0.0f,
-                static_cast<float>(App::priv_ctx().window.width()),
-                static_cast<float>(App::priv_ctx().window.height()),
-                0.0f, -1.0f, 1.0f
+                static_cast<float>(Target::RESOLUTION.x),
+                static_cast<float>(Target::RESOLUTION.y),
+                0.0f,
+                -1.0f, 1.0f
             ),
             .camera_pos = scene.get<Transform>(scene.camera()).position
         };

@@ -70,7 +70,7 @@ namespace mse
             BoxCollider* bc = rb_data.get_from_idx(i, box_coll_data); if (!bc) continue;
 
             // update rb while at it
-            if (rb.gravity) rb.acceleration.y += GRAVITY * 100.0f;
+            if (rb.gravity) rb.acceleration.y += GRAVITY;
             rb.velocity += std::exchange(rb.acceleration, { 0.0f, 0.0f }) * FIXED_TIME_STEP;
             rb.velocity *= 1.0f - rb.drag;
 

@@ -16,6 +16,8 @@ namespace mse
     class DebugUI final
     {
     public:
+        ~DebugUI();
+
         DebugUI(const DebugUI&)            = delete;
         DebugUI(DebugUI&&)                 = delete;
         DebugUI& operator=(const DebugUI&) = delete;
@@ -24,7 +26,6 @@ namespace mse
         void init() const;
         void begin_frame() const;
         void render() const;
-        void shutdown() const;
 
         void draw_box(aabb box, glm::u8vec4 color) const;
 

@@ -13,6 +13,13 @@ namespace mse
         ImU32  to_imu32(const glm::u8vec4 vec) { return IM_COL32(vec.x, vec.y, vec.z, vec.w); }
     }
 
+    DebugUI::~DebugUI()
+    {
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+    }
+
     void DebugUI::init() const
     {
         IMGUI_CHECKVERSION();
@@ -38,13 +45,6 @@ namespace mse
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
 
-    void DebugUI::shutdown() const
-    {
-        ImGui_ImplOpenGL3_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
-        ImGui::DestroyContext();
-    }
-
     void DebugUI::draw_box(const aabb box, const glm::u8vec4 color) const
     {
         ImGui::GetForegroundDrawList()->AddRect(
@@ -52,7 +52,7 @@ namespace mse
             to_vec2(box.max),
             to_imu32(color),
             0.0f, {},
-            5.0f);
+            1.0f);
     }
 }
 

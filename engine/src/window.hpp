@@ -32,25 +32,21 @@ namespace mse
 
         bool should_close() const;
         void poll_events() const;
-        void swap_buffers();
+        void swap_buffers() const;
 
-        uint32_t width() const { return desc_.width; }
-        uint32_t height() const { return desc_.height; }
+        uint32_t width() const { return width_; }
+        uint32_t height() const { return height_; }
 
-        aabb bounds() const { return aabb{ { 0, 0 }, { width(), height() } }; }
+        aabb bounds() const { return aabb{ {}, { width_, height_ } }; }
 
-        float aspect_ratio() const
-        {
-            return static_cast<float>(desc_.width) /
-                    static_cast<float>(desc_.height);
-        }
-
+        float aspect_ratio() const { return static_cast<float>(width_) / height_; }
         GLFWwindow* native_handle() const { return handle_; }
 
     private:
         Window() = default;
 
-        WindowDesc  desc_{};
+        uint32_t width_{};
+        uint32_t height_{};
         GLFWwindow* handle_{ nullptr };
 
         friend ::mse::PrivCtx;

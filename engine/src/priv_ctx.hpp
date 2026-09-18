@@ -13,6 +13,8 @@
 #include "animation_system.hpp"
 #include "rendering_system.hpp"
 
+#include "post_processor.hpp"
+
 #ifndef NDEBUG
 #include "debug_ui.hpp"
 #endif
@@ -35,5 +37,7 @@ namespace mse
         #ifndef NDEBUG
         DebugUI debug_ui;
         #endif
+
+        PostProcessor post_processor;
     };
 }
