@@ -8,7 +8,7 @@ namespace mse
         glDeleteFramebuffers(1, &fbo);
     }
 
-    void PostProcessor::init(const string_view vertex_path, const string_view fragment_path)
+    bool PostProcessor::init(const string_view vertex_path, const string_view fragment_path)
     {
         vao.create({});
         shader.create(vertex_path, fragment_path);
@@ -22,11 +22,14 @@ namespace mse
         glGenFramebuffers(1, &fbo);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_tex.id(), 0);
+
+        return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
     }
 
     void PostProcessor::bind() const
     {
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
         glViewport(0, 0, Target::RESOLUTION.x, Target::RESOLUTION.y);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -34,29 +37,14 @@ namespace mse
 
     void PostProcessor::render(const Window& window) const
     {
-        const float ar = window.aspect_ratio();
-
-        glm::uvec2 offset{}, size;
-
-        if (ar > Target::DAR)
-        {
-            size.x = window.height() * Target::DAR;
-            size.y = window.height();
-            offset.x = (window.width() - size.x) * 0.5f;
-        }
-        else
-        {
-            size.x = window.width();
-            size.y = window.width() / Target::DAR;
-            offset.y = (window.height() - size.y) * 0.5f;
-        }
-
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         glViewport(0, 0, window.width(), window.height());
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        const glm::uvec2 offset = window.output_offset();
+        const glm::uvec2 size = window.output_size();
         glViewport(offset.x, offset.y, size.x, size.y);
 
         shader.use();

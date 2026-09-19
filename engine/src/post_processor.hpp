@@ -26,7 +26,7 @@ namespace mse
         PostProcessor& operator=(const PostProcessor&) = delete;
         PostProcessor& operator=(PostProcessor&&)      = delete;
 
-        void init(string_view vertex_path, string_view fragment_path);
+        bool init(string_view vertex_path, string_view fragment_path);
         void bind() const;
         void render(const Window& window) const;
 

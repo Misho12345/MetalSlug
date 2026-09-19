@@ -24,6 +24,7 @@ namespace mse
         RenderingSystem& operator=(const RenderingSystem&) = delete;
         RenderingSystem& operator=(RenderingSystem&&)      = delete;
 
+        void init_global() const;
         bool init_sprite_objects(const Scene& scene);
         void render_sprites(const Scene& scene);
 

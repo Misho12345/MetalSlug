@@ -47,9 +47,14 @@ namespace mse
         priv_ctx_->debug_ui.init();
         #endif
 
-        priv_ctx_->post_processor.init(
+       if (!priv_ctx_->post_processor.init(
             "assets/shaders/post_processing.vert",
-            "assets/shaders/post_processing.frag");
+            "assets/shaders/post_processing.frag"))
+        {
+            printf("failed to init post processor\n");
+            ok_ = false;
+            return;
+        }
 
         printf("finished setup\n");
     }
@@ -57,6 +62,8 @@ namespace mse
     void App::run()
     {
         if (!ok_) return;
+
+        priv_ctx_->rendering_system.init_global();
 
         // here and not in setup() because it has to have the animation frame counts set in App::init()
         if (!priv_ctx_->rendering_system.init_sprite_objects(ctx_->scene))
@@ -70,10 +77,7 @@ namespace mse
         while (!priv_ctx_->window.should_close())
         {
             priv_ctx_->input.update();
-
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
             priv_ctx_->window.poll_events();
-            priv_ctx_->post_processor.bind();
 
             #ifndef NDEBUG
             priv_ctx_->debug_ui.begin_frame();
@@ -101,13 +105,16 @@ namespace mse
             }
 
             priv_ctx_->animation_system.update(ctx_->scene, dt);
+
+            priv_ctx_->post_processor.bind();
             priv_ctx_->rendering_system.render_sprites(ctx_->scene);
+
+            priv_ctx_->post_processor.render(priv_ctx_->window);
 
             #ifndef NDEBUG
             priv_ctx_->debug_ui.render();
             #endif
 
-            priv_ctx_->post_processor.render(priv_ctx_->window);
             priv_ctx_->window.swap_buffers();
         }
     }
