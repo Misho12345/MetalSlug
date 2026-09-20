@@ -63,8 +63,6 @@ namespace mse
     {
         if (!ok_) return;
 
-        priv_ctx_->rendering_system.init_global();
-
         // here and not in setup() because it has to have the animation frame counts set in App::init()
         if (!priv_ctx_->rendering_system.init_sprite_objects(ctx_->scene))
         {

@@ -8,7 +8,7 @@ file(GLOB_RECURSE GAME_SOURCES CONFIGURE_DEPENDS
 
 target_sources(MetalSlug PRIVATE ${GAME_SOURCES})
 target_link_libraries(MetalSlug PRIVATE MetalSlugEngine)
-target_precompile_headers(MetalSlug REUSE_FROM MetalSlugEngine)
+target_precompile_headers(MetalSlug PRIVATE ${CMAKE_SOURCE_DIR}/engine/include/mse/mse.hpp)
 
 enable_warnings(MetalSlug)
 

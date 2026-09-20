@@ -27,7 +27,7 @@ namespace mse
         data_{ static_cast<T*>(operator new(sizeof(T) * capacity_)) }
     {
         size_t idx{};
-        (new(data_ + idx++) T{ std::forward<Args>(args) }, ...);
+        (new(data_ + idx++) T(std::forward<Args>(args)), ...);
     }
 
     template <typename T> requires (!std::same_as<T, void>)
@@ -109,10 +109,10 @@ namespace mse
         {
             if (capacity_ < size_ + 1) reserve(capacity_ * 2);
 
-            new(data_ + size_) T{ std::move(data_[size_ - 1]) };
+            new(data_ + size_) T(std::move(data_[size_ - 1]));
             move_mem(data_ + idx + 1, data_ + idx, size_ - idx - 1);
             destroy_at(data_ + idx);
-            new(data_ + idx) T{ std::forward<Args>(args)... };
+            new(data_ + idx) T(std::forward<Args>(args)...);
             ++size_;
         }
     }
@@ -122,7 +122,7 @@ namespace mse
     void vector<T>::emplace_back(Args&&... args)
     {
         if (capacity_ < size_ + 1) reserve(capacity_ * 2);
-        new(data_ + size_++) T{ std::forward<Args>(args)... };
+        new(data_ + size_++) T(std::forward<Args>(args)...);
     }
 
 
@@ -188,7 +188,7 @@ namespace mse
             reserve(new_cap);
         }
 
-        for (size_t i = size_; i < new_size; ++i) new(data_ + i) T{ fill };
+        for (size_t i = size_; i < new_size; ++i) new(data_ + i) T(fill);
         size_ = new_size;
     }
 
@@ -205,7 +205,7 @@ namespace mse
         {
             for (size_t i = 0; i < count; ++i)
             {
-                new(dest + i) T{ src[i] };
+                new(dest + i) T(src[i]);
             }
         }
     }
@@ -251,7 +251,7 @@ namespace mse
         {
             for (size_t i = 0; i < count; ++i)
             {
-                new(dest + i) T{ std::move(src[i]) };
+                new(dest + i) T(std::move(src[i]));
                 destroy_at(src + i);
             }
         }

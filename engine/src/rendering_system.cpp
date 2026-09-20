@@ -6,87 +6,6 @@
 
 namespace mse
 {
-
-    namespace
-    {
-        #ifndef NDEBUG
-        const char* source_name(const GLenum value)
-        {
-            switch (value)
-            {
-                case GL_DEBUG_SOURCE_API: return "api";
-                case GL_DEBUG_SOURCE_WINDOW_SYSTEM: return "window";
-                case GL_DEBUG_SOURCE_SHADER_COMPILER: return "shader";
-                case GL_DEBUG_SOURCE_THIRD_PARTY: return "third_party";
-                case GL_DEBUG_SOURCE_APPLICATION: return "application";
-                default: return "other";
-            }
-        }
-
-        const char* type_name(const GLenum value)
-        {
-            switch (value)
-            {
-                case GL_DEBUG_TYPE_ERROR: return "error";
-                case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return "deprecated";
-                case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR: return "undefined";
-                case GL_DEBUG_TYPE_PORTABILITY: return "portability";
-                case GL_DEBUG_TYPE_PERFORMANCE: return "performance";
-                case GL_DEBUG_TYPE_MARKER: return "marker";
-                case GL_DEBUG_TYPE_PUSH_GROUP: return "push_group";
-                case GL_DEBUG_TYPE_POP_GROUP: return "pop_group";
-                default: return "other";
-            }
-        }
-
-        const char* severity_name(const GLenum value)
-        {
-            switch (value)
-            {
-                case GL_DEBUG_SEVERITY_HIGH: return "high";
-                case GL_DEBUG_SEVERITY_MEDIUM: return "medium";
-                case GL_DEBUG_SEVERITY_LOW: return "low";
-                default: return "other";
-            }
-        }
-
-        // taken from my intake
-        void gl_debug_callback(
-            const GLenum source,
-            const GLenum type,
-            const GLuint /*id*/,
-            const GLenum severity,
-            const GLsizei /*length*/,
-            const GLchar* message,
-            const void* /*user_param*/)
-        {
-            if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) return;
-
-
-            if (severity == GL_DEBUG_SEVERITY_HIGH)
-            {
-                fprintf(
-                    stderr,
-                    "\033[31mOpenGL [%s:%s:%s] %s\033[0m",
-                    source_name(source),
-                    type_name(type),
-                    severity_name(severity),
-                    message);
-            }
-            else
-            {
-                printf(
-                    "\033[33mOpenGL [%s:%s:%s] %s\033[0m",
-                    source_name(source),
-                    type_name(type),
-                    severity_name(severity),
-                    message);
-            }
-        }
-        #endif
-    }
-
-
     // just for the qsort lambda
     static int32_t* s_layers;
 
@@ -97,19 +16,10 @@ namespace mse
     }
 
 
-    void RenderingSystem::init_global() const
-    {
-        #ifndef NDEBUG
-        glEnable(GL_DEBUG_OUTPUT);
-        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(gl_debug_callback, nullptr);
-        #endif
-
-        glEnable(GL_CULL_FACE);
-    }
-
     bool RenderingSystem::init_sprite_objects(const Scene& scene)
     {
+        glEnable(GL_CULL_FACE);
+
         // empty vao because sprite vertices are hardcoded in shader
         sprite_vao_.create({});
 

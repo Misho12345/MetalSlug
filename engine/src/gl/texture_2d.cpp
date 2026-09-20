@@ -14,6 +14,7 @@ namespace mse::gl
             }
 
             assert(false);
+            return {};
         }
 
         GLenum to_gl_source_fmt(const TextureFormat format) noexcept
@@ -25,6 +26,7 @@ namespace mse::gl
             }
 
             assert(false);
+            return {};
         }
 
         GLint to_gl(const TextureFilter filter) noexcept
@@ -36,6 +38,7 @@ namespace mse::gl
             }
 
             assert(false);
+            return {};
         }
 
         GLint to_gl(const TextureWrap wrap) noexcept
@@ -47,6 +50,7 @@ namespace mse::gl
             }
 
             assert(false);
+            return {};
         }
 
         int format_size(const TextureFormat format) noexcept
@@ -58,6 +62,7 @@ namespace mse::gl
             }
 
             assert(false);
+            return {};
         }
     }
 

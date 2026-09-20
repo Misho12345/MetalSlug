@@ -1,8 +1,6 @@
 #include <thread>
 
-#include "../tools/texture_packer/atlas.hpp"
 #include "mse/game.hpp"
-#include "mse/input.hpp"
 
 using namespace mse;
 using namespace mse::anim;

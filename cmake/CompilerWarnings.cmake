@@ -2,6 +2,8 @@ include_guard(GLOBAL)
 
 # copied from github.com/Misho12345/Boza (mine)
 function(enable_warnings target)
+    target_compile_definitions(${target} PUBLIC _CRT_SECURE_NO_WARNINGS)
+
     if (MSVC)
         target_compile_options(${target} PRIVATE
                 /W4
@@ -9,6 +11,8 @@ function(enable_warnings target)
                 /permissive-
                 /Zc:__cplusplus
                 /sdl
+                /wd4267    # conversion
+                /wd4146    # - on unsigned for overflow
                 /wd4702    # unreachable code
                 /wd4065    # switch with 'default' but no 'case'
                 /wd4251    # DLL-interface warning

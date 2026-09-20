@@ -1,6 +1,6 @@
 #pragma once
 
-#include "app.hpp"
+#include "mse/mse.hpp"
 
 /**
  * @brief The main game class, derived from mse::App

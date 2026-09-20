@@ -34,28 +34,19 @@ namespace mse
         void poll_events() const;
         void swap_buffers() const;
 
-        uint32_t width() const { return size_.x; }
-        uint32_t height() const { return size_.y; }
-        glm::uvec2 size() const { return size_; }
+        uint32_t width() const { return width_; }
+        uint32_t height() const { return height_; }
 
-        aabb bounds() const { return aabb{ {}, size_ }; }
+        aabb bounds() const { return aabb{ {}, { width_, height_ } }; }
 
-        float aspect_ratio() const { return static_cast<float>(size_.x) / size_.y; }
+        float aspect_ratio() const { return static_cast<float>(width_) / height_; }
         GLFWwindow* native_handle() const { return handle_; }
-
-        glm::uvec2 output_offset() const { return output_offset_; }
-        glm::uvec2 output_size() const { return output_size_; }
 
     private:
         Window() = default;
 
-        void update(glm::uvec2 new_size);
-
-        glm::uvec2 size_{};
-
-        glm::uvec2 output_offset_{};
-        glm::uvec2 output_size_{};
-
+        uint32_t width_{};
+        uint32_t height_{};
         GLFWwindow* handle_{ nullptr };
 
         friend ::mse::PrivCtx;

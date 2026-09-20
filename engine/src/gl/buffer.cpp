@@ -72,6 +72,7 @@ namespace mse::gl
             default:
                 // you cannot bind vertex and instance buffers
                 assert(false && "Unsupported buffer type for binding");
+                target = {};
         }
 
         glBindBufferBase(target, binding, id_);

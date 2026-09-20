@@ -39,6 +39,6 @@ target_include_directories(MetalSlugEngine
 )
 
 target_compile_definitions(MetalSlugEngine PRIVATE MSE_EXPORTS)
-target_precompile_headers(MetalSlugEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/mse/pch.hpp)
+target_precompile_headers(MetalSlugEngine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/mse/pch.hpp)
 
 enable_warnings(MetalSlugEngine)

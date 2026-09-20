@@ -18,7 +18,7 @@ namespace mse
     class vector<void>
     {
     public:
-        static constexpr size_t npos = -1;
+        static constexpr size_t npos = static_cast<size_t>(-1);
     };
 
     template <typename T> requires (!std::same_as<T, void>)
