@@ -61,16 +61,36 @@ namespace mse
         glfwSetWindowUserPointer(handle_, this);
         glfwSetWindowSizeCallback(handle_, [](GLFWwindow* window, const int width, const int height)
         {
-            Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window));
-            if (!win) return;
-            win->width_  = static_cast<uint32_t>(width);
-            win->height_ = static_cast<uint32_t>(height);
+            if (Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window)))
+                win->update({ static_cast<uint32_t>(width), static_cast<uint32_t>(height) });
         });
 
-        width_ = desc.width;
-        height_ = desc.height;
+        update({ desc.width, desc.height });
 
         return true;
+    }
+
+
+    void Window::update(const glm::uvec2 new_size)
+    {
+        size_ = new_size;
+
+        float ar = aspect_ratio();
+
+        if (ar > Target::DAR)
+        {
+            output_size_.x = static_cast<uint32_t>(size_.y * Target::DAR);
+            output_size_.y = size_.y;
+            output_offset_.x = static_cast<uint32_t>((size_.x - output_size_.x) * 0.5f);
+            output_offset_.y = 0u;
+        }
+        else
+        {
+            output_size_.x = size_.x;
+            output_size_.y = static_cast<uint32_t>(size_.x / Target::DAR);
+            output_offset_.x = 0u;
+            output_offset_.y = static_cast<uint32_t>((size_.y - output_size_.y) * 0.5f);
+        }
     }
 
     bool Window::should_close() const { return glfwWindowShouldClose(handle_); }

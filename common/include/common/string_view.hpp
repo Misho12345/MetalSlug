@@ -19,6 +19,11 @@ namespace mse
     class MSC_API string_view final
     {
     public:
+        string_view() = default;
+
+        string_view(const string_view&) = default;
+        string_view& operator=(const string_view&) = default;
+
         /// @brief Construct a string view from a string literal
         template <size_t N>
         string_view(const char (&data)[N]) : data_{ data }, size_{ N } {}

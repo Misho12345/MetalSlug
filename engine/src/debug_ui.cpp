@@ -47,11 +47,14 @@ namespace mse
 
     void DebugUI::draw_box(const aabb box, const glm::u8vec4 color) const
     {
-        // TODO: fix the box to either draw on the framebuffer or resize to fit the window
+        const Window& win = App::priv_ctx().window;
+
+        const glm::vec2 scale = glm::vec2(win.output_size()) / glm::vec2(Target::RESOLUTION);
+        const glm::vec2 output_offset = win.output_offset();
 
         ImGui::GetForegroundDrawList()->AddRect(
-            to_vec2(box.min),
-            to_vec2(box.max),
+            to_vec2(output_offset + box.min * scale),
+            to_vec2(output_offset + box.max * scale),
             to_imu32(color),
             0.0f, {},
             5.0f);
