@@ -98,7 +98,7 @@ namespace mse
             DynamicObject& dyn = dynamic_objects[i];
             const SweepResult& res = results[i];
 
-            dyn.tr.position += dyn.rb.velocity * res.time * FIXED_TIME_STEP;
+            dyn.rb.pos_remainder += dyn.rb.velocity * res.time * FIXED_TIME_STEP;
 
             // if stopped, stop the velocity depending on the normal
             if (res.time < 1.0f)
@@ -106,8 +106,12 @@ namespace mse
                 if (res.normal.x != 0.0f) dyn.rb.velocity.x = 0.0f;
                 if (res.normal.y != 0.0f) dyn.rb.velocity.y = 0.0f;
 
-                dyn.tr.position += dyn.rb.velocity * (1.0f - res.time) * FIXED_TIME_STEP;
+                dyn.rb.pos_remainder += dyn.rb.velocity * (1.0f - res.time) * FIXED_TIME_STEP;
             }
+
+            const glm::vec2 floor = glm::floor(dyn.rb.pos_remainder);
+            dyn.tr.position += floor;
+            dyn.rb.pos_remainder -= floor;
         }
     }
 

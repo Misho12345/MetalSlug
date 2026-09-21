@@ -47,12 +47,14 @@ namespace mse
             return *this;
         }
 
+        [[nodiscard]]
         T& operator*()
         {
             assert(ptr_ && "dereferencing nullptr");
             return *ptr_;
         }
 
+        [[nodiscard]]
         const T& operator*() const
         {
             assert(ptr_ && "dereferencing nullptr");

@@ -20,8 +20,8 @@ namespace mse
 
         constexpr entity_id() : value{ IDX_MASK } {}
 
-        constexpr uint32_t idx() const { return value & IDX_MASK; }
-        constexpr uint8_t version() const { return static_cast<uint8_t>(value >> IDX_BITS); }
+        [[nodiscard]] constexpr uint32_t idx() const { return value & IDX_MASK; }
+        [[nodiscard]] constexpr uint8_t version() const { return static_cast<uint8_t>(value >> IDX_BITS); }
 
         constexpr bool operator==(const entity_id other) const { return value == other.value; }
 

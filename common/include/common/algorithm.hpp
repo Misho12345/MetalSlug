@@ -3,9 +3,11 @@
 namespace mse
 {
     template <typename T>
+    [[nodiscard]]
     constexpr T min(const T& a, const T& b) { return a < b ? a : b; }
 
     template <typename T>
+    [[nodiscard]]
     constexpr T max(const T& a, const T& b) { return a > b ? a : b; }
 
     // signature practically copied from cppreference

@@ -17,6 +17,7 @@ namespace mse
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 
         GLFWmonitor* primary_monitor = glfwGetPrimaryMonitor();
 
@@ -37,11 +38,8 @@ namespace mse
         }
 
         handle_ = glfwCreateWindow(
-            static_cast<int>(desc.width),
-            static_cast<int>(desc.height),
-            desc.title,
-            nullptr,
-            nullptr);
+            desc.width, desc.height, desc.title,
+            nullptr, nullptr);
 
         if (!handle_)
         {
@@ -52,17 +50,16 @@ namespace mse
 
         glfwSetWindowPos(
             handle_,
-            static_cast<int>((mode->width - desc.width) / 2),
-            static_cast<int>((mode->height - desc.height) / 2));
+            (mode->width - desc.width) / 2,
+            (mode->height - desc.height) / 2);
 
-        glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
         glfwMakeContextCurrent(handle_);
 
         glfwSetWindowUserPointer(handle_, this);
         glfwSetWindowSizeCallback(handle_, [](GLFWwindow* window, const int width, const int height)
         {
             if (Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window)))
-                win->update({ static_cast<uint32_t>(width), static_cast<uint32_t>(height) });
+                win->update({ width, height });
         });
 
         update({ desc.width, desc.height });
@@ -71,25 +68,25 @@ namespace mse
     }
 
 
-    void Window::update(const glm::uvec2 new_size)
+    void Window::update(const glm::ivec2 new_size)
     {
         size_ = new_size;
 
-        float ar = aspect_ratio();
+        const float ar = aspect_ratio();
 
         if (ar > Target::DAR)
         {
-            output_size_.x = static_cast<uint32_t>(size_.y * Target::DAR);
-            output_size_.y = size_.y;
-            output_offset_.x = static_cast<uint32_t>((size_.x - output_size_.x) * 0.5f);
+            output_size_.x   = static_cast<int32_t>(size_.y * Target::DAR);
+            output_size_.y   = size_.y;
+            output_offset_.x = (size_.x - output_size_.x) / 2;
             output_offset_.y = 0u;
         }
         else
         {
             output_size_.x = size_.x;
-            output_size_.y = static_cast<uint32_t>(size_.x / Target::DAR);
+            output_size_.y = static_cast<int32_t>(size_.x / Target::DAR);
             output_offset_.x = 0u;
-            output_offset_.y = static_cast<uint32_t>((size_.y - output_size_.y) * 0.5f);
+            output_offset_.y = (size_.y - output_size_.y) / 2;
         }
     }
 

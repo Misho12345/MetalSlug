@@ -44,15 +44,17 @@ namespace mse
 
         /// @brief Access an element in the string view
         /// @note No out-of-bounds checks are made, make sure the index is within bounds
+        [[nodiscard]]
         const char& operator[](const size_t idx) const { return data_[idx]; }
 
+        [[nodiscard]]
         const char* data() const { return data_; }
 
-        size_t size() const { return size_; }
-        bool   empty() const { return size_ == 0; }
+        [[nodiscard]] size_t size() const { return size_; }
+        [[nodiscard]] bool   empty() const { return size_ == 0; }
 
-        char front() const { return data_[0]; }
-        char back() const { return data_[size_ - 1]; }
+        [[nodiscard]] char front() const { return data_[0]; }
+        [[nodiscard]] char back() const { return data_[size_ - 1]; }
 
         operator const char*() const { return data_; }
 

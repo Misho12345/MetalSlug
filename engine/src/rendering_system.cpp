@@ -90,7 +90,7 @@ namespace mse
     }
 
 
-    RenderingSystem::RenderingSystem() : instances_{ 5 }
+    RenderingSystem::RenderingSystem() : instances_(5)
     {
         layers_.reserve(5);
         order_.reserve(5);
@@ -196,6 +196,8 @@ namespace mse
                 continue;
 
             const Transform& transform = scene.get<Transform>(entities[i]);
+
+            // TODO: fix for rotated and parallax scrolling and factor in camera pos
             if (!(transform.bounds() & aabb({}, Target::RESOLUTION))) continue;
 
             size_t idx = layers_.find(sprite.layer);

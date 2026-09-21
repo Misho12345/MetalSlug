@@ -47,11 +47,12 @@ namespace mse
          * @return A reference to the element at the specified index
          * @note This function does not perform bounds checking
          */
+        [[nodiscard]]
         T& operator[](const size_t idx) const { return data_[idx]; }
 
-        T* data() const { return data_; }
-        size_t size() const { return size_; }
-        bool   empty() const { return size_ == 0; }
+        [[nodiscard]] T* data() const { return data_; }
+        [[nodiscard]] size_t size() const { return size_; }
+        [[nodiscard]] bool   empty() const { return size_ == 0; }
 
 
         // iterator methods

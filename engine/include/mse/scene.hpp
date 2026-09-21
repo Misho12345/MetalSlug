@@ -14,6 +14,7 @@ namespace mse
     public:
         Scene();
 
+        [[nodiscard]]
         entity_id create_entity();
         void      destroy_entity(entity_id entity);
 
@@ -25,6 +26,7 @@ namespace mse
         }
 
         template <typename C>
+        [[nodiscard]]
         C* try_get(entity_id entity)
         {
             if (!valid(entity)) return nullptr;
@@ -32,6 +34,7 @@ namespace mse
         }
 
         template <typename C>
+        [[nodiscard]]
         const C* try_get(entity_id entity) const
         {
             if (!valid(entity)) return nullptr;
@@ -39,6 +42,7 @@ namespace mse
         }
 
         template <typename C>
+        [[nodiscard]]
         C& get(entity_id entity)
         {
             assert(valid(entity) && "Entity is not valid");
@@ -47,6 +51,7 @@ namespace mse
         }
 
         template <typename C>
+        [[nodiscard]]
         const C& get(entity_id entity) const
         {
             assert(valid(entity) && "Entity is not valid");
@@ -55,6 +60,7 @@ namespace mse
         }
 
         template <typename C>
+        [[nodiscard]]
         bool has(entity_id entity) const
         {
             assert(valid(entity) && "Entity is not valid");
@@ -68,6 +74,7 @@ namespace mse
             pool<C>().remove(entity);
         }
 
+        [[nodiscard]]
         bool valid(const entity_id entity) const
         {
             return entity &&
@@ -75,16 +82,19 @@ namespace mse
                     versions_[entity.idx()] == entity.version();
         }
 
+        [[nodiscard]]
         entity_id camera() const { return camera_; }
 
 
         template <typename C>
+        [[nodiscard]]
         ComponentPool<C>& pool()
         {
             return const_cast<ComponentPool<C>&>(std::as_const(*this).pool<C>());
         }
 
         template <typename C>
+        [[nodiscard]]
         const ComponentPool<C>& pool() const
         {
             if constexpr (std::same_as<C, Transform>) return transform_pool_;

@@ -33,6 +33,7 @@ namespace mse::gl
          * @return A new VertexAttrib instance
          */
         template <typename M>
+        [[nodiscard]]
         static VertexAttrib make(
             const GLuint _rel_offset,
             const GLuint _attrib_idx,
@@ -99,8 +100,8 @@ namespace mse::gl
         void bind() const;
         static void unbind();
 
-        GLuint id() const { return id_; }
-        operator bool() const { return id_; }
+        [[nodiscard]] GLuint id() const { return id_; }
+        [[nodiscard]] operator bool() const { return id_; }
 
     private:
         GLuint id_{ 0 };

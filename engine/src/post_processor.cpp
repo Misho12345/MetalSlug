@@ -11,7 +11,12 @@ namespace mse
     bool PostProcessor::init(const string_view vertex_path, const string_view fragment_path)
     {
         vao.create({});
-        shader.create(vertex_path, fragment_path);
+
+        if (!shader.create(vertex_path, fragment_path))
+        {
+            printf("failed to create post processing shader");
+            return false;
+        }
 
         color_tex.create({ Target::RESOLUTION, 1 }, {
             .format = gl::TextureFormat::RGB8,
@@ -42,8 +47,8 @@ namespace mse
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        const glm::uvec2 offset = window.output_offset();
-        const glm::uvec2 size = window.output_size();
+        const glm::ivec2 offset = window.output_offset();
+        const glm::ivec2 size = window.output_size();
         glViewport(offset.x, offset.y, size.x, size.y);
 
         shader.use();

@@ -36,6 +36,8 @@ namespace mse
         template <std::integral C>
         explicit vector(C size);
 
+
+        // i could avoid doing that integral check here if i could use std::initialized_list
         /**
          * @brief Constructs a vector with the specified elements
          * @tparam Args The types of the arguments to be passed to the constructor of T
@@ -56,17 +58,19 @@ namespace mse
 
         /// @brief Accesses the element at the specified index
         /// @note No bounds checking is performed
+        [[nodiscard]]
         T& operator[](size_t idx) { return data_[idx]; }
 
         /// @brief Accesses the element at the specified index
         /// @note No bounds checking is performed
+        [[nodiscard]]
         const T& operator[](size_t idx) const { return data_[idx]; }
 
-        T& front() { assert(capacity_ && data_); return data_[0]; }
-        const T& front() const { assert(capacity_ && data_); return data_[0]; }
+        [[nodiscard]] T& front() { assert(capacity_ && data_); return data_[0]; }
+        [[nodiscard]] const T& front() const { assert(capacity_ && data_); return data_[0]; }
 
-        T& back() { assert(size_ && data_); return data_[size_ - 1]; }
-        const T& back() const { assert(size_ && data_); return data_[size_ - 1]; }
+        [[nodiscard]] T& back() { assert(size_ && data_); return data_[size_ - 1]; }
+        [[nodiscard]] const T& back() const { assert(size_ && data_); return data_[size_ - 1]; }
 
         /// @brief Resets the vector to an empty state (does deallocate memory)
         void reset();
@@ -74,12 +78,13 @@ namespace mse
         /// @brief Resets the vector to an empty state (does not deallocate memory)
         void clear();
 
+        [[nodiscard]]
         bool empty() const { return !size_; }
 
-        T* data() { return data_; }
-        const T* data() const { return data_; }
-        size_t size() const { return size_; }
-        size_t capacity() const { return capacity_; }
+        [[nodiscard]] T* data() { return data_; }
+        [[nodiscard]] const T* data() const { return data_; }
+        [[nodiscard]] size_t size() const { return size_; }
+        [[nodiscard]] size_t capacity() const { return capacity_; }
 
         /// @brief Inserts a copy of the specified value to the front of the vector
         void push_front(const T& value) { emplace_front(value); }
@@ -155,6 +160,7 @@ namespace mse
          * @param value The value to search for
          * @return The index of the first occurrence of the value, or vector<>::npos if not found
          */
+        [[nodiscard]]
         size_t find(const T& value) requires std::equality_comparable<T>
         {
             for (size_t i = 0; i < size_; ++i)

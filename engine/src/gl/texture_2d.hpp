@@ -43,6 +43,7 @@ namespace mse::gl
          * @return True if the texture was created successfully, false otherwise
          * @note Texture 2D array will be created unless the number of paths is 1 and force_array is false
          */
+        [[nodiscard]]
         bool create(const TextureDesc& desc, span<const string> paths, bool force_array = false);
 
         /**
@@ -60,8 +61,9 @@ namespace mse::gl
 
         void reset();
 
-        glm::uvec3 size() const { return size_; } // size_.z is the number of layers in the texture array
-        GLuint id() const { return id_; }
+        [[nodiscard]] glm::uvec3 size() const { return size_; } // size_.z is the number of layers in the texture array
+        [[nodiscard]] GLuint id() const { return id_; }
+
         operator bool() const { return id_; }
 
     private:

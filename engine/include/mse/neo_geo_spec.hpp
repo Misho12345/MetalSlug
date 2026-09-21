@@ -6,7 +6,7 @@ namespace mse
     struct NeoGeoSpec final
     {
         // MetalSlug doesn't use 8 pixels to the left and right of the screen
-        static constexpr glm::uvec2 RESOLUTION{ 304, 224 };
+        static constexpr glm::ivec2 RESOLUTION{ 304, 224 };
 
         // 264 / 15625
         static constexpr float FRAME_TIME{ 0.016896f };
@@ -14,7 +14,7 @@ namespace mse
         // pixel aspect ratio
         static constexpr float PAR{ 14.0f / 15.0f };
 
-        static constexpr glm::uvec2 TILE_SIZE{ 16, 16 };
+        static constexpr glm::ivec2 TILE_SIZE{ 16, 16 };
 
 
         // display aspect ratio

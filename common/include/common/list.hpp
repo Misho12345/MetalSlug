@@ -98,6 +98,7 @@ namespace mse
          * In case a node is accessed that does not exist
          * (for example the list is empty), assert will be triggered
          */
+        [[nodiscard]]
         T& operator[](size_t idx);
 
         /**
@@ -108,6 +109,7 @@ namespace mse
          * In case a node is accessed that does not exist
          * (for example the list is empty), assert will be triggered
          */
+        [[nodiscard]]
         const T& operator[](size_t idx) const;
 
         /**
@@ -115,6 +117,7 @@ namespace mse
          * @return Reference to the first element in the list
          * @note If the list is empty, assert will be triggered
          */
+        [[nodiscard]]
         T& front() { assert(head_); return head_->data; }
 
         /**
@@ -122,6 +125,7 @@ namespace mse
          * @return Const reference to the first element in the list
          * @note If the list is empty, assert will be triggered
          */
+        [[nodiscard]]
         const T& front() const { assert(head_); return head_->data; }
 
         /**
@@ -129,6 +133,7 @@ namespace mse
          * @return Reference to the last element in the list
          * @note If the list is empty, assert will be triggered
          */
+        [[nodiscard]]
         T& back() { assert(tail_); return tail_->data; }
 
         /**
@@ -136,14 +141,15 @@ namespace mse
          * @return Const reference to the last element in the list
          * @note If the list is empty, assert will be triggered
          */
+        [[nodiscard]]
         const T& back() const { assert(tail_); return tail_->data; }
 
 
-        node* head() { return head_; }
-        const node* head() const { return head_; }
+        [[nodiscard]] node* head() { return head_; }
+        [[nodiscard]] const node* head() const { return head_; }
 
-        node* tail() { return tail_; }
-        const node* tail() const { return tail_; }
+        [[nodiscard]] node* tail() { return tail_; }
+        [[nodiscard]] const node* tail() const { return tail_; }
 
 
         /**
@@ -151,6 +157,7 @@ namespace mse
          * @param idx Index of the element to access
          * @return Node of the element at the specified index; if idx is out of bounds tail_ is returned.
          */
+        [[nodiscard]]
         node* get_node(const size_t idx)
         {
             return const_cast<node*>(std::as_const(*this).get_node(idx));
@@ -161,12 +168,13 @@ namespace mse
          * @param idx Index of the element to access
          * @return Node of the element at the specified index; if idx is out of bounds tail_ is returned.
          */
+        [[nodiscard]]
         const node* get_node(size_t idx) const;
 
 
         void reset();
-        bool empty() const { return !size_; }
-        size_t size() const { return size_; }
+        [[nodiscard]] bool empty() const { return !size_; }
+        [[nodiscard]] size_t size() const { return size_; }
 
 
 

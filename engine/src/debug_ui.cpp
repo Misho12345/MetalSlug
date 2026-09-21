@@ -9,7 +9,7 @@ namespace mse
 {
     namespace
     {
-        ImVec2 to_vec2(const glm::vec2 vec) { return ImVec2{ vec.x, vec.y }; }
+        ImVec2 to_vec2(const glm::ivec2 vec) { return ImVec2{ static_cast<float>(vec.x), static_cast<float>(vec.y) }; }
         ImU32  to_imu32(const glm::u8vec4 vec) { return IM_COL32(vec.x, vec.y, vec.z, vec.w); }
     }
 
@@ -49,12 +49,9 @@ namespace mse
     {
         const Window& win = App::priv_ctx().window;
 
-        const glm::vec2 scale = glm::vec2(win.output_size()) / glm::vec2(Target::RESOLUTION);
-        const glm::vec2 output_offset = win.output_offset();
-
         ImGui::GetForegroundDrawList()->AddRect(
-            to_vec2(output_offset + box.min * scale),
-            to_vec2(output_offset + box.max * scale),
+            to_vec2(box.min * win.output_size() / Target::RESOLUTION + win.output_offset()),
+            to_vec2(box.max * win.output_size() / Target::RESOLUTION + win.output_offset()),
             to_imu32(color),
             0.0f, {},
             5.0f);

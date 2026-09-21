@@ -11,19 +11,17 @@ namespace
     entity_id player_legs, player_body;
     entity_id ground;
 
-    glm::vec2 get_input()
+    glm::ivec2 get_input()
     {
         const bool w = Input::down(Key::W);
         const bool a = Input::down(Key::A);
         const bool s = Input::down(Key::S);
         const bool d = Input::down(Key::D);
 
-        return w - s || a - d
-                   ? glm::normalize(glm::vec2{
-                       static_cast<float>(d) - static_cast<float>(a),
-                       static_cast<float>(s) - static_cast<float>(w)
-                   })
-                   : glm::vec2{ 0.0f, 0.0f };
+        return glm::ivec2{
+            static_cast<float>(d) - static_cast<float>(a),
+            static_cast<float>(s) - static_cast<float>(w)
+        };
     }
 }
 
@@ -37,20 +35,20 @@ void Game::init()
 
     const Transform& legs_tr = scene.set<Transform>(
         player_legs,
-        glm::vec2{ Target::RESOLUTION.x / 2, 64 },
-        glm::vec2{ 32, 32 }
+        glm::ivec2{ Target::RESOLUTION.x / 2, 64 },
+        glm::ivec2{ 32, 32 }
     );
 
     scene.set<Transform>(
         player_body,
-        legs_tr.position - glm::vec2{ 0, 32 },
-        glm::vec2{ 32, 32 }
+        legs_tr.position - glm::ivec2{ 0, 32 },
+        glm::ivec2{ 32, 32 }
     );
 
     Transform& gr_tr = scene.set<Transform>(
         ground,
-        glm::vec2{ Target::RESOLUTION.x / 2, Target::RESOLUTION.y - 16 },
-        glm::vec2{ Target::RESOLUTION.x, 16 }
+        glm::ivec2{ Target::RESOLUTION.x / 2, Target::RESOLUTION.y - 16 },
+        glm::ivec2{ Target::RESOLUTION.x, 16 }
     );
 
     scene.set<SpriteRenderer>(player_legs, player::Legs::Idle);
@@ -58,8 +56,8 @@ void Game::init()
     scene.set<SpriteRenderer>(ground, Enemy::Slon);
 
     scene.set<Rigidbody>(player_legs);
-    scene.set<BoxCollider>(player_legs, glm::vec2{ 0, -32 }, glm::vec2{ 32, 64 });
-    scene.set<BoxCollider>(ground, glm::vec2{}, gr_tr.scale);
+    scene.set<BoxCollider>(player_legs, glm::ivec2{ 0, -32 }, glm::ivec2{ 32, 64 });
+    scene.set<BoxCollider>(ground, glm::ivec2{}, gr_tr.scale);
 }
 
 void Game::update(const float)
@@ -73,7 +71,7 @@ void Game::update(const float)
 
     s.get<Transform>(player_body).position =
             s.get<Transform>(player_legs).position -
-            glm::vec2{ 0, s.get<Transform>(player_legs).scale.y * 0.5f };
+            glm::ivec2{ 0, 32 };
 
     if (Input::just_pressed(Key::Enter))
     {

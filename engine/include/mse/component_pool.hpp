@@ -32,6 +32,7 @@ namespace mse
          * @param id The entity_id to get the component for
          * @return A pointer to the component, or nullptr if the entity_id does not have a component
          */
+        [[nodiscard]]
         C* get(entity_id id) { return const_cast<C*>(std::as_const(*this).get(id)); }
 
         /**
@@ -39,6 +40,7 @@ namespace mse
          * @param id The entity_id to get the component for
          * @return A pointer to the component, or nullptr if the entity_id does not have a component
          */
+        [[nodiscard]]
         const C* get(entity_id id) const;
 
         /**
@@ -46,6 +48,7 @@ namespace mse
          * @param id The entity_id to check
          * @return true if the entity_id has a component, false otherwise
          */
+        [[nodiscard]]
         bool has(entity_id id) const;
 
         /**
@@ -54,24 +57,11 @@ namespace mse
          */
         void remove(entity_id id);
 
-        vector<C>& components() { return components_; }
-        const vector<C>& components() const { return components_; }
+        [[nodiscard]] vector<C>& components() { return components_; }
+        [[nodiscard]] const vector<C>& components() const { return components_; }
 
-        const vector<entity_id>& owners() const { return owners_; }
-        const vector<int32_t>& lookup() const { return lookup_; }
-
-
-        entity_id get_id(C& c) const
-        {
-            if (c < components_.data() ||
-                c >= components_.data() + components_.size())
-                return {};
-
-            return owners_[(
-                reinterpret_cast<uint8_t*>(&c) -
-                reinterpret_cast<uint8_t*>(components_.data())
-            ) / sizeof(C)];
-        }
+        [[nodiscard]] const vector<entity_id>& owners() const { return owners_; }
+        [[nodiscard]] const vector<int32_t>& lookup() const { return lookup_; }
 
     private:
         vector<C>         components_; // packed data

@@ -59,7 +59,7 @@ namespace mse
 
         // "C++ is a strongly typed language, we shouldn't use auto"
         // - Abhishek
-        for (const decltype(j.items().begin())& atlas : j["atlases"].items())
+        for (decltype(*j.items().begin())& atlas : j["atlases"].items())
         {
             ++atlas_count_;
 
@@ -69,7 +69,7 @@ namespace mse
                 return false;
             }
 
-            for (const decltype(atlas.value().items().begin())& sprite : atlas.value().items())
+            for (decltype(*atlas.value().items().begin())& sprite : atlas.value().items())
             {
                 const json& v = sprite.value();
 

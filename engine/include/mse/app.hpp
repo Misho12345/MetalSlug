@@ -38,9 +38,11 @@ namespace mse
         virtual void update(float dt) = 0;
         virtual void fixed_update() = 0;
 
+        [[nodiscard]]
         static App& instance() { return *instance_; }
 
         /// @brief Access to public engine systems
+        [[nodiscard]]
         static GameCtx& ctx() { return *instance_->ctx_; }
 
         /**
@@ -49,6 +51,7 @@ namespace mse
         * @note These are not intended to be accessed directly by game code.
         * @see priv_ctx.hpp
         */
+        [[nodiscard]]
         static PrivCtx& priv_ctx() { return *instance_->priv_ctx_; }
 
     protected:

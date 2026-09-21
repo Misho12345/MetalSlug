@@ -9,8 +9,8 @@ namespace mse::gl
     public:
         ShaderCompiler() = delete;
 
-        static GLint compile_stage(GLenum stage, string_view source);
-        static GLint link_program(span<const GLuint> shaders);
+        [[nodiscard]] static GLint compile_stage(GLenum stage, string_view source);
+        [[nodiscard]] static GLint link_program(span<const GLuint> shaders);
 
     private:
         static string shader_log(GLuint shader); // Returns the log of a shader compilation

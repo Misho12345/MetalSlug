@@ -64,6 +64,7 @@ namespace mse::gl
         void bind(GLuint binding) const;
 
         template <typename T>
+        [[nodiscard]]
         T* mapped_data() const { return static_cast<T*>(mapped_ptr_); }
 
         /**
@@ -77,9 +78,11 @@ namespace mse::gl
             increase_size_(static_cast<GLsizeiptr>(new_size) * sizeof(T));
         }
 
+        [[nodiscard]]
         GLuint id() const { return id_; }
 
         template <typename T>
+        [[nodiscard]]
         GLsizeiptr size() const { return size_ / sizeof(T); }
 
         operator bool() const { return id_; }

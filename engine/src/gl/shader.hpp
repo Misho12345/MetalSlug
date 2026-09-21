@@ -18,6 +18,7 @@ namespace mse::gl
         Shader& operator=(const Shader&)     = delete;
         Shader& operator=(Shader&&) noexcept = delete;
 
+        [[nodiscard]]
         bool create(string_view vertex, string_view fragment);
 
         void use() const;

@@ -5,8 +5,8 @@ namespace mse
 {
     struct aabb final
     {
-        glm::vec2 min;
-        glm::vec2 max;
+        glm::ivec2 min;
+        glm::ivec2 max;
 
         constexpr bool operator&(const aabb& other) const
         {
@@ -16,24 +16,27 @@ namespace mse
 
         constexpr operator bool() const { return min.x <= max.x && min.y <= max.y; }
 
+        [[nodiscard]]
         static constexpr aabb overlap(const aabb& a, const aabb& b)
         {
             return aabb{ glm::max(a.min, b.min), glm::min(a.max, b.max) };
         }
 
-        constexpr bool contains_excl(const glm::vec2 point) const
+        [[nodiscard]]
+        constexpr bool contains_excl(const glm::ivec2 point) const
         {
             return point.x > min.x && point.x < max.x &&
                    point.y > min.y && point.y < max.y;
         }
 
-        constexpr bool contains(const glm::vec2 point) const
+        [[nodiscard]]
+        constexpr bool contains(const glm::ivec2 point) const
         {
             return point.x >= min.x && point.x <= max.x &&
                    point.y >= min.y && point.y <= max.y;
         }
 
-        glm::vec2 center() const { return (min + max) * 0.5f; }
-        glm::vec2 size() const { return max - min; }
+        [[nodiscard]] glm::ivec2 center() const { return (min + max) / 2; }
+        [[nodiscard]] glm::ivec2 size() const { return max - min; }
     };
 }

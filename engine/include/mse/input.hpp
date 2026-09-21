@@ -89,11 +89,11 @@ namespace mse
         void init();
         void update();
 
-        static bool up(Key key);
-        static bool down(Key key);
+        [[nodiscard]] static bool up(Key key);
+        [[nodiscard]] static bool down(Key key);
 
-        static bool just_pressed(Key key);
-        static bool just_released(Key key);
+        [[nodiscard]] static bool just_pressed(Key key);
+        [[nodiscard]] static bool just_released(Key key);
 
     private:
         Input() = default;

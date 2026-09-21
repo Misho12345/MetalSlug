@@ -6,14 +6,21 @@ namespace mse
 {
     struct Transform final
     {
-        glm::vec2 position{ 0.0f, 0.0f };
-        glm::vec2 scale{ 100.0f, 100.0f };
-        float     rotation{ 0.0f };
+        glm::ivec2 position{ 0, 0 };
+        glm::ivec2 scale{ 32, 32 };
+        float      rotation{ 0.0f };
 
-        constexpr glm::vec2 top_left() const { return position - scale * 0.5f; }
-        constexpr glm::vec2 bottom_right() const { return position + scale * 0.5f; }
+        [[nodiscard]] constexpr glm::ivec2 top_left() const { return position - scale / 2; }
+        [[nodiscard]] constexpr glm::ivec2 bottom_right() const { return position + scale / 2; }
 
-        aabb bounds() const { return aabb{ top_left(), bottom_right() }; }
+        [[nodiscard]]
+        aabb bounds() const
+        {
+            return aabb{
+                .min = top_left(),
+                .max = bottom_right()
+            };
+        }
     };
 
     struct Rigidbody final
@@ -26,19 +33,22 @@ namespace mse
         float mass{ 1.0f };
         float drag{ 0.02f };
 
+        glm::vec2 pos_remainder{};
+
         bool gravity{ true };
         bool is_grounded{ false };
     };
 
     struct BoxCollider final
     {
-        glm::vec2 offset{ 0.0f, 0.0f };
-        glm::vec2 size{ 32.0f, 32.0f };
-        bool      is_trigger{ false };
+        glm::ivec2 offset{ 0, 0 };
+        glm::ivec2 size{ 32, 32 };
+        bool       is_trigger{ false };
 
+        [[nodiscard]]
         aabb bounds(const Transform& tr) const
         {
-            const glm::vec2 top_left = tr.top_left() + offset;
+            const glm::ivec2 top_left = tr.top_left() + offset;
             return aabb{ top_left, top_left + size };
         }
     };
@@ -46,7 +56,7 @@ namespace mse
     struct MSE_API SpriteRenderer final
     {
         template <anim::sprite_enum E>
-        SpriteRenderer(E animation) : info_{ anim::sprite_id<E>, static_cast<uint32_t>(animation) } {}
+        SpriteRenderer(E animation) : info_(anim::info(animation)) {}
 
         glm::vec2 parallax_factor{ 0.0f };
 
@@ -56,8 +66,8 @@ namespace mse
         bool paused{ false };
         bool hidden{ false };
 
-        anim::Info info() const { return info_; }
-        uint32_t   frame() const { return frame_; }
+        [[nodiscard]] anim::Info info() const { return info_; }
+        [[nodiscard]] uint32_t   frame() const { return frame_; }
 
         template <anim::sprite_enum E>
         void play(const E animation, const bool restart_if_same = false)

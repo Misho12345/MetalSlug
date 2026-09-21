@@ -32,11 +32,12 @@ namespace mse
         AnimationSystem& operator=(const AnimationSystem&) = delete;
         AnimationSystem& operator=(AnimationSystem&&)      = delete;
 
+        [[nodiscard]]
         bool init(); // load the animation data from texture_packer output
         void update(Scene& scene, float dt) const;
 
-        const SpriteAnimationData& anim_data(anim::Info info) const;
-        uint32_t atlas_count() const { return atlas_count_; }
+        [[nodiscard]] const SpriteAnimationData& anim_data(anim::Info info) const;
+        [[nodiscard]] uint32_t atlas_count() const { return atlas_count_; }
 
     private:
         AnimationSystem() : sprite_anim_datas_(anim::sprite_count) {}
