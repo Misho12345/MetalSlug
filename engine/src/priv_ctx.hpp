@@ -7,11 +7,13 @@
 
 
 #include "platform/window.hpp"
-
 #include "mse/input/input.hpp"
+
 
 #include "collision/tile_map.hpp"
 #include "collision/collision_system.hpp"
+
+#include "assets/sprite_data_registry.hpp"
 
 #include "render/animation_system.hpp"
 #include "render/rendering_system.hpp"
@@ -35,13 +37,15 @@ namespace mse
         Input input;
 
         TileMap         tile_map;
-        CollisionSystem physics_system;
+        CollisionSystem collision_system;
+
+        SpriteDataRegistry sprite_data_registry;
 
         AnimationSystem animation_system;
         RenderingSystem rendering_system;
 
         #ifndef NDEBUG
-        DebugUI debug_ui;
+        DebugUI   debug_ui;
         DebugDraw debug_draw;
         #endif
 

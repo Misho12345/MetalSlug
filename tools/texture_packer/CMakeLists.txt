@@ -69,8 +69,10 @@ set(anim_header "// Automatically generated enums for sprite animations
 #include <type_traits>
 #include <concepts>
 #include <cstdint>
+#include <cassert>
 
-namespace mse::anim {
+namespace mse::anim
+{
     // sprite_id is a template variable that maps an enum type to its corresponding sprite id
     // if the enum type is not a valid sprite enum, sprite_id will be -1
     template <typename E>
@@ -94,9 +96,14 @@ endforeach ()
 
 set(sprites_paths)
 
-set(idx 0) # sprite id counter
-set(anim_count 0) # total animation count
-set(sprites_names) # list of sprite enum names
+set(idx 0)          # sprite id counter
+set(anim_count 0)   # total animation count
+set(frame_count 0)  # total frame count
+
+set(sprites_names)  # list of sprite enum names
+
+set(sprite_anim_offsets) # list that maps sprite_id to anim id offset
+set(frame_offsets) # list that maps anim_id to frame id offset
 
 # Process each leaf directory to gather images and generate enum names
 foreach (dir IN LISTS leaf_dirs)
@@ -111,10 +118,13 @@ foreach (dir IN LISTS leaf_dirs)
 
     foreach (img IN LISTS images)
         list(APPEND args ${img})
-        cmake_path(GET img STEM LAST_ONLY frame_count)      # idle.4.png -> idle.4
-        cmake_path(GET frame_count EXTENSION frame_count)   # idle.4 -> .4
-        string(REPLACE "." "" frame_count "${frame_count}") # .4 -> 4
-        list(APPEND args ${frame_count})
+        cmake_path(GET img STEM LAST_ONLY curr_frame_count)      # idle.4.png -> idle.4
+        cmake_path(GET curr_frame_count EXTENSION curr_frame_count)   # idle.4 -> .4
+        string(REPLACE "." "" curr_frame_count "${curr_frame_count}") # .4 -> 4
+        list(APPEND args ${curr_frame_count})
+
+        math(EXPR frame_count "${frame_count} + ${curr_frame_count}")
+        list(APPEND frame_offsets ${frame_count})
     endforeach ()
 
     # get the needed info to construct the enum name and namespace
@@ -162,14 +172,19 @@ foreach (dir IN LISTS leaf_dirs)
 
     # generate the enum values for the images in this directory
     set(enum_values "")
+    set(anim_id_offset ${anim_count})
     foreach (img IN LISTS images)
         cmake_path(GET img STEM img_stem)
 
         snake_to_pascal_case("${img_stem}" img_pascal)
-        string(APPEND enum_values "        ${img_pascal},\n")
+        string(APPEND enum_values "${img_pascal}, ")
 
         math(EXPR anim_count "${anim_count} + 1")
     endforeach ()
+
+    list(APPEND sprite_anim_offsets ${anim_count})
+
+    set(enum_def "enum class ${enum_name} { ${enum_values}_COUNT };")
 
     # append the correct enum definition to the header file content
     # depending on whether there is a need for a namespace
@@ -177,35 +192,22 @@ foreach (dir IN LISTS leaf_dirs)
         string(APPEND anim_header "
     namespace ${ns_prefix}
     {
-        enum class ${enum_name}
-        {
-${enum_values}            _COUNT
-        };
-    }
-
-    template <> inline constexpr int sprite_id<${full_enum_type}> = ${idx};\n")
-
+        ${enum_def}
+    }")
     else ()
-        string(APPEND anim_header "
-    enum class ${enum_name}
-    {
-${enum_values}        _COUNT
-    };
-
-    template <> inline constexpr int sprite_id<${full_enum_type}> = ${idx};\n")
+        string(APPEND anim_header "\n    ${enum_def}")
     endif ()
+
+    string(APPEND anim_header "\n
+    template <> inline constexpr int sprite_id<${full_enum_type}> = ${idx};\n")
 
     math(EXPR idx "${idx} + 1")
 endforeach ()
 
 list(APPEND args "--out" ${texture_packer_out_dir})
 
-# Generate the switch cases for sprite_anim_count function
-set(sprite_anims_count_cases "")
-foreach (name IN LISTS sprites_names)
-    string(APPEND sprite_anims_count_cases "
-        case sprite_id<${name}>: return static_cast<uint32_t>(${name}::_COUNT);")
-endforeach ()
+string(JOIN ", " sprite_anim_offsets ${sprite_anim_offsets})
+string(JOIN ", " frame_offsets ${frame_offsets})
 
 string(APPEND anim_header "
     // sprite_enum concept ensures that the type is an enum and
@@ -214,6 +216,7 @@ string(APPEND anim_header "
     concept sprite_enum = std::is_enum_v<E> && requires
     {
         { anim::sprite_id<E> } -> std::convertible_to<int>;
+        { E::_COUNT };
     } && anim::sprite_id<E> >= 0;
 
     struct Info { int sprite_id; uint32_t anim_id; };
@@ -221,18 +224,46 @@ string(APPEND anim_header "
     template <sprite_enum E>
     constexpr Info info(E e) { return { sprite_id<E>, static_cast<uint32_t>(e) }; }
 
-    constexpr inline uint32_t sprite_count = ${idx};
-    constexpr inline uint32_t total_anim_count = ${anim_count};
+    inline constexpr uint32_t total_sprite_count = ${idx};
+    inline constexpr uint32_t total_anim_count = ${anim_count};
+    inline constexpr uint32_t total_frame_count = ${frame_count};
 
-    // helper function to get the number of animations for a given sprite id
-    inline uint32_t sprite_anim_count(const int _sprite_id) noexcept
+    inline constexpr uint32_t sprite_anim_offsets[] = { 0, ${sprite_anim_offsets} };
+    inline constexpr uint32_t frame_offsets[] = { 0, ${frame_offsets} };
+
+    constexpr uint32_t sprite_anim_count(const int sprite_id)
     {
-        switch (_sprite_id)
-        {${sprite_anims_count_cases}
-        }
+        assert(sprite_id != -1 && sprite_id < total_sprite_count);
+        return sprite_anim_offsets[sprite_id + 1] - sprite_anim_offsets[sprite_id];
+    }
 
-        assert(false && \"Invalid sprite id\");
-        return 0;
+    constexpr uint32_t global_anim_id(const Info info)
+    {
+        assert(info.anim_id < sprite_anim_count(info.sprite_id));
+        return sprite_anim_offsets[info.sprite_id] + info.anim_id;
+    }
+
+    template <sprite_enum E>
+    constexpr uint32_t global_anim_id(const E anim)
+    {
+        return global_anim_id(info(anim));
+    }
+
+    constexpr uint32_t frame_count(const uint32_t anim_id)
+    {
+        assert(anim_id < total_frame_count);
+        return frame_offsets[anim_id + 1] - frame_offsets[anim_id];
+    }
+
+    constexpr uint32_t frame_count(const Info info)
+    {
+        return frame_count(global_anim_id(info));
+    }
+
+    constexpr uint32_t global_frame_id(const Info info, const uint32_t frame_idx)
+    {
+        assert(frame_idx < frame_count(info));
+        return frame_offsets[global_anim_id(info)] + frame_idx;
     }
 }")
 

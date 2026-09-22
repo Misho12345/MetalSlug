@@ -20,6 +20,9 @@ struct Box final
     int w{}, h{};
 
     int sprite_id, anim_id;
+
+    // frame count is still passed and stored, even though the program doesn't save it in meta.json
+    // because it's still needed for the mask file generation
     int frame_count;
 
     bool rotated{ false };
@@ -36,8 +39,8 @@ public:
     void add(Box* box);
     void save(const char* atlas_path) const;
 
-    static void save_masks(mse::span<const Atlas> atlases, const char* mask_path);
-
 private:
     mse::vector<Box*>  boxes_{ nullptr };
 };
+
+void save_masks(mse::span<const Box> boxes, const char* mask_path);

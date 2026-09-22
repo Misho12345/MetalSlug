@@ -37,7 +37,7 @@ namespace mse
 
         priv_ctx_->rendering_system.init_global();
 
-        if (!priv_ctx_->animation_system.init())
+        if (!priv_ctx_->sprite_data_registry.init())
         {
             printf("failed to init animation system\n");
             ok_ = false;
@@ -93,8 +93,6 @@ namespace mse
             const float dt = new_time - time;
             time = new_time;
 
-            update(dt);
-
             static float accumulator = 0.0f;
             accumulator += dt;
 
@@ -110,10 +108,12 @@ namespace mse
             while (c && accumulator > CollisionSystem::FIXED_TIME_STEP)
             {
                 fixed_update();
-                priv_ctx_->physics_system.step(ctx_->scene);
+                priv_ctx_->collision_system.step(ctx_->scene);
                 accumulator -= CollisionSystem::FIXED_TIME_STEP;
                 --c;
             }
+
+            update(dt);
 
             priv_ctx_->animation_system.update(ctx_->scene, dt);
 

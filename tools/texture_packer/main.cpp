@@ -113,7 +113,6 @@ int main(const int argc, const char** argv)
         j["atlases"][atlases.size() - 1].push_back({
             { "sprite_id", box->sprite_id },
             { "anim_id", box->anim_id },
-            { "frame_count", box->frame_count },
             { "x", box->x },
             { "y", box->y },
             { "w", box->w },
@@ -133,7 +132,8 @@ int main(const int argc, const char** argv)
 
     snprintf(path, sizeof(path), "%s/mask", argv[argc - 1]);
     printf("saving %s\n", path);
-    Atlas::save_masks(atlases, path);
+    // using the original box order so the masks order matchers what anim.hpp will provide
+    save_masks(boxes, path);
 
     snprintf(path, sizeof(path), "%s/meta.json", argv[argc - 1]);
     printf("saving %s\n", path);

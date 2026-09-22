@@ -1,21 +1,10 @@
 #pragma once
 #include "mse/pch.hpp"
 #include "mse/ecs/scene.hpp"
+#include "assets/sprite_data_registry.hpp"
 
 namespace mse
 {
-    /**
-     * @brief Sprite animation data
-     * @details This is the format of the animation data for the buffer sprite rendering
-     */
-    struct SpriteAnimationData final
-    {
-        glm::vec2 offset;
-        glm::vec2 image_size;
-        uint32_t  frame_count;
-        uint32_t  atlas_idx;
-    };
-
     struct PrivCtx;
 
     /**
@@ -32,18 +21,10 @@ namespace mse
         AnimationSystem& operator=(const AnimationSystem&) = delete;
         AnimationSystem& operator=(AnimationSystem&&)      = delete;
 
-        [[nodiscard]]
-        bool init(); // load the animation data from texture_packer output
         void update(Scene& scene, float dt) const;
 
-        [[nodiscard]] const SpriteAnimationData& anim_data(anim::Info info) const;
-        [[nodiscard]] uint32_t atlas_count() const { return atlas_count_; }
-
     private:
-        AnimationSystem() : sprite_anim_datas_(anim::sprite_count) {}
-
-        vector<vector<SpriteAnimationData>> sprite_anim_datas_{};
-        uint32_t atlas_count_{};
+        AnimationSystem() = default;
 
         friend ::mse::PrivCtx;
     };

@@ -215,18 +215,12 @@ namespace mse
                 idx = layers_.size() - 1;
             }
 
-            uint32_t anim_id_offset = 0;
-            for (int j = 0; j < sprite.info().sprite_id; ++j)
-            {
-                anim_id_offset += anim::sprite_anim_count(j);
-            }
-
             instances_[idx].emplace_back(
                     sprite.parallax_factor,
                     transform.top_left(),
                     transform.scale,
                     transform.rotation,
-                    anim_id_offset + sprite.info().anim_id,
+                    anim::global_anim_id(sprite.info()),
                     sprite.frame());
         }
 
@@ -300,34 +294,19 @@ namespace mse
 
     void RenderingSystem::init_sprite_anim_data()
     {
-        const AnimationSystem& anim_sys = App::priv_ctx().animation_system;
-
-        vector<SpriteAnimationData> anim_datas;
-        anim_datas.reserve(anim::total_anim_count);
-
-        for (uint32_t i = 0; i < anim::sprite_count; ++i)
-        {
-            for (uint32_t j = 0; j < anim::sprite_anim_count(i); ++j)
-            {
-                anim_datas.emplace_back(anim_sys.anim_data({
-                    .sprite_id = static_cast<int>(i),
-                    .anim_id = j
-                }));
-            }
-        }
-
-        sprite_anim_data_.create<SpriteAnimationData>(gl::BufferType::Storage, anim_datas);
+        const SpriteDataRegistry& reg = App::priv_ctx().sprite_data_registry;
+        sprite_anim_data_.create<SpriteAnimationData>(gl::BufferType::Storage, reg.anim_data());
     }
 
     bool RenderingSystem::init_sprite_atlases()
     {
-        const AnimationSystem& anim_sys = App::priv_ctx().animation_system;
+        const SpriteDataRegistry& reg = App::priv_ctx().sprite_data_registry;
 
         vector<string> atlas_paths;
-        atlas_paths.reserve(anim_sys.atlas_count());
+        atlas_paths.reserve(reg.atlas_count());
 
         char buf[256];
-        for (size_t i = 0; i < anim_sys.atlas_count(); ++i)
+        for (size_t i = 0; i < reg.atlas_count(); ++i)
         {
             snprintf(buf, sizeof(buf), "texture_packer/atlas_%zu.png", i);
             atlas_paths.emplace_back(buf);

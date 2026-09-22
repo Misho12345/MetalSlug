@@ -21,14 +21,14 @@ namespace mse::gl
         const string vert_src = FileIO::read(vertex);
         if (vert_src.empty())
         {
-            printf("failed to read vertex shader source\n");
+            printf("failed to read vertex shader source %s\n", vert_src.data());
             return false;
         }
 
         const string frag_src = FileIO::read(fragment);
         if (frag_src.empty())
         {
-            printf("failed to read fragment shader source\n");
+            printf("failed to read fragment shader source %s\n", frag_src.data());
             return false;
         }
 

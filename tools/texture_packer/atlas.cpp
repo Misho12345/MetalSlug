@@ -88,60 +88,55 @@ void Atlas::save(const char* atlas_path) const
     delete[] data;
 }
 
-void Atlas::save_masks(const mse::span<const Atlas> atlases, const char* mask_path)
+void save_masks(const mse::span<const Box> boxes, const char* mask_path)
 {
     size_t total_size = 0;
 
-    for (const Atlas& atlas : atlases)
+    for (const Box& box : boxes)
     {
-        for (const Box* box : atlas.boxes_)
-        {
-            total_size += (box->w * box->h + 7) / 8;
-        }
+        // round up to the count of bytes
+        total_size += (box.w * box.h + 7) / 8;
     }
 
     uint8_t* data = new uint8_t[total_size]();
     uint8_t* dp = data;
     int bit = 0;
 
-    for (const Atlas& atlas : atlases)
+    for (const Box& box : boxes)
     {
-        for (const Box* box : atlas.boxes_)
+        // for each box go through each frame and put the data of the frames sequentially
+        // that way when loaded each frame will have a pointer for the it's mask, and not have to find
+        // the parts of the mask for the specific frame in the entire animation data block
+
+        const uint32_t* p       = box.data;
+        const size_t    frame_w = box.w / box.frame_count;
+
+        for (int f = 0; f < box.frame_count; ++f)
         {
-            // for each box go through each frame and put the data of the frames sequentially
-            // that way when loaded each frame will have a pointer for the it's mask, and not have to find
-            // the parts of the mask for the specific frame in the entire animation data block
-
-            const uint32_t* p       = box->data;
-            const size_t    frame_w = box->w / box->frame_count;
-
-            for (int f = 0; f < box->frame_count; ++f)
+            const size_t off_x = frame_w * f;
+            for (int y = 0; y < box.h; ++y)
             {
-                const size_t off_x = frame_w * f;
-                for (int y = 0; y < box->h; ++y)
+                for (int x = 0; x < frame_w; ++x)
                 {
-                    for (int x = 0; x < frame_w; ++x)
+                   const uint32_t v = p[off_x + x + y * box.w];
+
+                    // if more than half solid - mark solid and advance to the next bit
+                    if (((v & 0xff000000) >> 24) > 128) *dp |= 1 << bit;
+
+                    // same as & 0b1000 - just checks if it got to 8 (totally necessary)
+                    if (++bit & 8)
                     {
-                       const uint32_t v = p[off_x + x + y * box->w];
-
-                        // if more than half solid - mark solid and advance to the next bit
-                        if (((v & 0xff000000) >> 24) > 128) *dp |= 1 << bit;
-
-                        // same as & 0b1000 - just checks if it got to 8 (totally necessary)
-                        if (++bit & 8)
-                        {
-                            bit = 0;
-                            ++dp;
-                        }
+                        bit = 0;
+                        ++dp;
                     }
                 }
+            }
 
-                // start the next box from a new byte
-                if (bit)
-                {
-                    bit = 0;
-                    ++dp;
-                }
+            // start the next box from a new byte
+            if (bit)
+            {
+                bit = 0;
+                ++dp;
             }
         }
     }
