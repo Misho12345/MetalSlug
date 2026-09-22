@@ -1,6 +1,6 @@
 #include "mse/pch.hpp"
 
-#include "mse/input.hpp"
+#include "mse/input/input.hpp"
 #include "mse/app.hpp"
 #include "priv_ctx.hpp"
 

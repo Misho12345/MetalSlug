@@ -6,18 +6,22 @@
 #endif
 
 
-#include "window.hpp"
-#include "mse/input.hpp"
+#include "platform/window.hpp"
 
-#include "physics_system.hpp"
-#include "animation_system.hpp"
-#include "rendering_system.hpp"
+#include "mse/input/input.hpp"
 
-#include "post_processor.hpp"
+#include "collision/tile_map.hpp"
+#include "collision/collision_system.hpp"
+
+#include "render/animation_system.hpp"
+#include "render/rendering_system.hpp"
 
 #ifndef NDEBUG
-#include "debug_ui.hpp"
+#include "debug/debug_ui.hpp"
+#include "debug/debug_draw.hpp"
 #endif
+
+#include "render/post_processor.hpp"
 
 
 namespace mse
@@ -30,12 +34,15 @@ namespace mse
         // but to just use the static interface
         Input input;
 
-        PhysicsSystem   physics_system;
+        TileMap         tile_map;
+        CollisionSystem physics_system;
+
         AnimationSystem animation_system;
         RenderingSystem rendering_system;
 
         #ifndef NDEBUG
         DebugUI debug_ui;
+        DebugDraw debug_draw;
         #endif
 
         PostProcessor post_processor;

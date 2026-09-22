@@ -1,5 +1,5 @@
 #pragma once
-#include "api.hpp"
+#include "mse/api.hpp"
 #include "components.hpp"
 #include "component_pool.hpp"
 
@@ -98,16 +98,14 @@ namespace mse
         const ComponentPool<C>& pool() const
         {
             if constexpr (std::same_as<C, Transform>) return transform_pool_;
-            else if constexpr (std::same_as<C, Rigidbody>) return rigidbody_pool_;
-            else if constexpr (std::same_as<C, BoxCollider>) return collider_pool_;
+            else if constexpr (std::same_as<C, SpriteCollider>) return sprite_collider_pool_;
             else if constexpr (std::same_as<C, SpriteRenderer>) return sprite_renderer_pool_;
             else static_assert(always_false<C>, "Component type not supported in Scene");
         }
 
     private:
         ComponentPool<Transform>      transform_pool_;
-        ComponentPool<Rigidbody>      rigidbody_pool_;
-        ComponentPool<BoxCollider>    collider_pool_;
+        ComponentPool<SpriteCollider> sprite_collider_pool_;
         ComponentPool<SpriteRenderer> sprite_renderer_pool_;
 
         vector<uint8_t>  versions_{};

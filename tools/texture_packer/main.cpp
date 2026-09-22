@@ -2,7 +2,6 @@
 
 #include <cstring>
 #include <cassert>
-#include <cstdio>
 
 #include <stb_image.h>
 #include <nlohmann/json.hpp>
@@ -16,7 +15,9 @@ using nlohmann::json;
 // <sprite_idx_1> <anim_count_1> <animation_1_0> <frame_count_1_0>, ... <animation_1_N> <frame_count_1_N>,
 // ...
 // --out <out_dir>
-static void validate_args(const int argc, const char** argv)
+static void validate_args(
+    [[maybe_unused]] const int argc,
+    [[maybe_unused]] const char** argv)
 {
     assert(argc >= 3);
     assert(strcmp(argv[argc - 2], "--out") == 0);
@@ -130,7 +131,11 @@ int main(const int argc, const char** argv)
         atlas.save(path);
     }
 
-    snprintf(path, sizeof(path), "%s/meta.json", argv[argc - 1]);
+    snprintf(path, sizeof(path), "%s/mask", argv[argc - 1]);
+    printf("saving %s\n", path);
+    Atlas::save_masks(atlases, path);
 
+    snprintf(path, sizeof(path), "%s/meta.json", argv[argc - 1]);
+    printf("saving %s\n", path);
     mse::FileIO::write(path, j.dump(2).c_str());
 }

@@ -1,7 +1,7 @@
 #pragma once
-#include "pch.hpp"
-#include "input.hpp"
-#include "scene.hpp"
+#include "mse/pch.hpp"
+#include "input/input.hpp"
+#include "ecs/scene.hpp"
 
 namespace mse
 {

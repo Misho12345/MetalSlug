@@ -1,7 +1,7 @@
 #include "mse/pch.hpp"
 
 #include "mse/app.hpp"
-#include "mse/input.hpp"
+#include "mse/input/input.hpp"
 #include "priv_ctx.hpp"
 
 namespace mse
@@ -44,7 +44,6 @@ namespace mse
             return;
         }
 
-
         #ifndef NDEBUG
         priv_ctx_->debug_ui.init();
         #endif
@@ -54,6 +53,13 @@ namespace mse
             "assets/shaders/post_processing.frag"))
         {
             printf("failed to init post processor\n");
+            ok_ = false;
+            return;
+        }
+
+        if (!priv_ctx_->tile_map.load("assets/tile_maps/mission1.csv"))
+        {
+            printf("couldn't load tile map\n");
             ok_ = false;
             return;
         }
@@ -92,15 +98,20 @@ namespace mse
             static float accumulator = 0.0f;
             accumulator += dt;
 
-            static bool debug_draw = false;
-            if (Input::down(Key::Ctrl) && Input::just_pressed(Key::B)) debug_draw = !debug_draw;
+            #ifndef NDEBUG
+            if (Input::down(Key::Ctrl) &&
+                Input::just_pressed(Key::B))
+                priv_ctx_->debug_draw.toggle();
 
-            uint32_t c = PhysicsSystem::MAX_STEPS;
-            while (c && accumulator > PhysicsSystem::FIXED_TIME_STEP)
+            priv_ctx_->debug_draw.draw(ctx_->scene);
+            #endif
+
+            uint32_t c = CollisionSystem::MAX_STEPS;
+            while (c && accumulator > CollisionSystem::FIXED_TIME_STEP)
             {
                 fixed_update();
-                priv_ctx_->physics_system.step(ctx_->scene, debug_draw);
-                accumulator -= PhysicsSystem::FIXED_TIME_STEP;
+                priv_ctx_->physics_system.step(ctx_->scene);
+                accumulator -= CollisionSystem::FIXED_TIME_STEP;
                 --c;
             }
 

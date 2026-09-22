@@ -1,6 +1,6 @@
 #pragma once
 #include "mse/pch.hpp"
-#include "mse/scene.hpp"
+#include "mse/ecs/scene.hpp"
 
 namespace mse
 {

@@ -1,7 +1,7 @@
 #include "mse/pch.hpp"
 #include "animation_system.hpp"
 
-#include "mse/components.hpp"
+#include "mse/ecs/components.hpp"
 #include "mse/app.hpp"
 
 #define ERR_MSG(MSG) "cannot load sprites, invalid json format - " MSG ";\n"

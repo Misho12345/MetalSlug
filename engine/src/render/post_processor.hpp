@@ -6,7 +6,7 @@
 #include "gl/shader.hpp"
 #include "gl/texture_2d.hpp"
 
-#include "window.hpp"
+#include "platform/window.hpp"
 
 namespace mse
 {

@@ -1,5 +1,5 @@
 #include "mse/pch.hpp"
-#include "mse/scene.hpp"
+#include "mse/ecs/scene.hpp"
 
 namespace mse
 {
@@ -37,8 +37,7 @@ namespace mse
         free_entities_.emplace_back(entity.idx());
 
         transform_pool_.remove(entity);
-        collider_pool_.remove(entity);
-        rigidbody_pool_.remove(entity);
+        sprite_renderer_pool_.remove(entity);
         sprite_renderer_pool_.remove(entity);
     }
 }

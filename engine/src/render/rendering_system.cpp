@@ -197,7 +197,7 @@ namespace mse
 
             const Transform& transform = scene.get<Transform>(entities[i]);
 
-            // TODO: fix for rotated and parallax scrolling and factor in camera pos
+            // TODO: fix parallax scrolling and factor in camera pos
             if (!(transform.bounds() & aabb({}, Target::RESOLUTION))) continue;
 
             size_t idx = layers_.find(sprite.layer);

@@ -19,8 +19,8 @@ namespace
         const bool d = Input::down(Key::D);
 
         return glm::ivec2{
-            static_cast<float>(d) - static_cast<float>(a),
-            static_cast<float>(s) - static_cast<float>(w)
+            static_cast<int>(d) - static_cast<int>(a),
+            static_cast<int>(s) - static_cast<int>(w)
         };
     }
 }
@@ -45,7 +45,7 @@ void Game::init()
         glm::ivec2{ 32, 32 }
     );
 
-    Transform& gr_tr = scene.set<Transform>(
+    scene.set<Transform>(
         ground,
         glm::ivec2{ Target::RESOLUTION.x / 2, Target::RESOLUTION.y - 16 },
         glm::ivec2{ Target::RESOLUTION.x, 16 }
@@ -55,9 +55,8 @@ void Game::init()
     scene.set<SpriteRenderer>(player_body, player::Body::Idle);
     scene.set<SpriteRenderer>(ground, Enemy::Slon);
 
-    scene.set<Rigidbody>(player_legs);
-    scene.set<BoxCollider>(player_legs, glm::ivec2{ 0, -32 }, glm::ivec2{ 32, 64 });
-    scene.set<BoxCollider>(ground, glm::ivec2{}, gr_tr.scale);
+    scene.set<SpriteCollider>(player_legs, glm::ivec2{ 0, -32 }, glm::ivec2{ 32, 64 });
+    scene.set<SpriteCollider>(ground, ground);
 }
 
 void Game::update(const float)
@@ -91,6 +90,6 @@ void Game::fixed_update()
 
     if (input.x != 0.0f || input.y != 0.0f)
     {
-        s.get<Rigidbody>(player_legs).apply_force(input * 100.0f);
+        s.get<SpriteCollider>(player_legs).apply_force(input * 100.0f);
     }
 }

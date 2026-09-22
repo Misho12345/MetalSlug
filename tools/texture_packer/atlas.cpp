@@ -18,16 +18,15 @@ Box::Box(const char* _image_path, const int _sprite_id, const int _anim_id, cons
     data = reinterpret_cast<uint32_t*>(stbi_load(image_path, &w, &h, &t, 4));
 }
 
-Box::~Box()
-{
-    if (data) stbi_image_free(data);
-}
+Box::~Box() { if (data) stbi_image_free(data); }
 
 Box::Box(Box&& other) noexcept :
     image_path{ std::exchange(other.image_path, nullptr) },
     data{ std::exchange(other.data, nullptr) },
-    x{ other.x }, y{ other.y },
-    w{ other.w }, h{ other.h },
+    x{ other.x },
+    y{ other.y },
+    w{ other.w },
+    h{ other.h },
     sprite_id{ other.sprite_id },
     anim_id{ other.anim_id },
     frame_count{ other.frame_count },
@@ -40,29 +39,29 @@ Box& Box::operator=(Box&& other) noexcept
     if (data) stbi_image_free(data);
 
     image_path = std::exchange(other.image_path, nullptr);
-    data = std::exchange(other.data, nullptr);
+    data       = std::exchange(other.data, nullptr);
 
-    x = other.x; y = other.y;
-    w = other.w; h = other.h;
+    x = other.x;
+    y = other.y;
+    w = other.w;
+    h = other.h;
 
-    sprite_id = other.sprite_id;
-    anim_id = other.anim_id;
+    sprite_id   = other.sprite_id;
+    anim_id     = other.anim_id;
     frame_count = other.frame_count;
-    rotated = other.rotated;
+    rotated     = other.rotated;
 
     return *this;
 }
 
 
-void Atlas::add(Box* box)
-{
-    boxes_.emplace_back(box);
-}
+void Atlas::add(Box* box) { boxes_.emplace_back(box); }
 
-void Atlas::save(const char* path) const
+void Atlas::save(const char* atlas_path) const
 {
     uint32_t* data = new uint32_t[SIZE * SIZE]();
 
+    // save to texture atlas
     for (const Box* box : boxes_)
     {
         const uint32_t* p = box->data;
@@ -72,10 +71,7 @@ void Atlas::save(const char* path) const
             // copy pixel by pixel because it's rotated
             for (int x = 0; x < box->h; ++x)
             {
-                for (int y = 0; y < box->w; ++y, ++p)
-                {
-                    data[(box->x + x + (box->y + y) * SIZE)] = *p;
-                }
+                for (int y = 0; y < box->w; ++y, ++p) { data[(box->x + x + (box->y + y) * SIZE)] = *p; }
             }
         }
         else
@@ -88,6 +84,68 @@ void Atlas::save(const char* path) const
         }
     }
 
-    stbi_write_png(path, SIZE, SIZE, sizeof(uint32_t), data, SIZE * sizeof(uint32_t));
+    stbi_write_png(atlas_path, SIZE, SIZE, sizeof(uint32_t), data, SIZE * sizeof(uint32_t));
+    delete[] data;
+}
+
+void Atlas::save_masks(const mse::span<const Atlas> atlases, const char* mask_path)
+{
+    size_t total_size = 0;
+
+    for (const Atlas& atlas : atlases)
+    {
+        for (const Box* box : atlas.boxes_)
+        {
+            total_size += (box->w * box->h + 7) / 8;
+        }
+    }
+
+    uint8_t* data = new uint8_t[total_size]();
+    uint8_t* dp = data;
+    int bit = 0;
+
+    for (const Atlas& atlas : atlases)
+    {
+        for (const Box* box : atlas.boxes_)
+        {
+            // for each box go through each frame and put the data of the frames sequentially
+            // that way when loaded each frame will have a pointer for the it's mask, and not have to find
+            // the parts of the mask for the specific frame in the entire animation data block
+
+            const uint32_t* p       = box->data;
+            const size_t    frame_w = box->w / box->frame_count;
+
+            for (int f = 0; f < box->frame_count; ++f)
+            {
+                const size_t off_x = frame_w * f;
+                for (int y = 0; y < box->h; ++y)
+                {
+                    for (int x = 0; x < frame_w; ++x)
+                    {
+                       const uint32_t v = p[off_x + x + y * box->w];
+
+                        // if more than half solid - mark solid and advance to the next bit
+                        if (((v & 0xff000000) >> 24) > 128) *dp |= 1 << bit;
+
+                        // same as & 0b1000 - just checks if it got to 8 (totally necessary)
+                        if (++bit & 8)
+                        {
+                            bit = 0;
+                            ++dp;
+                        }
+                    }
+                }
+
+                // start the next box from a new byte
+                if (bit)
+                {
+                    bit = 0;
+                    ++dp;
+                }
+            }
+        }
+    }
+
+    mse::FileIO::write(mask_path, { data, total_size });
     delete[] data;
 }

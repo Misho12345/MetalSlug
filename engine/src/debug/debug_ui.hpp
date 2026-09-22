@@ -1,5 +1,5 @@
 #pragma once
-#include "mse/aabb.hpp"
+#include "mse/collision/aabb.hpp"
 #include "mse/pch.hpp"
 
 #ifndef NDEBUG

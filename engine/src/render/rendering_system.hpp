@@ -4,7 +4,7 @@
 #include "gl/buffer.hpp"
 #include "gl/shader.hpp"
 #include "gl/texture_2d.hpp"
-#include "mse/scene.hpp"
+#include "mse/ecs/scene.hpp"
 
 namespace mse
 {

@@ -34,7 +34,9 @@ public:
     ~Atlas() = default;
 
     void add(Box* box);
-    void save(const char* path) const;
+    void save(const char* atlas_path) const;
+
+    static void save_masks(mse::span<const Atlas> atlases, const char* mask_path);
 
 private:
     mse::vector<Box*>  boxes_{ nullptr };

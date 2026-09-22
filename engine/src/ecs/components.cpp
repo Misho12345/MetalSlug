@@ -1,5 +1,7 @@
 #include "mse/pch.hpp"
-#include "mse/components.hpp"
+#include "mse/ecs/components.hpp"
+
+#include "mse/app.hpp"
 
 namespace mse
 {
@@ -35,5 +37,20 @@ namespace mse
         }
 
         frame_ %= frame_count;
+    }
+
+
+
+    SpriteCollider::SpriteCollider(const entity_id id)
+    {
+        const Transform* tr = App::ctx().scene.try_get<Transform>(id);
+        if (!tr) return;
+        size = tr->scale;
+    }
+
+    SpriteCollider::SpriteCollider(const glm::ivec2 _offset, const glm::ivec2 _size)
+    {
+        offset = _offset;
+        size = _size;
     }
 }
