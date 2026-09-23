@@ -191,14 +191,13 @@ namespace mse
         {
             const SpriteRenderer& sprite = sprites[i];
 
-            if (sprite.hidden ||
-                !scene.has<Transform>(entities[i]))
-                continue;
+            const Transform* tr = scene.try_get<Transform>(entities[i]);
+            const Transform* cam = scene.try_get<Transform>(scene.camera());
 
-            const Transform& transform = scene.get<Transform>(entities[i]);
+            if (sprite.hidden || !tr) continue;
+            assert(cam);
 
-            // TODO: fix parallax scrolling and factor in camera pos
-            if (!(transform.bounds() & aabb({}, Target::RESOLUTION))) continue;
+            if (!(sprite.screen_bounds(*tr, cam->position) & aabb({}, Target::RESOLUTION))) continue;
 
             size_t idx = layers_.find(sprite.layer);
 
@@ -217,9 +216,9 @@ namespace mse
 
             instances_[idx].emplace_back(
                     sprite.parallax_factor,
-                    transform.top_left(),
-                    transform.scale,
-                    transform.rotation,
+                    tr->position,
+                    tr->scale,
+                    tr->rotation,
                     anim::global_anim_id(sprite.info()),
                     sprite.frame());
         }

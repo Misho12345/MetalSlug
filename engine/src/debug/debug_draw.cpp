@@ -19,6 +19,8 @@ namespace mse
     void DebugDraw::draw_colliders(const Scene& scene) const
     {
         const DebugUI& ui = App::priv_ctx().debug_ui;
+        const Transform* cam = scene.try_get<Transform>(scene.camera());
+        if (!cam) return;
 
         const ComponentPool<SpriteCollider>& collider_pool = scene.pool<SpriteCollider>();
 
@@ -31,7 +33,7 @@ namespace mse
         {
             if (const Transform* t = scene.try_get<Transform>(owners[i]))
             {
-                ui.draw_box(colliders[i].bounds(*t), COLLIDER_COLOR);
+                ui.draw_box(colliders[i].bounds(*t) - cam->position, COLLIDER_COLOR);
             }
         }
     }

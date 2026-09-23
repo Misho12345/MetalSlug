@@ -47,105 +47,155 @@ namespace mse
 
     CollisionSystem::CollisionSystem() { objects_.reserve(64); }
 
+    bool CollisionSystem::pp_check(const SpriteData& a, const SpriteData& b)
+    {
+        const SpriteDataRegistry& reg = App::priv_ctx().sprite_data_registry;
+
+        const aabb bounds_a = a.sr.bounds(a.tr);
+        const aabb bounds_b = b.sr.bounds(b.tr);
+
+        const aabb overlap = aabb::overlap(bounds_a, bounds_b);
+
+        if (!overlap) return false;
+
+        const glm::ivec2 size = overlap.size();
+        const glm::ivec2 local_a = overlap.min - bounds_a.min;
+        const glm::ivec2 local_b = overlap.min - bounds_b.min;
+
+        const FrameMask mask_a = reg.mask(a.sr.info(), a.sr.frame());
+        const FrameMask mask_b = reg.mask(b.sr.info(), b.sr.frame());
+
+        for (int y = 0; y < size.y; ++y)
+        {
+            for (int x = 0; x < size.x; x += sizeof(size_t))
+            {
+                const glm::ivec2 coords{ x, y };
+                const int max = size.x - x;
+
+                const size_t block_a = mask_a.range(coords + local_a, max);
+                const size_t block_b = mask_b.range(coords + local_b, max);
+
+                if (block_a & block_b) return true;
+            }
+        }
+
+        return false;
+    }
+
     void CollisionSystem::step(Scene& scene)
     {
-        ComponentData col_data{ scene.pool<SpriteCollider>() };
-        ComponentData transform_data{ scene.pool<Transform>() };
+        ComponentData tr_data{ scene.pool<Transform>() };
+        ComponentData sr_data{ scene.pool<SpriteRenderer>() };
+        ComponentData sc_data{ scene.pool<SpriteCollider>() };
 
-        if (!transform_data || !col_data) return;
+        if (!tr_data || !sc_data) return;
 
         objects_.clear();
 
         // get all dynamic objects
-        for (size_t i = 0; i < col_data.size; ++i)
+        for (size_t i = 0; i < sc_data.size; ++i)
         {
-            Transform* tr = col_data.get_from_idx(i, transform_data);
+            Transform* tr = sc_data.get_from_idx(i, tr_data);
             if (!tr) continue;
-            SpriteCollider& col = col_data.components[i];
+
+            SpriteRenderer* sr = sc_data.get_from_idx(i, sr_data);
+            if (!sr) continue;
+
+            SpriteCollider& col = sc_data.components[i];
 
             // update rb while at it
             // if (col.gravity) rb.acceleration.y += GRAVITY * 10.0f;
             col.velocity += std::exchange(col.acceleration, { 0.0f, 0.0f }) * FIXED_TIME_STEP;
             col.velocity *= 1.0f - col.drag;
 
-            objects_.emplace_back(*tr, col);
+            objects_.emplace_back(*tr, *sr, col);
         }
 
-        vector<float> results = all_sweeps();
-
-        for (size_t i = 0; i < results.size(); ++i)
+        for (SpriteData& obj : objects_)
         {
-            Object& obj = objects_[i];
+            obj.sc.pos_remainder  += obj.sc.velocity * FIXED_TIME_STEP;
 
-            obj.col.pos_remainder += obj.col.velocity * results[i] * FIXED_TIME_STEP;
+            const glm::vec2 floor = glm::floor(obj.sc.pos_remainder);
 
-            const glm::vec2 floor = glm::floor(obj.col.pos_remainder);
-            obj.tr.position       += floor;
-            obj.col.pos_remainder -= floor;
+            obj.tr.position      += floor;
+            obj.sc.pos_remainder -= floor;
         }
+
+        // vector<float> results = all_sweeps();
+        //
+        // for (size_t i = 0; i < results.size(); ++i)
+        // {
+        //     SpriteData& obj = objects_[i];
+        //
+        //     obj.sc.pos_remainder += obj.sc.velocity * results[i] * FIXED_TIME_STEP;
+        //
+        //     const glm::vec2 floor = glm::floor(obj.sc.pos_remainder);
+        //     obj.tr.position       += floor;
+        //     obj.sc.pos_remainder -= floor;
+        // }
     }
 
-    vector<float> CollisionSystem::all_sweeps()
-    {
-        const size_t s = objects_.size();
-
-        // smallest sweep result for every dynamic object with other dynamic objects
-        vector<float> results_dyn;
-        results_dyn.resize(s, 1.0f);
-
-        // indices of the other dynamic object the current sweep is at
-        vector<size_t> other_dyn_idx;
-        other_dyn_idx.resize(s, -1_zu);
-
-        // indices of invalid sweep results for the dynamic objects results, i.e. they need recalculation
-        vector<size_t> invalid;
-        vector<size_t> temp_invalid;
-
-        invalid.reserve(s);
-        temp_invalid.reserve(8);
-
-        // mark all indices "invalid" at the beginning
-        for (size_t i = 0; i < s; ++i) invalid.emplace_back(i);
-
-        while (true)
-        {
-            for (size_t i = 0; i < invalid.size(); ++i)
-            {
-                const size_t  idx1 = invalid[i];
-                const Object& obj1 = objects_[idx1];
-
-                for (size_t j = i; j < invalid.size(); ++j)
-                {
-                    const size_t  idx2 = invalid[j];
-                    const Object& obj2 = objects_[idx2];
-
-                    const float result = sweep(
-                        obj1.col.bounds(obj1.tr), obj1.col.velocity,
-                        obj2.col.bounds(obj2.tr), obj2.col.velocity);
-
-                    // skip if the result is not smaller than both objects
-                    if (result >= results_dyn[idx1] &&
-                        result >= results_dyn[idx2])
-                        continue;
-
-                    if (other_dyn_idx[idx1] != -1_zu) temp_invalid.emplace_back(idx1);
-                    if (other_dyn_idx[idx2] != -1_zu) temp_invalid.emplace_back(idx2);
-
-                    other_dyn_idx[idx1] = idx2;
-                    other_dyn_idx[idx2] = idx1;
-
-                    results_dyn[idx1] = result;
-                    results_dyn[idx2] = result;
-                }
-            }
-
-            if (temp_invalid.empty()) break;
-            swap(temp_invalid, invalid);
-            temp_invalid.clear();
-        }
-
-        return results_dyn;
-    }
+    // vector<float> CollisionSystem::all_sweeps()
+    // {
+    //     const size_t s = objects_.size();
+    //
+    //     // smallest sweep result for every dynamic object with other dynamic objects
+    //     vector<float> results_dyn;
+    //     results_dyn.resize(s, 1.0f);
+    //
+    //     // indices of the other dynamic object the current sweep is at
+    //     vector<size_t> other_dyn_idx;
+    //     other_dyn_idx.resize(s, -1_zu);
+    //
+    //     // indices of invalid sweep results for the dynamic objects results, i.e. they need recalculation
+    //     vector<size_t> invalid;
+    //     vector<size_t> temp_invalid;
+    //
+    //     invalid.reserve(s);
+    //     temp_invalid.reserve(8);
+    //
+    //     // mark all indices "invalid" at the beginning
+    //     for (size_t i = 0; i < s; ++i) invalid.emplace_back(i);
+    //
+    //     while (true)
+    //     {
+    //         for (size_t i = 0; i < invalid.size(); ++i)
+    //         {
+    //             const size_t  idx1 = invalid[i];
+    //             const SpriteData& obj1 = objects_[idx1];
+    //
+    //             for (size_t j = i; j < invalid.size(); ++j)
+    //             {
+    //                 const size_t  idx2 = invalid[j];
+    //                 const SpriteData& obj2 = objects_[idx2];
+    //
+    //                 const float result = sweep(
+    //                     obj1.sc.bounds(obj1.tr), obj1.sc.velocity,
+    //                     obj2.sc.bounds(obj2.tr), obj2.sc.velocity);
+    //
+    //                 // skip if the result is not smaller than both objects
+    //                 if (result >= results_dyn[idx1] &&
+    //                     result >= results_dyn[idx2])
+    //                     continue;
+    //
+    //                 if (other_dyn_idx[idx1] != -1_zu) temp_invalid.emplace_back(idx1);
+    //                 if (other_dyn_idx[idx2] != -1_zu) temp_invalid.emplace_back(idx2);
+    //
+    //                 other_dyn_idx[idx1] = idx2;
+    //                 other_dyn_idx[idx2] = idx1;
+    //
+    //                 results_dyn[idx1] = result;
+    //                 results_dyn[idx2] = result;
+    //             }
+    //         }
+    //
+    //         if (temp_invalid.empty()) break;
+    //         swap(temp_invalid, invalid);
+    //         temp_invalid.clear();
+    //     }
+    //
+    //     return results_dyn;
+    // }
 
 
     float CollisionSystem::sweep(

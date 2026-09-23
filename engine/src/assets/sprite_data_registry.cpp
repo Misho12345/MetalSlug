@@ -5,9 +5,8 @@
 
 namespace mse
 {
-    SpriteDataRegistry::SpriteDataRegistry()
+    SpriteDataRegistry::SpriteDataRegistry() : anim_data_(anim::total_anim_count)
     {
-        anim_data_.reserve(anim::total_anim_count);
         mask_offsets_.reserve(anim::total_frame_count);
     }
 
@@ -93,9 +92,9 @@ namespace mse
 
                 SpriteAnimationData& data = anim_data_[anim::global_anim_id(info)];
 
-                data.offset      = { v["x"].get<uint32_t>(), v["y"].get<uint32_t>() };
-                data.image_size  = { v["w"].get<uint32_t>(), v["h"].get<uint32_t>() };
                 data.frame_count = anim::frame_count(info);
+                data.offset      = { v["x"].get<uint32_t>(), v["y"].get<uint32_t>() };
+                data.frame_size  = { v["w"].get<uint32_t>() / data.frame_count, v["h"].get<uint32_t>() };
                 data.atlas_idx   = std::stoi(atlas.key());
             }
         }
@@ -117,12 +116,11 @@ namespace mse
         for (uint32_t anim_id = 0; anim_id < anim::total_anim_count; ++anim_id)
         {
             const SpriteAnimationData& data = anim_data_[anim_id];
-            const glm::ivec2 frame_size{ data.image_size.x / data.frame_count, data.image_size.y };
 
             for (uint32_t frame = 0; frame < data.frame_count; ++frame)
             {
                 mask_offsets_.emplace_back(offset);
-                offset += (frame_size.x * frame_size.y + 7) / 8;
+                offset += (data.frame_size.x * data.frame_size.y + 7) / 8;
             }
         }
 
@@ -130,13 +128,13 @@ namespace mse
     }
 
 
-    FrameMask SpriteDataRegistry::mask(const anim::Info info, const uint32_t frame)
+    FrameMask SpriteDataRegistry::mask(const anim::Info info, const uint32_t frame) const
     {
         const SpriteAnimationData& data = anim_data(info);
 
         return {
             .origin = masks_buf_.data() + mask_offsets_[anim::global_frame_id(info, frame)],
-            .size = glm::ivec2{ data.image_size.x / data.frame_count, data.image_size.y }
+            .size = data.frame_size
         };
     }
 

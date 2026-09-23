@@ -11,16 +11,38 @@ namespace mse
      */
     struct SpriteAnimationData final
     {
-        glm::vec2 offset;
-        glm::vec2 image_size;
-        uint32_t  frame_count;
-        uint32_t  atlas_idx;
+        glm::ivec2 offset;
+        glm::ivec2 frame_size;
+        uint32_t   frame_count;
+        uint32_t   atlas_idx;
     };
 
     struct FrameMask final
     {
         const uint8_t* origin;
+
+        // struct will be 16 bytes either way because of padding, might as well store the height for assert checks
         glm::ivec2 size;
+
+        // gets a strip from the mask to compare with another one
+        size_t range(const glm::ivec2 coords, const uint32_t max_size) const
+        {
+            assert(
+                coords.x >= 0 && coords.x < size.x &&
+                coords.y >= 0 && coords.y < size.y);
+
+            assert(size.x - coords.x - 1u <= max_size); // does not leak to the next row
+
+            const size_t idx = coords.x + coords.y * size.x;
+            assert(idx % 8); // starts from the beginning of a byte
+
+            const size_t ret = *reinterpret_cast<const size_t*>(origin + idx / 8);
+
+            if (max_size >= sizeof(size_t) * 8) return ret;
+
+            // max_size = 61 -> 3 to discard -> 0b1000 -> 0b111 -> 0b11...11000
+            return ret & ~((1 << (sizeof(size_t) * 8 - max_size)) - 1);
+        }
     };
 
     /**
@@ -39,7 +61,7 @@ namespace mse
         // load the animation data and masks buffer from texture_packer output
         bool init();
 
-        [[nodiscard]] FrameMask mask(anim::Info info, uint32_t frame);
+        [[nodiscard]] FrameMask mask(anim::Info info, uint32_t frame) const;
         [[nodiscard]] const SpriteAnimationData& anim_data(anim::Info info) const;
 
         const vector<SpriteAnimationData>& anim_data() const { return anim_data_; }

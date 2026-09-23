@@ -1,6 +1,7 @@
 #include "mse/pch.hpp"
 #include "mse/ecs/components.hpp"
 
+#include "priv_ctx.hpp"
 #include "mse/app.hpp"
 
 namespace mse
@@ -39,18 +40,39 @@ namespace mse
         frame_ %= frame_count;
     }
 
+    glm::ivec2 SpriteRenderer::size() const
+    {
+        return App::priv_ctx().sprite_data_registry.anim_data(info_).frame_size;
+    }
+
+    aabb SpriteRenderer::bounds(const Transform& tr) const
+    {
+        const glm::ivec2 half_size = size() * tr.scale / 2;
+        return aabb{ -half_size, +half_size } + tr.position;
+    }
+
+    aabb SpriteRenderer::screen_bounds(const Transform& tr, const glm::ivec2 cam_pos) const
+    {
+        return bounds(tr) - glm::ivec2(glm::vec2(cam_pos) * parallax_factor);
+    }
 
 
     SpriteCollider::SpriteCollider(const entity_id id)
     {
-        const Transform* tr = App::ctx().scene.try_get<Transform>(id);
-        if (!tr) return;
-        size = tr->scale;
+        const SpriteRenderer* sr = App::ctx().scene.try_get<SpriteRenderer>(id);
+        if (!sr) return;
+        size = sr->size();
     }
 
     SpriteCollider::SpriteCollider(const glm::ivec2 _offset, const glm::ivec2 _size)
     {
         offset = _offset;
         size = _size;
+    }
+
+    aabb SpriteCollider::bounds(const Transform& tr) const
+    {
+        const glm::ivec2 half_size = size * tr.scale / 2;
+        return aabb{ -half_size, +half_size } + (offset + tr.position);
     }
 }

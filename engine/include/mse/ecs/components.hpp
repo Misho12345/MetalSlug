@@ -8,20 +8,8 @@ namespace mse
     struct Transform final
     {
         glm::ivec2 position{ 0, 0 };
-        glm::ivec2 scale{ 32, 32 };
+        glm::ivec2 scale{ 1 };
         float      rotation{ 0.0f };
-
-        [[nodiscard]] constexpr glm::ivec2 top_left() const { return position - scale / 2; }
-        [[nodiscard]] constexpr glm::ivec2 bottom_right() const { return position + scale / 2; }
-
-        [[nodiscard]]
-        aabb bounds() const
-        {
-            return aabb{
-                .min = top_left(),
-                .max = bottom_right()
-            };
-        }
     };
 
     struct MSE_API SpriteRenderer final
@@ -50,6 +38,10 @@ namespace mse
         void stop();
         void update(float dt, uint32_t frame_count);
 
+        [[nodiscard]] glm::ivec2 size() const;
+        [[nodiscard]] aabb bounds(const Transform& tr) const;
+        [[nodiscard]] aabb screen_bounds(const Transform& tr, glm::ivec2 cam_pos) const;
+
     private:
         void play(uint32_t anim_id, bool restart_if_same);
 
@@ -67,11 +59,7 @@ namespace mse
         void apply_force(const glm::vec2 force) { acceleration += force / mass; }
 
         [[nodiscard]]
-        aabb bounds(const Transform& tr) const
-        {
-            const glm::ivec2 top_left = tr.top_left() + offset;
-            return aabb{ top_left, top_left + size };
-        }
+        aabb bounds(const Transform& tr) const;
 
         glm::vec2 velocity{ 0.0f, 0.0f };
         glm::vec2 acceleration{ 0.0f, 0.0f };

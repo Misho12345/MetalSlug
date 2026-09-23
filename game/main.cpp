@@ -9,7 +9,7 @@ using namespace mse::literals;
 namespace
 {
     entity_id player_legs, player_body;
-    entity_id ground;
+    entity_id slon;
 
     glm::ivec2 get_input()
     {
@@ -31,51 +31,54 @@ void Game::init()
 
     player_legs = scene.create_entity();
     player_body = scene.create_entity();
-    ground      = scene.create_entity();
+    slon        = scene.create_entity();
 
-    const Transform& legs_tr = scene.set<Transform>(
-        player_legs,
-        glm::ivec2{ Target::RESOLUTION.x / 2, 64 },
-        glm::ivec2{ 32, 32 }
-    );
-
-    scene.set<Transform>(
-        player_body,
-        legs_tr.position - glm::ivec2{ 0, 32 },
-        glm::ivec2{ 32, 32 }
-    );
-
-    scene.set<Transform>(
-        ground,
-        glm::ivec2{ Target::RESOLUTION.x / 2, Target::RESOLUTION.y - 16 },
-        glm::ivec2{ Target::RESOLUTION.x, 16 }
-    );
+    scene.set<Transform>(player_legs, glm::ivec2{ 150, 64 });
+    scene.set<Transform>(player_body);
+    scene.set<Transform>(slon, glm::ivec2{ 160, 150 });
 
     scene.set<SpriteRenderer>(player_legs, player::Legs::Idle);
     scene.set<SpriteRenderer>(player_body, player::Body::Idle);
-    scene.set<SpriteRenderer>(ground, Enemy::Slon);
+    scene.set<SpriteRenderer>(slon, Enemy::Slon);
 
-    scene.set<SpriteCollider>(player_legs, glm::ivec2{ 0, -32 }, glm::ivec2{ 32, 64 });
-    scene.set<SpriteCollider>(ground, ground);
+    scene.set<SpriteCollider>(player_legs, player_legs);
+    scene.set<SpriteCollider>(player_body, player_body);
+    scene.set<SpriteCollider>(slon, slon);
 }
 
 void Game::update(const float)
 {
     Scene& s = ctx().scene;
 
+    Transform& legs = s.get<Transform>(player_legs);
+    Transform& body = s.get<Transform>(player_body);
+
+    SpriteRenderer& legs_sr = s.get<SpriteRenderer>(player_legs);
     SpriteRenderer& body_sr = s.get<SpriteRenderer>(player_body);
+
+    body.position = legs.position - glm::ivec2{ 0, (legs_sr.size().y * legs.scale.y + body_sr.size().y * body.scale.y) / 2 };
 
     if (Input::just_pressed(Key::Space)) body_sr.play(player::Body::Drinking);
     else if (Input::just_released(Key::Space)) body_sr.play(player::Body::Tired);
 
-    s.get<Transform>(player_body).position =
-            s.get<Transform>(player_legs).position -
-            glm::ivec2{ 0, 32 };
-
     if (Input::just_pressed(Key::Enter))
     {
-        Transform& tr = s.get<Transform>(player_legs);
-        printf("%f, %f\n", static_cast<double>(tr.position.x), static_cast<double>(tr.position.y));
+        printf(
+            "%f, %f\n",
+            static_cast<double>(legs.position.x),
+            static_cast<double>(legs.position.y));
+    }
+
+    if (Input::just_pressed(Key::Minus))
+    {
+        legs.scale = glm::max(legs.scale - 1, glm::ivec2{ 1 });
+        body.scale = glm::max(body.scale - 1, glm::ivec2{ 1 });
+    }
+
+    if (Input::just_pressed(Key::Equal))
+    {
+        legs.scale = glm::max(legs.scale + 1, glm::ivec2{ 1 });
+        body.scale = glm::max(body.scale + 1, glm::ivec2{ 1 });
     }
 
     // temporary, will implement a cross platform sleep later

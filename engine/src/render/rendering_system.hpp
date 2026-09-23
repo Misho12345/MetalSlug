@@ -43,9 +43,9 @@ namespace mse
         {
             glm::vec2 parallax_factor;
 
-            glm::vec2 position;
-            glm::vec2 scale;
-            float     rotation;
+            glm::ivec2 position;
+            glm::ivec2 scale;
+            float      rotation;
 
             uint32_t  anim_idx;
             uint32_t  frame_idx;

@@ -30,22 +30,24 @@ namespace mse
         void step(Scene& scene);
 
     private:
-        struct Object final
+        struct SpriteData final
         {
             Transform& tr;
-            SpriteCollider& col;
+            SpriteRenderer& sr;
+            SpriteCollider& sc;
         };
 
         CollisionSystem();
 
-        vector<float> all_sweeps();
+        // performs a pixel perfect check using
+        static bool pp_check(const SpriteData& a, const SpriteData& b);
 
         // returns the time of collision (max 1.0f)
         static float sweep(
             aabb bounds_a, glm::vec2 vel_a,
             aabb bounds_b, glm::vec2 vel_b);
 
-        vector<Object> objects_;
+        vector<SpriteData> objects_;
         float time_{ 0.0f };
 
         friend ::mse::PrivCtx;
