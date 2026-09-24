@@ -33,7 +33,7 @@ namespace mse
             });
     }
 
-    void Input::update()
+    void Input::clear()
     {
         memset(pressed_released_, 0, sizeof(pressed_released_));
     }

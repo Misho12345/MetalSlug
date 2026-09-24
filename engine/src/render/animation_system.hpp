@@ -21,7 +21,7 @@ namespace mse
         AnimationSystem& operator=(const AnimationSystem&) = delete;
         AnimationSystem& operator=(AnimationSystem&&)      = delete;
 
-        void update(Scene& scene, float dt) const;
+        void update(Scene& scene) const;
 
     private:
         AnimationSystem() = default;

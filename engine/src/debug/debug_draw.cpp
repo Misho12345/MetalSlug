@@ -31,9 +31,25 @@ namespace mse
 
         for (size_t i = 0; i < owners.size(); ++i)
         {
-            if (const Transform* t = scene.try_get<Transform>(owners[i]))
+            const Transform* t = scene.try_get<Transform>(owners[i]);
+            if (!t) continue;
+
+            ui.draw_box(colliders[i].bounds(*t) - cam->position, HITBOX_COLOR);
+
+            if (const SpriteRenderer* sr = scene.try_get<SpriteRenderer>(owners[i]))
             {
-                ui.draw_box(colliders[i].bounds(*t) - cam->position, COLLIDER_COLOR);
+                aabb bounds = sr->screen_bounds(*t, cam->position);
+                FrameMask mask = App::priv_ctx().sprite_data_registry.mask(sr->info(), sr->frame());
+
+                for (int y = bounds.min.y; y < bounds.max.y; y += t->scale.y)
+                {
+                    for (int x = bounds.min.x; x < bounds.max.x; x += t->scale.x)
+                    {
+                        glm::ivec2 coords{ x, y };
+                        if (mask[(coords - bounds.min) / t->scale])
+                            ui.draw_box({ coords, coords + t->scale }, PIXEL_COLOR, 1.0f);
+                    }
+                }
             }
         }
     }

@@ -45,7 +45,7 @@ namespace mse
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
 
-    void DebugUI::draw_box(const aabb box, const glm::u8vec4 color) const
+    void DebugUI::draw_box(const aabb box, const glm::u8vec4 color, const float thickness) const
     {
         if (!(box & aabb{ {}, Target::RESOLUTION })) return;
 
@@ -58,7 +58,7 @@ namespace mse
 
         ImGui::GetForegroundDrawList()->AddRect(
             to_vec2(rel.min), to_vec2(rel.max),
-            to_imu32(color), 0.0f, {}, 5.0f);
+            to_imu32(color), 0.0f, {}, thickness);
     }
 }
 

@@ -49,12 +49,12 @@ namespace mse::gl
     {
         if (id_)
         {
-            glDeleteBuffers(1, &id_);
             if (mapped_ptr_)
             {
                 glUnmapNamedBuffer(id_);
                 mapped_ptr_ = nullptr;
             }
+            glDeleteBuffers(1, &id_);
         }
 
         id_ = 0;

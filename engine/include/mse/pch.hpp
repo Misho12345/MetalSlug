@@ -70,7 +70,7 @@ namespace mse
 
     static_assert(
         std::same_as<std::remove_cvref_t<decltype(Target::RESOLUTION)>, glm::ivec2> &&
-        std::same_as<std::remove_cvref_t<decltype(Target::FRAME_TIME)>, float> &&
+        std::same_as<std::remove_cvref_t<decltype(Target::FRAME_TIME)>, double> &&
         std::same_as<std::remove_cvref_t<decltype(Target::PAR)>, float> &&
         std::same_as<std::remove_cvref_t<decltype(Target::TILE_SIZE)>, glm::ivec2> &&
         std::same_as<std::remove_cvref_t<decltype(Target::DAR)>, float>,

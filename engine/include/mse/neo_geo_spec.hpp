@@ -9,7 +9,7 @@ namespace mse
         static constexpr glm::ivec2 RESOLUTION{ 304, 224 };
 
         // 264 / 15625
-        static constexpr float FRAME_TIME{ 0.016896f };
+        static constexpr double FRAME_TIME{ 0.016896 };
 
         // pixel aspect ratio
         static constexpr float PAR{ 14.0f / 15.0f };

@@ -27,7 +27,7 @@ namespace mse
         void begin_frame() const;
         void render() const;
 
-        void draw_box(aabb box, glm::u8vec4 color) const;
+        void draw_box(aabb box, glm::u8vec4 color, float thickness = 5.0f) const;
 
     private:
         DebugUI() = default;

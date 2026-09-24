@@ -78,51 +78,54 @@ namespace mse
             return;
         }
 
-        float time = static_cast<float>(glfwGetTime());
+        double time = glfwGetTime();
 
         while (!priv_ctx_->window.should_close())
         {
-            priv_ctx_->input.update();
             priv_ctx_->window.poll_events();
+
+            const double new_time = glfwGetTime();
+            accumulator_ += min(new_time - time, MAX_DELTA_TIME);
+            time = new_time;
+
 
             #ifndef NDEBUG
             priv_ctx_->debug_ui.begin_frame();
             #endif
 
-            const float new_time = static_cast<float>(glfwGetTime());
-            const float dt = new_time - time;
-            time = new_time;
+            priv_ctx_->post_processor.bind();
 
-            static float accumulator = 0.0f;
-            accumulator += dt;
+            uint32_t c = 0;
 
-            #ifndef NDEBUG
-            if (Input::down(Key::Ctrl) &&
-                Input::just_pressed(Key::B))
-                priv_ctx_->debug_draw.toggle();
-
-            priv_ctx_->debug_draw.draw(ctx_->scene);
-            #endif
-
-            uint32_t c = CollisionSystem::MAX_STEPS;
-            while (c && accumulator > CollisionSystem::FIXED_TIME_STEP)
+            while (accumulator_ >= Target::FRAME_TIME)
             {
-                fixed_update();
+                update();
+                priv_ctx_->animation_system.update(ctx_->scene);
                 priv_ctx_->collision_system.step(ctx_->scene);
-                accumulator -= CollisionSystem::FIXED_TIME_STEP;
-                --c;
+                accumulator_ -= Target::FRAME_TIME;
+
+                if (c == 0)
+                {
+                    #ifndef NDEBUG
+                    if (Input::down(Key::Ctrl) && Input::just_pressed(Key::B))
+                        priv_ctx_->debug_draw.toggle();
+                    #endif
+
+                    priv_ctx_->input.clear();
+                }
+
+                if (++c >= MAX_STEPS)
+                {
+                    accumulator_ = 0;
+                    break;
+                }
             }
 
-            update(dt);
-
-            priv_ctx_->animation_system.update(ctx_->scene, dt);
-
-            priv_ctx_->post_processor.bind();
             priv_ctx_->rendering_system.render_sprites(ctx_->scene);
-
             priv_ctx_->post_processor.render(priv_ctx_->window);
 
             #ifndef NDEBUG
+            priv_ctx_->debug_draw.draw(ctx_->scene);
             priv_ctx_->debug_ui.render();
             #endif
 

@@ -35,8 +35,7 @@ namespace mse
         void shutdown();
 
         virtual void init() = 0;
-        virtual void update(float dt) = 0;
-        virtual void fixed_update() = 0;
+        virtual void update() = 0;
 
         [[nodiscard]]
         static App& instance() { return *instance_; }
@@ -58,9 +57,14 @@ namespace mse
         App();
 
     private:
+        static constexpr uint32_t MAX_STEPS = 10;
+        static constexpr double MAX_DELTA_TIME = Target::FRAME_TIME * 3;
+
         // the extending class will ensure that there is only one instance
         // maybe not the best design, but good enough
         static inline App* instance_;
+
+        double accumulator_{ 0.0 };
 
         bool ok_{ true };
 

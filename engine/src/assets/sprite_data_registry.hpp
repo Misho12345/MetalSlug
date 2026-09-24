@@ -17,32 +17,25 @@ namespace mse
         uint32_t   atlas_idx;
     };
 
+    /**
+     * @brief Alpha mask for a singular frame
+     * @details Has a pointer to the mask and the size of the frame
+     */
     struct FrameMask final
     {
+        // The mask has packed data for weather a pixel is transparent or not
+        // 1 byte contains the data for 8 consecutive pixels
+        // So if the frame size is 26x15 => origin will be 49 bytes
         const uint8_t* origin;
 
         // struct will be 16 bytes either way because of padding, might as well store the height for assert checks
         glm::ivec2 size;
 
         // gets a strip from the mask to compare with another one
-        size_t range(const glm::ivec2 coords, const uint32_t max_size) const
-        {
-            assert(
-                coords.x >= 0 && coords.x < size.x &&
-                coords.y >= 0 && coords.y < size.y);
+        // the strip is of size sizeof(size_t), therefore containing data for 64 pixels for x64
+        size_t range(glm::ivec2 coords, uint32_t max_size) const;
 
-            assert(size.x - coords.x - 1u <= max_size); // does not leak to the next row
-
-            const size_t idx = coords.x + coords.y * size.x;
-            assert(idx % 8); // starts from the beginning of a byte
-
-            const size_t ret = *reinterpret_cast<const size_t*>(origin + idx / 8);
-
-            if (max_size >= sizeof(size_t) * 8) return ret;
-
-            // max_size = 61 -> 3 to discard -> 0b1000 -> 0b111 -> 0b11...11000
-            return ret & ~((1 << (sizeof(size_t) * 8 - max_size)) - 1);
-        }
+        bool operator[](glm::ivec2 coords) const;
     };
 
     /**

@@ -54,9 +54,10 @@ namespace mse
             (mode->height - desc.height) / 2);
 
         glfwMakeContextCurrent(handle_);
+        glfwSwapInterval(1); // enable vsync
 
         glfwSetWindowUserPointer(handle_, this);
-        glfwSetWindowSizeCallback(handle_, [](GLFWwindow* window, const int width, const int height)
+        glfwSetFramebufferSizeCallback(handle_, [](GLFWwindow* window, const int width, const int height)
         {
             if (Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window)))
                 win->update({ width, height });

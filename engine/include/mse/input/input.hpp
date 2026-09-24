@@ -87,7 +87,7 @@ namespace mse
         Input& operator=(Input&&)      = delete;
 
         void init();
-        void update();
+        void clear();
 
         [[nodiscard]] static bool up(Key key);
         [[nodiscard]] static bool down(Key key);

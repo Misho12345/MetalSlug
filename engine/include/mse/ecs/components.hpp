@@ -19,7 +19,7 @@ namespace mse
 
         glm::vec2 parallax_factor{ 0.0f };
 
-        float frame_dur{ 0.15f };
+        float frame_dur{ 0.1f };
         int32_t layer{ 0 };
 
         bool paused{ false };
@@ -56,18 +56,19 @@ namespace mse
         explicit SpriteCollider(entity_id id);
         SpriteCollider(glm::ivec2 _offset, glm::ivec2 _size);
 
-        void apply_force(const glm::vec2 force) { acceleration += force / mass; }
-
         [[nodiscard]]
         aabb bounds(const Transform& tr) const;
 
         glm::vec2 velocity{ 0.0f, 0.0f };
-        glm::vec2 acceleration{ 0.0f, 0.0f };
         glm::vec2 pos_remainder{};
-        float mass{ 1.0f };
-        float drag{ 0.02f };
 
         glm::ivec2 offset{};
         glm::ivec2 size{ 32 };
+
+        uint32_t mask{};
+        uint32_t target_mask{};
+
+        using callback_t = void(*)(entity_id, uint32_t);
+        callback_t callback{ nullptr };
     };
 }

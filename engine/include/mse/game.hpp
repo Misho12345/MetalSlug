@@ -11,8 +11,7 @@ class Game final : public mse::App
 {
 public:
     void init() override;
-    void update(float dt) override;
-    void fixed_update() override;
+    void update() override;
 
     static Game& instance()
     {

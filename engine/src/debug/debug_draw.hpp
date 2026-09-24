@@ -13,7 +13,8 @@ namespace mse
      */
     class DebugDraw final
     {
-        static constexpr glm::u8vec4 COLLIDER_COLOR{ 0, 255, 0, 255 };
+        static constexpr glm::u8vec4 HITBOX_COLOR{ 0, 255, 0, 255 };
+        static constexpr glm::u8vec4 PIXEL_COLOR{ 0, 200, 200, 255 };
 
         static constexpr glm::u8vec4 tile_color(const TileType type)
         {

@@ -1,5 +1,3 @@
-#include <thread>
-
 #include "mse/game.hpp"
 
 using namespace mse;
@@ -11,19 +9,30 @@ namespace
     entity_id player_legs, player_body;
     entity_id slon;
 
-    glm::ivec2 get_input()
+    glm::vec2 get_input()
     {
         const bool w = Input::down(Key::W);
         const bool a = Input::down(Key::A);
         const bool s = Input::down(Key::S);
         const bool d = Input::down(Key::D);
 
-        return glm::ivec2{
-            static_cast<int>(d) - static_cast<int>(a),
-            static_cast<int>(s) - static_cast<int>(w)
-        };
+        return w - s || a - d
+                   ? glm::normalize(glm::vec2{
+                       static_cast<float>(d) - static_cast<float>(a),
+                       static_cast<float>(s) - static_cast<float>(w)
+                   })
+                   : glm::vec2{};
     }
 }
+
+enum class Layer
+{
+    Player = 1 << 0,
+    Enemy = 1 << 1
+};
+
+
+uint32_t to(auto val) { return static_cast<uint32_t>(val); }
 
 void Game::init()
 {
@@ -41,12 +50,23 @@ void Game::init()
     scene.set<SpriteRenderer>(player_body, player::Body::Idle);
     scene.set<SpriteRenderer>(slon, Enemy::Slon);
 
-    scene.set<SpriteCollider>(player_legs, player_legs);
-    scene.set<SpriteCollider>(player_body, player_body);
-    scene.set<SpriteCollider>(slon, slon);
+    SpriteCollider& sc_legs = scene.set<SpriteCollider>(player_legs, player_legs);
+    SpriteCollider& sc_body = scene.set<SpriteCollider>(player_body, player_body);
+    SpriteCollider& sc_slon = scene.set<SpriteCollider>(slon, slon);
+
+    sc_legs.mask = to(Layer::Player);
+    sc_body.mask = to(Layer::Player);
+    sc_slon.mask = to(Layer::Enemy);
+
+    sc_slon.target_mask = to(Layer::Player);
+    sc_slon.callback = +[](entity_id id, uint32_t mask)
+    {
+        assert(mask & to(Layer::Player));
+        ctx().scene.get<Transform>(id).rotation += 3.0_deg;
+    };
 }
 
-void Game::update(const float)
+void Game::update()
 {
     Scene& s = ctx().scene;
 
@@ -81,18 +101,6 @@ void Game::update(const float)
         body.scale = glm::max(body.scale + 1, glm::ivec2{ 1 });
     }
 
-    // temporary, will implement a cross platform sleep later
-    using namespace std::chrono_literals;
-    std::this_thread::sleep_for(10ms);
-}
-
-void Game::fixed_update()
-{
-    Scene& s = ctx().scene;
     const glm::vec2 input = get_input();
-
-    if (input.x != 0.0f || input.y != 0.0f)
-    {
-        s.get<SpriteCollider>(player_legs).apply_force(input * 100.0f);
-    }
+    s.get<SpriteCollider>(player_legs).velocity = input * 50.0f;
 }

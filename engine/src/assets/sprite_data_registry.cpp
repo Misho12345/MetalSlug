@@ -11,6 +11,38 @@ namespace mse
     }
 
 
+    size_t FrameMask::range(const glm::ivec2 coords, const uint32_t max_size) const {
+        // may need the chunk to start from a prev row
+        assert(/*coords.x >= 0 &&*/ coords.x < size.x &&
+               /*coords.y >= 0 &&*/ coords.y < size.y);
+
+        // does not leak to the next row
+        assert(static_cast<int>(max_size) + coords.x < size.x);
+
+        const size_t idx = coords.x + coords.y * size.x;
+        assert(idx % 8 == 0); // starts from the beginning of a byte
+
+        const size_t ret = *reinterpret_cast<const size_t*>(origin + idx / 8);
+
+        if (max_size >= sizeof(size_t) * 8) return ret;
+
+        // max_size = 61 -> 3 to discard -> 0b1000 -> 0b111 -> 0b11...11000
+        return ret & ~((1_zu << (sizeof(size_t) * 8 - max_size)) - 1);
+    }
+
+    bool FrameMask::operator[](const glm::ivec2 coords) const
+    {
+        assert(
+            coords.x >= 0 && coords.x < size.x &&
+            coords.y >= 0 && coords.y < size.y);
+
+        const size_t idx = coords.x + coords.y * size.x;
+
+        return origin[idx / 8] & (1 << (idx % 8));
+    }
+
+
+
     bool SpriteDataRegistry::init()
     {
         return load_meta_json() && load_mask();

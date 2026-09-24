@@ -17,9 +17,6 @@ namespace mse
     class CollisionSystem final
     {
     public:
-        static constexpr uint32_t MAX_STEPS = 10;
-        static constexpr float FIXED_TIME_STEP = 1.0f / 60.0f;
-
         static constexpr float GRAVITY = 9.81f;
 
         CollisionSystem(const CollisionSystem&)            = delete;
