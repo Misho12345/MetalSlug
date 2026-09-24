@@ -98,7 +98,7 @@ namespace mse
             {
                 for (int x = -lbits_a; x < size.x; x += sizeof(size_t) * 8)
                 {
-                    const int max = size.x - x;
+                    const int max = size.x - x - 1;
 
                     size_t block_a = mask_a.range(local_a + glm::ivec2{ x, 0 }, max);
                     size_t block_b = mask_b.range(local_b + glm::ivec2{ x, 0 }, max);
@@ -191,7 +191,7 @@ namespace mse
                 // start from the beginning of the byte and advance by the chunk size
                 for (int x = -lbits1; x < size.x; x += sizeof(size_t) * 8)
                 {
-                    const int max = size.x - x;
+                    const int max = size.x - x - 1;
 
                     // STEP 0, 4, ...
                     block1 = mask1->range(local1 + glm::ivec2{ x, 0 }, max);

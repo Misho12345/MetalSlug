@@ -65,7 +65,7 @@ void main()
     SpriteAnimationData data = sprite_data[v_AnimationIdx];
 
     vec2 size = data.frame_size * instance.scale;
-    vec2 world_pos = rotate(base_pos * size, instance.rotation) + instance.position - size / 2;
+    vec2 world_pos = rotate(base_pos - 0.5, instance.rotation) * size + instance.position;
     vec2 view_pos = world_pos - (u_CameraPos * instance.parallax_factor);
 
     gl_Position = u_Projection * vec4(view_pos, 0.0, 1.0);
