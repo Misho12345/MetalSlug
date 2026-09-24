@@ -67,10 +67,10 @@ namespace mse
         if (!overlap) return false;
 
         // get scaled down overlap size and local positions of where the overlap starts for the 2 sprites
-        const glm::ivec2 size = (overlap.size() + 1) / a.tr.scale;
+        const glm::ivec2 size = overlap.size() / a.tr.scale;
 
-        glm::ivec2 local_a = glm::floor(glm::vec2(overlap.min - a.tr.position) / glm::vec2(a.tr.scale) + glm::vec2(a.sr.size()) / 2.0f);
-        glm::ivec2 local_b = glm::floor(glm::vec2(overlap.min - b.tr.position) / glm::vec2(b.tr.scale) + glm::vec2(b.sr.size()) / 2.0f);
+        glm::ivec2 local_a = (overlap.min - a.tr.position) / a.tr.scale + a.sr.size() / 2;
+        glm::ivec2 local_b = (overlap.min - b.tr.position) / b.tr.scale + b.sr.size() / 2;
 
         // The masks (mask_a and mask_b) contain a pointer to a buffer with packed data (see sprite_data_registry.hpp)
         const FrameMask mask_a = reg.mask(a.sr.info(), a.sr.frame());
@@ -79,14 +79,14 @@ namespace mse
         for (int y = 0; y < size.y; ++y, ++local_a.y, ++local_b.y)
         {
             // because .range() for the masks requires the coords it's sampled from is byte-aligned
-            // in case the first chunks are not aligned i have to read from the begining of the byte
+            // in case the first chunks are not aligned i have to read from the beginning of the byte
 
             // how many bits are to the left from the coords till the start of the byte
             const int lbits_a = (local_a.x + local_a.y * a.sr.size().x) % 8;
             const int lbits_b = (local_b.x + local_b.y * b.sr.size().x) % 8;
 
             // how many bits are to the right (i.e. how many have to be considered when checking)
-            int rbits_a = min(static_cast<int>(sizeof(size_t)) * 8 - lbits_a, size.x);
+            int rbits_a = min(static_cast<int>(sizeof(size_t)) * 8, size.x) - lbits_a;
 
             // for example
             // for frame with size 21x16 and coords = (15, 15)
@@ -109,7 +109,7 @@ namespace mse
             }
             else
             {
-                int rbits_b = min(static_cast<int>(sizeof(size_t)) * 8 - lbits_b, size.x);
+                int rbits_b = min(static_cast<int>(sizeof(size_t)) * 8, size.x) - lbits_b;
 
                 // Get it so that 1 is the mask with the smaller offset and 2 is the one with the bigger
                 // for example if these are where the coords fall in the mask buffers
@@ -279,15 +279,8 @@ namespace mse
                 SpriteCollider::callback_t callbacks[2]{};
                 uint32_t masks[2]{};
 
-                if (sc1.callback && (masks[0] = sc1.mask & sc2.target_mask))
-                {
-                    callbacks[0] = sc1.callback;
-                }
-
-                if (sc2.callback && (masks[1] = sc2.mask & sc1.target_mask))
-                {
-                    callbacks[1] = sc2.callback;
-                }
+                if (sc1.callback && (masks[0] = sc1.target_mask & sc2.mask)) callbacks[0] = sc1.callback;
+                if (sc2.callback && (masks[1] = sc2.target_mask & sc1.mask)) callbacks[1] = sc2.callback;
 
                 if (!callbacks[0] && !callbacks[1]) continue;
                 if (!(sc1.bounds(*tr1) & sc2.bounds(*tr2))) continue;

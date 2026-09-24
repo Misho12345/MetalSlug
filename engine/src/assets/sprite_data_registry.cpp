@@ -14,7 +14,7 @@ namespace mse
     size_t FrameMask::range(const glm::ivec2 coords, const uint32_t max_size) const {
         // may need the chunk to start from a prev row
         assert(/*coords.x >= 0 &&*/ coords.x < size.x &&
-               /*coords.y >= 0 &&*/ coords.y < size.y);
+               coords.y >= 0 && coords.y < size.y);
 
         // does not leak to the next row
         assert(static_cast<int>(max_size) + coords.x < size.x);
