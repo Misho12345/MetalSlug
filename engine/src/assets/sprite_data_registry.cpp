@@ -26,8 +26,7 @@ namespace mse
 
         if (max_size >= sizeof(size_t) * 8) return ret;
 
-        // max_size = 61 -> 3 to discard -> 0b1000 -> 0b111 -> 0b11...11000
-        return ret & ~((1_zu << (sizeof(size_t) * 8 - max_size)) - 1);
+        return ret & ((1_zu << max_size) - 1);
     }
 
     bool FrameMask::operator[](const glm::ivec2 coords) const

@@ -121,7 +121,7 @@ void save_masks(const mse::span<const Box> boxes, const char* mask_path)
                    const uint32_t v = p[off_x + x + y * box.w];
 
                     // if more than half solid - mark solid and advance to the next bit
-                    if (((v & 0xff000000) >> 24) > 128) *dp |= 1 << bit;
+                    if (((v & 0xff000000) >> 24) > 128) *dp |= 1 << bit; // not 7 - bit because little endian
 
                     // same as & 0b1000 - just checks if it got to 8 (totally necessary)
                     if (++bit & 8)

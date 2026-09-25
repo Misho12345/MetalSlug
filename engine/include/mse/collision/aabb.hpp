@@ -14,7 +14,7 @@ namespace mse
                     max.x >= other.min.x && max.y >= other.min.y;
         }
 
-        constexpr operator bool() const { return min.x <= max.x && min.y <= max.y; }
+        constexpr operator bool() const { return min.x < max.x && min.y < max.y; }
 
         [[nodiscard]]
         static constexpr aabb overlap(const aabb& a, const aabb& b)
