@@ -47,8 +47,9 @@ namespace mse
 
     aabb SpriteRenderer::bounds(const Transform& tr) const
     {
-        const glm::ivec2 half_size = size() * tr.scale / 2;
-        return aabb{ -half_size, +half_size } + tr.position;
+        const glm::ivec2 s = size() * tr.scale;
+        const glm::ivec2 hs = s / 2;
+        return aabb{ -hs, s - hs } + tr.position;
     }
 
     aabb SpriteRenderer::screen_bounds(const Transform& tr, const glm::ivec2 cam_pos) const
@@ -72,7 +73,8 @@ namespace mse
 
     aabb SpriteCollider::bounds(const Transform& tr) const
     {
-        const glm::ivec2 half_size = size * tr.scale / 2;
-        return aabb{ -half_size, +half_size } + (offset + tr.position);
+        const glm::ivec2 s = size * tr.scale;
+        const glm::ivec2 hs = s / 2;
+        return aabb{ -hs, s - hs } + (offset + tr.position);
     }
 }

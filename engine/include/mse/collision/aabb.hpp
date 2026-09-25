@@ -10,8 +10,8 @@ namespace mse
 
         constexpr bool operator&(const aabb& other) const
         {
-            return min.x <= other.max.x && min.y <= other.max.y &&
-                    max.x >= other.min.x && max.y >= other.min.y;
+            return min.x < other.max.x && min.y < other.max.y &&
+                    max.x > other.min.x && max.y > other.min.y;
         }
 
         constexpr operator bool() const { return min.x < max.x && min.y < max.y; }

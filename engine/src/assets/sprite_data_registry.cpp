@@ -153,6 +153,9 @@ namespace mse
             }
         }
 
+        // give enough padding to be able to give a range from FrameMask without going out of bounds
+        masks_buf_.resize(masks_buf_.size() + sizeof(size_t));
+
         return true;
     }
 
