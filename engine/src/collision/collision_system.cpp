@@ -136,51 +136,49 @@ namespace mse
 
 
                 // (imagine 8 bit chunk size)
-                // 1: <(-|A B C  D E F G)>  (H I J K  L M - -)
-                // 2: <(- - -|N  O P Q R)>  (S T U V  W X Y Z)
+                // 1: (- - M L  K J I H) <(G F E D  C B A|-)>
+                // 2: (Z Y X W  V U T S) <(R Q P O  N|- - -)>
                 //
                 // STEP 0:
                 // Get the first chunks
-                // 1: - A B C  D E F G
-                // 2: - - - N  O P Q R
+                // 1: G F E D  C B A -
+                // 2: R Q P O  N - - -
                 //
                 // STEP 1:
                 // 2 is shifted by diff (2 in this case) to align
-                // 1: - A B C  D E F G
-                // 2: - N O P  Q R 0 0
+                // 1: G F E D  C B A -
+                // 2: 0 0 R Q  P O N -
                 //
                 // STEP 2:
                 // the next chunk of 2 is requested, and the bytes from 1 which
                 // weren't checked because they weren't in 2 have to be checked now
                 //
-                // 1:  - A B C  D E[F G]
-                // 2: [S T]U V  W X Y Z
+                // 1: [G F] E D  C B A -
+                // 2: Z Y X W  V U[T S]
                 //
                 // STEP 3:
                 // 1 is shifted by rev_diff (6 in this case)
                 //
-                // 1: [F G]0 0  0 0 0 0
-                // 2: [S T]U V  W X Y Z
+                // 1: 0 0 0 0  0 0[G F]
+                // 2: Z Y X W  V U[T S]
                 //
                 // STEP 4:
                 // new chunk for 1 is requested
-                // 1: [H I J K  L M - -]
-                // 2:  S T[U V  W X Y Z]
+                // 1: [- - M L  K J I H]
+                // 2: [Z Y X W  V U]T S
                 //
                 // STEP 5:
                 // 2 is shifted to align
                 //
-                // 1: [H I J K  L M - -]
-                // 2: [U V  W X Y Z]0 0
+                // 1: [- - M L  K J I H]
+                // 2:  0 0[Z Y  X W V U]
                 //
                 // repeat ...
 
 
                 // STEP 0
                 size_t block1;
-                size_t block2 = mask2->range(
-                    local2 - glm::ivec2{ lbits2, 0 },
-                    min(static_cast<int>(sizeof(size_t)) * 8, size.x) - lbits1);
+                size_t block2 = mask2->range(local2 - glm::ivec2{ lbits2, 0 }, size.x + lbits2);
 
                 // start from the beginning of the byte and advance by the chunk size
                 for (int x = -lbits1; x < size.x; x += sizeof(size_t) * 8)
@@ -197,7 +195,7 @@ namespace mse
                     }
 
                     // STEP 1, 5, ...
-                    if (block1 & (block2 << diff)) return true;
+                    if (block1 & (block2 >> diff)) return true;
 
                     if (max < sizeof(size_t) * 8) break; // last => no trailing bits for 2
 
@@ -205,7 +203,7 @@ namespace mse
                     block2 = mask2->range(local2 + glm::ivec2{ x - diff + sizeof(size_t) * 8, 0 }, max);
 
                     // STEP 3, ...
-                    if ((block1 << rev_diff) & block2) return true;
+                    if ((block1 >> rev_diff) & block2) return true;
                 }
             }
         }
