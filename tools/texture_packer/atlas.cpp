@@ -94,8 +94,9 @@ void save_masks(const mse::span<const Box> boxes, const char* mask_path)
 
     for (const Box& box : boxes)
     {
+        assert(box.w % box.frame_count == 0 && "Image isn't evenly divisible by the frame count");
         // round up to the count of bytes
-        total_size += (box.w * box.h + 7) / 8;
+        total_size += (box.w / box.frame_count * box.h + 7) / 8 * box.frame_count;
     }
 
     uint8_t* data = new uint8_t[total_size]();

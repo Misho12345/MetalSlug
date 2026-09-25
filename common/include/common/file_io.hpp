@@ -12,14 +12,17 @@ namespace mse
 {
     class MSC_API FileIO final
     {
+        template <typename T>
+        using read_ret_t = std::conditional_t<std::same_as<T, char>, string, vector<T>>;
+
     public:
-        template <typename C = string>
+        template <typename C = char>
         [[nodiscard]]
-        static C read(const string_view path)
+        static read_ret_t<C> read(const string_view path)
         {
             if (path.empty()) return {};
 
-            C out;
+            read_ret_t<C> out;
             FILE* f = fopen(path.data(), "rb");
 
             if (!f) return out;

@@ -12,12 +12,10 @@ namespace mse
 
 
     size_t FrameMask::range(const glm::ivec2 coords, const uint32_t max_size) const {
-        // may need the chunk to start from a prev row
-        assert(/*coords.x >= 0 &&*/ coords.x < size.x &&
-               coords.y >= 0 && coords.y < size.y);
+        assert(coords.y >= 0 && coords.y <= size.y);
 
         // does not leak to the next row
-        assert(static_cast<int>(max_size) + coords.x < size.x);
+        assert(static_cast<int>(max_size) + coords.x <= size.x);
 
         const size_t idx = coords.x + coords.y * size.x;
         assert(idx % 8 == 0); // starts from the beginning of a byte
@@ -135,7 +133,7 @@ namespace mse
 
     bool SpriteDataRegistry::load_mask()
     {
-        masks_buf_ = FileIO::read<vector<uint8_t>>("texture_packer/mask");
+        masks_buf_ = FileIO::read<uint8_t>("texture_packer/mask");
 
         if (masks_buf_.empty())
         {

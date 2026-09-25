@@ -85,9 +85,6 @@ namespace mse
             const int lbits_a = (local_a.x + local_a.y * a.sr.size().x) % 8;
             const int lbits_b = (local_b.x + local_b.y * b.sr.size().x) % 8;
 
-            // how many bits are to the right (i.e. how many have to be considered when checking)
-            int rbits_a = min(static_cast<int>(sizeof(size_t)) * 8, size.x) - lbits_a;
-
             // for example
             // for frame with size 21x16 and coords = (15, 15)
             // that lies on the 2nd bit of the 41th byte (0 as MSB)
@@ -98,19 +95,17 @@ namespace mse
             {
                 for (int x = -lbits_a; x < size.x; x += sizeof(size_t) * 8)
                 {
-                    const int max = size.x - x - 1;
+                    const int max = size.x - x;
 
                     size_t block_a = mask_a.range(local_a + glm::ivec2{ x, 0 }, max);
                     size_t block_b = mask_b.range(local_b + glm::ivec2{ x, 0 }, max);
-                    const size_t mask = x < 0 ? (1_zu << rbits_a) - 1 : ~0_zu;
+                    const size_t mask = x < 0 ? ~((1_zu << lbits_a) - 1) : ~0_zu;
 
                     if (block_a & block_b & mask) return true;
                 }
             }
             else
             {
-                int rbits_b = min(static_cast<int>(sizeof(size_t)) * 8, size.x) - lbits_b;
-
                 // Get it so that 1 is the mask with the smaller offset and 2 is the one with the bigger
                 // for example if these are where the coords fall in the mask buffers
                 // A: - - - -   -|0 1 0 ...; lbits = 5; rbits = 59; => 2
@@ -119,7 +114,6 @@ namespace mse
                 const FrameMask *mask1, *mask2;
                 glm::ivec2 local1, local2;
                 int lbits1, lbits2;
-                int rbits1, rbits2;
 
                 int diff = lbits_b - lbits_a;
 
@@ -128,14 +122,12 @@ namespace mse
                     mask1 = &mask_a;  mask2 = &mask_b;
                     local1 = local_a; local2 = local_b;
                     lbits1 = lbits_a; lbits2 = lbits_b;
-                    rbits1 = rbits_a; rbits2 = rbits_b;
                 }
                 else
                 {
                     mask1 = &mask_b;  mask2 = &mask_a;
                     local1 = local_b; local2 = local_a;
                     lbits1 = lbits_b; lbits2 = lbits_a;
-                    rbits1 = rbits_b; rbits2 = rbits_a;
 
                     diff = -diff;
                 }
@@ -186,12 +178,14 @@ namespace mse
 
                 // STEP 0
                 size_t block1;
-                size_t block2 = mask2->range(local2 - glm::ivec2{ lbits2, 0 }, rbits2);
+                size_t block2 = mask2->range(
+                    local2 - glm::ivec2{ lbits2, 0 },
+                    min(static_cast<int>(sizeof(size_t)) * 8, size.x) - lbits1);
 
                 // start from the beginning of the byte and advance by the chunk size
                 for (int x = -lbits1; x < size.x; x += sizeof(size_t) * 8)
                 {
-                    const int max = size.x - x - 1;
+                    const int max = size.x - x;
 
                     // STEP 0, 4, ...
                     block1 = mask1->range(local1 + glm::ivec2{ x, 0 }, max);
