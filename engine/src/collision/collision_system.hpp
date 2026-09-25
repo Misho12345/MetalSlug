@@ -45,7 +45,6 @@ namespace mse
             aabb bounds_b, glm::vec2 vel_b);
 
         vector<SpriteData> objects_;
-        float time_{ 0.0f };
 
         friend ::mse::PrivCtx;
     };

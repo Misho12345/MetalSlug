@@ -50,14 +50,14 @@ void Game::init()
     scene.set<SpriteRenderer>(player_body, player::Body::Idle);
     scene.set<SpriteRenderer>(slon, Enemy::Slon);
 
-    scene.set<SpriteCollider>(player_legs, player_legs).mask = to(Layer::Player);
-    scene.set<SpriteCollider>(player_body, player_body).mask = to(Layer::Player);
+    scene.set<SpriteCollider>(player_legs, player_legs).layer = to(Layer::Player);
+    scene.set<SpriteCollider>(player_body, player_body).layer = to(Layer::Player);
 
     SpriteCollider& sc_slon = scene.set<SpriteCollider>(slon, slon);
 
-    sc_slon.mask = to(Layer::Enemy);
+    sc_slon.layer = to(Layer::Enemy);
 
-    sc_slon.target_mask = to(Layer::Player);
+    sc_slon.target_layer = to(Layer::Player);
     sc_slon.callback = +[](entity_id id, uint32_t mask)
     {
         assert(mask & to(Layer::Player));

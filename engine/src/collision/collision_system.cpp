@@ -8,6 +8,8 @@ namespace mse
 {
     namespace
     {
+        constexpr int size_t_bits = sizeof(size_t) * 8;
+
         bool zero(const float x) { return x > -FLT_EPSILON && x < FLT_EPSILON; }
 
         template <typename C>
@@ -93,7 +95,7 @@ namespace mse
 
             if (lbits_a == lbits_b) // the 2 chunks have the same alignment, easier to handle
             {
-                for (int x = -lbits_a; x < size.x; x += sizeof(size_t) * 8)
+                for (int x = -lbits_a; x < size.x; x += size_t_bits)
                 {
                     const int max = size.x - x;
 
@@ -132,7 +134,7 @@ namespace mse
                     diff = -diff;
                 }
 
-                int rev_diff = sizeof(size_t) * 8 - diff;
+                int rev_diff = size_t_bits - diff;
 
 
                 // (imagine 8 bit chunk size)
@@ -181,7 +183,7 @@ namespace mse
                 size_t block2 = mask2->range(local2 - glm::ivec2{ lbits2, 0 }, size.x + lbits2);
 
                 // start from the beginning of the byte and advance by the chunk size
-                for (int x = -lbits1; x < size.x; x += sizeof(size_t) * 8)
+                for (int x = -lbits1; x < size.x; x += size_t_bits)
                 {
                     const int max = size.x - x;
 
@@ -197,10 +199,10 @@ namespace mse
                     // STEP 1, 5, ...
                     if (block1 & (block2 >> diff)) return true;
 
-                    if (max < sizeof(size_t) * 8) break; // last => no trailing bits for 2
+                    if (max < size_t_bits) break; // last => no trailing bits for 2
 
                     // STEP 2, ...
-                    block2 = mask2->range(local2 + glm::ivec2{ x - diff + sizeof(size_t) * 8, 0 }, max);
+                    block2 = mask2->range(local2 + glm::ivec2{ x - diff + size_t_bits, 0 }, max);
 
                     // STEP 3, ...
                     if ((block1 >> rev_diff) & block2) return true;
@@ -271,8 +273,8 @@ namespace mse
                 SpriteCollider::callback_t callbacks[2]{};
                 uint32_t masks[2]{};
 
-                if (sc1.callback && (masks[0] = sc1.target_mask & sc2.mask)) callbacks[0] = sc1.callback;
-                if (sc2.callback && (masks[1] = sc2.target_mask & sc1.mask)) callbacks[1] = sc2.callback;
+                if (sc1.callback && (masks[0] = sc1.target_layer & sc2.layer)) callbacks[0] = sc1.callback;
+                if (sc2.callback && (masks[1] = sc2.target_layer & sc1.layer)) callbacks[1] = sc2.callback;
 
                 if (!callbacks[0] && !callbacks[1]) continue;
                 if (!(sc1.bounds(*tr1) & sc2.bounds(*tr2))) continue;

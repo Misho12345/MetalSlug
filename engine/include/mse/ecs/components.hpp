@@ -12,6 +12,7 @@ namespace mse
         float      rotation{ 0.0f };
     };
 
+
     struct MSE_API SpriteRenderer final
     {
         template <anim::sprite_enum E>
@@ -51,6 +52,7 @@ namespace mse
         uint32_t frame_{ 0 };
     };
 
+
     struct MSE_API SpriteCollider final
     {
         explicit SpriteCollider(entity_id id);
@@ -65,8 +67,8 @@ namespace mse
         glm::ivec2 offset{};
         glm::ivec2 size{ 32 };
 
-        uint32_t mask{};
-        uint32_t target_mask{};
+        uint32_t layer{};
+        uint32_t target_layer{};
 
         using callback_t = void(*)(entity_id, uint32_t);
         callback_t callback{ nullptr };

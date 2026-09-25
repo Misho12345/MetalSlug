@@ -110,7 +110,7 @@ void save_masks(const mse::span<const Box> boxes, const char* mask_path)
         // the parts of the mask for the specific frame in the entire animation data block
 
         const uint32_t* p       = box.data;
-        const size_t    frame_w = box.w / box.frame_count;
+        const int       frame_w = box.w / box.frame_count;
 
         for (int f = 0; f < box.frame_count; ++f)
         {
