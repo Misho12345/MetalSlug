@@ -12,7 +12,7 @@ namespace mse
 
 
     size_t FrameMask::range(const glm::ivec2 coords, const uint32_t max_size) const {
-        assert(coords.y >= 0 && coords.y <= size.y);
+        assert(coords.y >= 0 && coords.y < size.y);
 
         // does not leak to the next row
         assert(static_cast<int>(max_size) + coords.x <= size.x);
@@ -20,10 +20,12 @@ namespace mse
         const size_t idx = coords.x + coords.y * size.x;
         assert(idx % 8 == 0); // starts from the beginning of a byte
 
-        const size_t ret = *reinterpret_cast<const size_t*>(origin + idx / 8);
+
+        // not *(size_t*)(...) because the memory is not aligned and that's technically UB
+        size_t ret;
+        memcpy(&ret, origin + idx / 8, sizeof(size_t));
 
         if (max_size >= sizeof(size_t) * 8) return ret;
-
         return ret & ((1_zu << max_size) - 1);
     }
 

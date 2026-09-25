@@ -26,13 +26,21 @@ namespace mse
         // The mask has packed data for weather a pixel is transparent or not
         // 1 byte contains the data for 8 consecutive pixels
         // So if the frame size is 26x15 => origin will be 49 bytes
+        // The data is LSB-first
+        //   so for pixels 0..31 this is what the buffer would look like:
+        //   [0] 7 6 .. 0   [1] 15 14 .. 8  [2]  23 22 .. 16   [3] 31 30 .. 24
+        //
+        // NOTE: rows are not padded, so a byte can contain the data for the
+        //       last pixels in a row and the first pixels in the next one
         const uint8_t* origin;
 
         // struct will be 16 bytes either way because of padding, might as well store the height for assert checks
         glm::ivec2 size;
 
-        // gets a strip from the mask to compare with another one
+        // returns a strip from the mask to compare with another one
         // the strip is of size sizeof(size_t), therefore containing data for 64 pixels for x64
+        // assumes coords is a position that lies on the start of a byte, not in the middle
+        //
         size_t range(glm::ivec2 coords, uint32_t max_size) const;
 
         bool operator[](glm::ivec2 coords) const;
