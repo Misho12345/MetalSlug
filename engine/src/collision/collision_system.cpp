@@ -198,8 +198,8 @@ namespace mse
 
                     if (x < 0)
                     {
-                        block1 &= (1_zu << rbits1) - 1;
-                        block2 &= (1_zu << rbits2) - 1;
+                        block1 &= ~((1_zu << lbits1) - 1);
+                        block2 &= ~((1_zu << lbits2) - 1);
                     }
 
                     // STEP 1, 5, ...
