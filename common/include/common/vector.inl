@@ -18,8 +18,7 @@ namespace mse
     }
 
     template <typename T> requires (!std::same_as<T, void>)
-    template <typename... Args> requires (
-        (std::convertible_to<Args, T> && ...) &&
+    template <std::convertible_to<T>... Args> requires (
         !(sizeof...(Args) == 1 && (std::integral<Args> && ...)))
     vector<T>::vector(Args&&... args) :
         size_{ sizeof...(Args) },
@@ -51,11 +50,11 @@ namespace mse
     {
         if (this == &other) return *this;
 
-        T* new_data = static_cast<T*>(::operator new(sizeof(T) * other.capacity_));
+        clear();
+        reserve(other.capacity());
+
         copy_mem(data_, other.data_, other.size_);
 
-        reset();
-        data_ = new_data;
         size_ = other.size_;
         capacity_ = other.capacity_;
 
@@ -151,14 +150,7 @@ namespace mse
     void vector<T>::reserve(size_t new_cap)
     {
         if (new_cap == 0) new_cap = 1;
-        if (new_cap == capacity_) return;
-
-        if (size_ > new_cap)
-        {
-            for (size_t i = new_cap; i < size_; ++i)
-                destroy_at(data_ + i);
-            size_ = new_cap;
-        }
+        if (new_cap <= capacity_) return;
 
         T* new_data = static_cast<T*>(operator new(sizeof(T) * new_cap));
         move_realloc(new_data, data_, size_);
@@ -191,6 +183,19 @@ namespace mse
         for (size_t i = size_; i < new_size; ++i) new(data_ + i) T(fill);
         size_ = new_size;
     }
+
+
+    template <typename T> requires (!std::same_as<T, void>)
+    size_t vector<T>::find(const T& value) requires std::equality_comparable<T>
+    {
+        for (size_t i = 0; i < size_; ++i)
+        {
+            if (data_[i] == value) return i;
+        }
+
+        return vector<>::npos;
+    }
+
 
     template <typename T> requires (!std::same_as<T, void>)
     void vector<T>::copy_mem(T* dest, const T* src, const size_t count)

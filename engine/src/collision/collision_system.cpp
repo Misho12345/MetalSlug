@@ -11,72 +11,238 @@ namespace mse
         constexpr int size_t_bits = sizeof(size_t) * 8;
 
         bool zero(const float x) { return x > -FLT_EPSILON && x < FLT_EPSILON; }
-
-        template <typename C>
-        struct ComponentData final
-        {
-            explicit ComponentData(ComponentPool<C>& pool)
-                : components{ pool.components() },
-                  owners{ pool.owners() },
-                  lookup{ pool.lookup() },
-                  size{ components.size() } { assert(owners.size() == components.size()); }
-
-            vector<C>&               components;
-            const vector<entity_id>& owners;
-            const vector<int32_t>&   lookup;
-
-            size_t size;
-
-            template <typename O>
-            const O* get_from_idx(const size_t idx, const ComponentData<O>& other_data) const
-            {
-                const entity_id entity = owners[idx];
-                if (other_data.lookup.size() <= entity.idx()) return nullptr;
-
-                const int32_t other_idx = other_data.lookup[entity.idx()];
-                return other_idx < 0 ? nullptr : &other_data.components[other_idx];
-            }
-
-            template <typename O>
-            O* get_from_idx(const size_t idx, ComponentData<O>& other_data) const
-            {
-                return const_cast<O*>(get_from_idx(idx, std::as_const(other_data)));
-            }
-
-            operator bool() const { return size; }
-        };
     }
 
-    CollisionSystem::CollisionSystem() { objects_.reserve(64); }
-
-    bool CollisionSystem::pp_check(const SpriteData& a, const SpriteData& b)
+    CollisionSystem::CollisionSystem() : counter_(X_GRID_SIZE + 1)
     {
+        buckets_.reserve(128);
+        extents_.reserve(128);
+        pairs_.reserve(64);
+    }
+
+
+    void CollisionSystem::step(Scene& scene)
+    {
+        ComponentPool<SpriteCollider>& sc_pool = scene.pool<SpriteCollider>();
+
+        const vector<entity_id>& entities = sc_pool.owners();
+        vector<SpriteCollider>& sc_comps = sc_pool.components();
+
+
+        if (entities.empty()) return;
+        for (uint32_t& c : counter_) c = 0;
+        buckets_.clear();
+        extents_.clear();
+        pairs_.clear();
+
+        const glm::vec2 camera_pos = scene.get<Transform>(scene.camera()).position;
+
+        assert(entities.size() == sc_comps.size());
+
+        for (size_t i = 0; i < entities.size(); ++i)
+        {
+            const entity_id entity = entities[i];
+            SpriteCollider& sc = sc_comps[i];
+
+            // sc.velocity += GRAVITY * Target::FRAME_TIME;
+            sc.pos_remainder += sc.velocity * Target::FRAME_TIME;
+
+
+            const Transform*      tr = scene.try_get<Transform>(entity);
+            const SpriteRenderer* sr = scene.try_get<SpriteRenderer>(entity);
+
+            if (!tr || !sr) continue;
+
+            if (sc.layer == 0 && (sc.target_layer == 0 || !sc.callback)) continue;
+            if (sr->parallax_factor != glm::vec2{})
+            {
+                printf("Collisions with sprites with non-zero parallax factor are not possible");
+                continue;
+            }
+
+            aabb bounds = sr->screen_bounds(*tr, camera_pos);
+            bounds |= bounds + sc.pos_remainder;
+
+            if (!(bounds & aabb::screen)) continue;
+
+            // clamp to grid size
+            const uint32_t min_idx = max(bounds.min.x / X_GRID_CELL_SIZE, 0u);
+            const uint32_t max_idx = min(bounds.max.x / X_GRID_CELL_SIZE, X_GRID_SIZE - 1u);
+
+            // get the cells it'll lie in
+            for (uint32_t j = min_idx; j <= max_idx; ++j) ++counter_[j];
+
+            extents_.emplace_back(entity, glm::uvec2{ min_idx, max_idx });
+        }
+
+
+        // turn from counts per bucket to upper boundry for each bucket
+        uint32_t curr = 0;
+        for (uint32_t& count : counter_) count = curr += count;
+
+        // save the total (that will remain unchanged after the for below)
+        // and will be needed for the big looping (below the for below)
+        counter_.back() = (&counter_.back())[-1];
+
+
+        // fill the buckets and move the idx offset from upper to lower boundry for the buckets
+        buckets_.resize(counter_.back());
+        for (const EntityExtent& extent : extents_)
+        {
+            for (uint32_t i = extent.range.x; i <= extent.range.y; ++i)
+            {
+                buckets_[--counter_[i]] = { extent.entity, extent.range.x };
+            }
+        }
+
+        for (size_t c = 0; c < counter_.size() - 1; ++c)
+        {
+            const BucketEntry* end = &buckets_[counter_[c + 1]];
+
+            for (BucketEntry* a = &buckets_[counter_[c]]; a < end - 1; ++a)
+            {
+                for (BucketEntry* b = a + 1; b < end; ++b)
+                {
+                    // if it's not the first cell they meet in, skip to avoid double checks
+                    if (max(a->starting_grid_id, b->starting_grid_id) != c) continue;
+
+                    if (collision_check(scene, a->entity, b->entity)) pairs_.emplace_back(a->entity, b->entity);
+                }
+            }
+        }
+
+        for (size_t i = 0; i < entities.size(); ++i)
+        {
+            SpriteCollider& sc = sc_comps[i];
+            Transform*      tr = scene.try_get<Transform>(entities[i]);
+
+            if (!tr) continue;
+
+            const glm::ivec2 floored = glm::floor(sc.pos_remainder);
+
+            tr->position       += floored;
+            sc.pos_remainder   -= floored;
+        }
+
+        for (const CollisionPair& pair : pairs_)
+        {
+            const SpriteCollider& sc_a = scene.get<SpriteCollider>(pair.a);
+            const SpriteCollider& sc_b = scene.get<SpriteCollider>(pair.b);
+
+            if (sc_a.callback) sc_a.callback(pair.b, sc_b.layer);
+            if (sc_b.callback) sc_b.callback(pair.a, sc_a.layer);
+        }
+    }
+
+
+    bool CollisionSystem::collision_check(Scene& scene, const entity_id a, const entity_id b)
+    {
+        Transform& tr_a = scene.get<Transform>(a);
+        const SpriteCollider& sc_a = scene.get<SpriteCollider>(a);
+
+        const Transform& tr_b = scene.get<Transform>(b);
+        const SpriteCollider& sc_b = scene.get<SpriteCollider>(b);
+
+        if (!(sc_a.target_layer & sc_b.layer) &&
+            !(sc_b.target_layer & sc_a.layer))
+            return false;
+
+        const float min_size = static_cast<float>(min(
+            sc_a.size.x, sc_a.size.y,
+            sc_b.size.x, sc_b.size.y));
+
+        const float min2 = min_size * min_size;
+
+        // pos_remainder is increased by vel * dt in ::step()
+        const glm::vec2 move = sc_a.pos_remainder - sc_b.pos_remainder;
+
+        const float move_len2 = glm::length2(move);
+        const glm::vec2 pos_a = tr_a.position;
+
+        if (min2 > move_len2)
+        {
+            const glm::vec2 abs_rel_vel = glm::abs(move);
+            bool collided = false;
+
+            if (abs_rel_vel.x > 1.0f || abs_rel_vel.y > 1.0f)
+            {
+                tr_a.position += glm::floor(move);
+
+                collided =
+                    sc_a.bounds(tr_a) & sc_b.bounds(tr_b) &&
+                    pp_check(scene, a, b);
+
+                tr_a.position = pos_a;
+            }
+
+            return collided ||
+                    (sc_a.bounds(tr_a) & sc_b.bounds(tr_b) &&
+                    pp_check(scene, a, b));
+        }
+
+        const float move_len = glm::sqrt(move_len2);
+        const float steps_f = move_len / min_size;
+        const glm::vec2 step = move / steps_f;
+
+        uint32_t steps_u = glm::ceil(steps_f);
+
+        bool should_break = false;
+
+        for (glm::vec2 pos = pos_a; !should_break; tr_a.position = glm::floor(pos += step))
+        {
+            if (!--steps_u)
+            {
+                tr_a.position = pos_a + glm::floor(move);
+                should_break = true;
+            }
+
+            if (sc_a.bounds(tr_a) & sc_b.bounds(tr_b) &&
+                pp_check(scene, a, b))
+            {
+                tr_a.position = pos_a;
+                return true;
+            }
+        }
+
+        tr_a.position = pos_a;
+        return false;
+    }
+
+
+    bool CollisionSystem::pp_check(const Scene& scene, const entity_id a, const entity_id b)
+    {
+        const Transform& tr_a = scene.get<Transform>(a);
+        const Transform& tr_b = scene.get<Transform>(b);
+
+        const SpriteRenderer& sr_a = scene.get<SpriteRenderer>(a);
+        const SpriteRenderer& sr_b = scene.get<SpriteRenderer>(b);
+
         const SpriteDataRegistry& reg = App::priv_ctx().sprite_data_registry;
 
         // metal slug doesn't need this and I'm too lazy to implement it
-        if (a.tr.scale != b.tr.scale)
+        if (tr_a.scale != tr_b.scale)
         {
             printf("Pixel perfect checks between differently sized objects is forbidden");
             return false;
         }
 
         // find intersection (return if none)
-        const aabb bounds_a = a.sr.bounds(a.tr);
-        const aabb bounds_b = b.sr.bounds(b.tr);
+        const aabb bounds_a = sr_a.bounds(tr_a);
+        const aabb bounds_b = sr_b.bounds(tr_b);
 
         const aabb overlap = aabb::overlap(bounds_a, bounds_b);
 
         if (!overlap) return false;
 
         // get scaled down overlap size and local positions of where the overlap starts for the 2 sprites
-        const glm::ivec2 size = overlap.size() / a.tr.scale;
+        const glm::ivec2 size = overlap.size() / tr_a.scale;
 
-        glm::ivec2 local_a = (overlap.min - a.tr.position) / a.tr.scale + a.sr.size() / 2;
-        glm::ivec2 local_b = (overlap.min - b.tr.position) / b.tr.scale + b.sr.size() / 2;
+        glm::ivec2 local_a = (overlap.min - tr_a.position) / tr_a.scale + sr_a.size() / 2;
+        glm::ivec2 local_b = (overlap.min - tr_b.position) / tr_b.scale + sr_b.size() / 2;
 
         // The masks (mask_a and mask_b) contain a pointer to a buffer with packed data (see sprite_data_registry.hpp)
-        const FrameMask mask_a = reg.mask(a.sr.info(), a.sr.frame());
-        const FrameMask mask_b = reg.mask(b.sr.info(), b.sr.frame());
+        const FrameMask mask_a = reg.mask(sr_a.info(), sr_a.frame());
+        const FrameMask mask_b = reg.mask(sr_b.info(), sr_b.frame());
 
         for (int y = 0; y < size.y; ++y, ++local_a.y, ++local_b.y)
         {
@@ -84,8 +250,8 @@ namespace mse
             // in case the first chunks are not aligned i have to read from the beginning of the byte
 
             // how many bits are to the left from the coords till the start of the byte
-            const int lbits_a = (local_a.x + local_a.y * a.sr.size().x) % 8;
-            const int lbits_b = (local_b.x + local_b.y * b.sr.size().x) % 8;
+            const int lbits_a = (local_a.x + local_a.y * sr_a.size().x) % 8;
+            const int lbits_b = (local_b.x + local_b.y * sr_b.size().x) % 8;
 
             // for example
             // for frame with size 21x16 and coords = (15, 15)
@@ -211,83 +377,6 @@ namespace mse
         }
 
         return false;
-    }
-
-    void CollisionSystem::step(Scene& scene)
-    {
-        ComponentData tr_data{ scene.pool<Transform>() };
-        ComponentData sr_data{ scene.pool<SpriteRenderer>() };
-        ComponentData sc_data{ scene.pool<SpriteCollider>() };
-
-        if (!tr_data || !sc_data) return;
-
-        objects_.clear();
-
-        // get all dynamic objects
-        for (size_t i = 0; i < sc_data.size; ++i)
-        {
-            Transform* tr = sc_data.get_from_idx(i, tr_data);
-            if (!tr) continue;
-
-            SpriteRenderer* sr = sc_data.get_from_idx(i, sr_data);
-            if (!sr) continue;
-
-            SpriteCollider& col = sc_data.components[i];
-
-            objects_.emplace_back(*tr, *sr, col);
-        }
-
-        for (SpriteData& obj : objects_)
-        {
-            obj.sc.pos_remainder  += obj.sc.velocity * Target::FRAME_TIME;
-
-            const glm::vec2 floor = glm::floor(obj.sc.pos_remainder);
-
-            obj.tr.position      += floor;
-            obj.sc.pos_remainder -= floor;
-        }
-
-
-        // ---------------
-        const size_t s = sc_data.components.size();
-        for (size_t i = 0; i < s - 1; ++i)
-        {
-            SpriteCollider& sc1 = sc_data.components[i];
-            Transform* tr1 = sc_data.get_from_idx(i, tr_data);
-            SpriteRenderer* sr1 = sc_data.get_from_idx(i, sr_data);
-
-            if (!tr1 || !sr1) continue;
-
-            entity_id id1 = sc_data.owners[i];
-
-            for (size_t j = i + 1; j < s; ++j)
-            {
-                SpriteCollider& sc2 = sc_data.components[j];
-                Transform* tr2 = sc_data.get_from_idx(j, tr_data);
-                SpriteRenderer* sr2 = sc_data.get_from_idx(j, sr_data);
-
-                if (!tr2 || !sr2) continue;
-
-                entity_id id2 = sc_data.owners[j];
-
-                SpriteCollider::callback_t callbacks[2]{};
-                uint32_t masks[2]{};
-
-                if (sc1.callback && (masks[0] = sc1.target_layer & sc2.layer)) callbacks[0] = sc1.callback;
-                if (sc2.callback && (masks[1] = sc2.target_layer & sc1.layer)) callbacks[1] = sc2.callback;
-
-                if (!callbacks[0] && !callbacks[1]) continue;
-                if (!(sc1.bounds(*tr1) & sc2.bounds(*tr2))) continue;
-
-                SpriteData d1{ *tr1, *sr1, sc1 };
-                SpriteData d2{ *tr2, *sr2, sc2 };
-
-                if (!pp_check(d1, d2)) continue;
-
-                if (callbacks[0]) callbacks[0](id2, masks[0]);
-                if (callbacks[1]) callbacks[1](id1, masks[1]);
-            }
-        }
     }
 
 

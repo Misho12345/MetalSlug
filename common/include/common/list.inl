@@ -5,7 +5,7 @@
 namespace mse
 {
     template <typename T>
-    template <typename... Args> requires (std::convertible_to<Args, T> && ...)
+    template <std::convertible_to<T>... Args>
     list<T>::list(Args&&... args)
     {
         (emplace_back(std::forward<Args>(args)), ...);

@@ -58,7 +58,7 @@ namespace mse
 
     private:
         static constexpr uint32_t MAX_STEPS = 10;
-        static constexpr double MAX_DELTA_TIME = Target::FRAME_TIME * 3;
+        static constexpr float MAX_DELTA_TIME = Target::FRAME_TIME * 3;
 
         // the extending class will ensure that there is only one instance
         // maybe not the best design, but good enough

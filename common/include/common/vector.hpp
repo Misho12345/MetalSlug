@@ -44,8 +44,7 @@ namespace mse
          * @param args Elements convertable to T
          * @note If T is integral and only one argument is provided, the argument is treated as the size of the vector
          */
-        template <typename... Args> requires (
-            (std::convertible_to<Args, T> && ...) &&
+        template <std::convertible_to<T>... Args> requires (
             !(sizeof...(Args) == 1 && (std::integral<Args> && ...)))
         vector(Args&&... args);
 
@@ -136,9 +135,9 @@ namespace mse
         void pop_back();
 
         /**
-         * @brief Reallocates the vector's buffer to the specified capacity
+         * @brief Reallocates the vector's buffer to the specified capacity if it's bigger than the current capacity
          * @param new_cap New capacity
-         * @note The method always makes a new allocation for the vector's data
+         * @note The method may make a new allocation for the vector's data if new_cap > capacity_
          * Make sure you don't keep a pointer to the vector's data after calling this method
          */
         void reserve(size_t new_cap);
@@ -161,15 +160,7 @@ namespace mse
          * @return The index of the first occurrence of the value, or vector<>::npos if not found
          */
         [[nodiscard]]
-        size_t find(const T& value) requires std::equality_comparable<T>
-        {
-            for (size_t i = 0; i < size_; ++i)
-            {
-                if (data_[i] == value) return i;
-            }
-
-            return vector<>::npos;
-        }
+        size_t find(const T& value) requires std::equality_comparable<T>;
 
         // iterator methods
         T* begin() { return data_; }

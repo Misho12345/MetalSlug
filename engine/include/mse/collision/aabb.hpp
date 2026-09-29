@@ -5,6 +5,8 @@ namespace mse
 {
     struct aabb final
     {
+        static aabb screen;
+
         glm::ivec2 min;
         glm::ivec2 max;
 
@@ -12,6 +14,16 @@ namespace mse
         {
             return min.x < other.max.x && min.y < other.max.y &&
                     max.x > other.min.x && max.y > other.min.y;
+        }
+
+        constexpr aabb& operator|=(const aabb& other)
+        {
+            if (&other == this) return *this;
+
+            min = glm::min(min, other.min);
+            max = glm::max(max, other.max);
+
+            return *this;
         }
 
         constexpr operator bool() const { return min.x < max.x && min.y < max.y; }
@@ -74,4 +86,6 @@ namespace mse
             return *this;
         }
     };
+
+    inline aabb aabb::screen{ {}, Target::RESOLUTION };
 }

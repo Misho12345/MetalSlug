@@ -15,7 +15,7 @@ namespace mse
         for (SpriteRenderer& sprite_renderer : scene.pool<SpriteRenderer>().components())
         {
             sprite_renderer.update(
-                static_cast<float>(Target::FRAME_TIME),
+                Target::FRAME_TIME,
                 reg.anim_data(sprite_renderer.info()).frame_count);
         }
     }

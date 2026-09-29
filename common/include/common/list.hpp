@@ -79,7 +79,7 @@ namespace mse
          * list<float> l{ 1, 2.0f, 5.5f };
          * @endcode
          */
-        template <typename... Args> requires (std::convertible_to<Args, T> && ...)
+        template <std::convertible_to<T>... Args>
         list(Args&&... args);
 
         ~list();

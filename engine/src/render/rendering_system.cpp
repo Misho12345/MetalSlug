@@ -186,18 +186,17 @@ namespace mse
 
         assert(sprites.size() == entities.size());
 
+        const glm::vec2 cam_pos = scene.get<Transform>(scene.camera()).position;
+
         // collect all the instances
         for (size_t i = 0; i < sprites.size(); ++i)
         {
             const SpriteRenderer& sprite = sprites[i];
-
             const Transform* tr = scene.try_get<Transform>(entities[i]);
-            const Transform* cam = scene.try_get<Transform>(scene.camera());
 
             if (sprite.hidden || !tr) continue;
-            assert(cam);
 
-            if (!(sprite.screen_bounds(*tr, cam->position) & aabb({}, Target::RESOLUTION))) continue;
+            if (!(sprite.screen_bounds(*tr, cam_pos) & aabb::screen)) continue;
 
             size_t idx = layers_.find(sprite.layer);
 

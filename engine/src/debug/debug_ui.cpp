@@ -47,7 +47,7 @@ namespace mse
 
     void DebugUI::draw_box(const aabb box, const glm::u8vec4 color, const float thickness) const
     {
-        if (!(box & aabb{ {}, Target::RESOLUTION })) return;
+        if (!(box & aabb::screen)) return;
 
         static constexpr glm::vec2 res = Target::RESOLUTION;
 

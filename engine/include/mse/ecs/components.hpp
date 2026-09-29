@@ -70,7 +70,6 @@ namespace mse
         uint32_t layer{};
         uint32_t target_layer{};
 
-        using callback_t = void(*)(entity_id, uint32_t);
-        callback_t callback{ nullptr };
+        void (*callback)(entity_id, uint32_t){ nullptr };
     };
 }
