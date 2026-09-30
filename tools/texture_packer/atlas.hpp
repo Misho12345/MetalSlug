@@ -4,7 +4,7 @@
 
 struct Box final
 {
-    Box(const char* _image_path, int _sprite_id, int _anim_id, int _frame_count);
+    Box(const char* _image_path, uint32_t _sprite_id, uint32_t _anim_id, uint32_t _frame_count);
     ~Box();
 
     Box(const Box&)            = delete;
@@ -16,14 +16,14 @@ struct Box final
     const char* image_path;
     uint32_t* data{};
 
-    int x{}, y{};
-    int w{}, h{};
+    uint32_t x{}, y{};
+    uint32_t w{}, h{};
 
-    int sprite_id, anim_id;
+    uint32_t sprite_id, anim_id;
 
     // frame count is still passed and stored, even though the program doesn't save it in meta.json
     // because it's still needed for the mask file generation
-    int frame_count;
+    uint32_t frame_count;
 
     bool rotated{ false };
 };
@@ -31,7 +31,7 @@ struct Box final
 class Atlas final
 {
 public:
-    static constexpr int SIZE = 2048;
+    static constexpr uint32_t SIZE = 2048;
 
     Atlas() = default;
     ~Atlas() = default;

@@ -79,7 +79,7 @@ namespace mse::anim
     inline constexpr int sprite_id{ -1 };
 ")
 
-set(sprites_dir "${CMAKE_SOURCE_DIR}/assets/images/sprites")
+set(sprites_dir "${CMAKE_SOURCE_DIR}/assets/sprites")
 
 # Gather all directories that contain sprite images (leaf directories)
 file(GLOB_RECURSE all_items CONFIGURE_DEPENDS LIST_DIRECTORIES true "${sprites_dir}/*")
@@ -129,7 +129,7 @@ foreach (dir IN LISTS leaf_dirs)
 
     # get the needed info to construct the enum name and namespace
     # for example this:
-    # assets/images/sprites
+    # assets/sprites
     #├── enemy
     #│   ├── idle.4.jpg
     #│   ├── walking.4.jpg

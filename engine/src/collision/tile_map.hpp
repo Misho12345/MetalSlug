@@ -28,14 +28,14 @@ namespace mse
         [[nodiscard]]
         bool load(string_view path);
 
-        [[nodiscard]] glm::ivec2 size() const { return size_; }
+        [[nodiscard]] ivec2 size() const { return size_; }
         [[nodiscard]] const TileType* data() const { return data_.data(); }
 
     private:
         TileMap() = default;
 
         vector<TileType> data_;
-        glm::ivec2       size_{};
+        ivec2            size_{};
 
         friend ::mse::PrivCtx;
     };

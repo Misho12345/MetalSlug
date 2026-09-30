@@ -89,7 +89,7 @@ namespace mse
         int32_t* s_layers;
 
 
-        const glm::mat4 proj = glm::ortho(
+        const mat4 proj = glm::ortho(
             0.0f,
             static_cast<float>(Target::RESOLUTION.x),
             static_cast<float>(Target::RESOLUTION.y),
@@ -207,7 +207,7 @@ namespace mse
 
         assert(sprites.size() == entities.size());
 
-        const glm::ivec2 cam_pos = scene.camera_pos_screen();
+        const ivec2 cam_pos = scene.camera_pos_screen();
 
         // collect all the instances
         for (size_t i = 0; i < sprites.size(); ++i)
@@ -300,7 +300,7 @@ namespace mse
 
         instance_data_.create_persistent<InstanceData>(
             gl::BufferType::Storage,
-            static_cast<GLsizeiptr>(max(sprite_pool.components().size(), 100_zu)));
+            max(sprite_pool.components().size(), 100_zu));
 
         update_instances_buffer(scene);
     }

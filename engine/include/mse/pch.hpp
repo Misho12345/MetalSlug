@@ -60,6 +60,14 @@ namespace mse
 
     // might replace later with a 16.16 integer range
     using unit = float;
+
+
+
+    using mat4 = glm::f32mat4;
+
+    using vec2 = glm::f32vec2;
+    using ivec2 = glm::i32vec2;
+    using uvec2 = glm::u32vec2;
 }
 
 #include "neo_geo_spec.hpp"
@@ -69,13 +77,10 @@ namespace mse
     using Target = NeoGeoSpec;
 
     static_assert(
-        std::same_as<std::remove_cvref_t<decltype(Target::RESOLUTION)>, glm::ivec2> &&
+        std::same_as<std::remove_cvref_t<decltype(Target::RESOLUTION)>, ivec2> &&
         std::same_as<std::remove_cvref_t<decltype(Target::FRAME_TIME)>, float> &&
         std::same_as<std::remove_cvref_t<decltype(Target::PAR)>, float> &&
-        std::same_as<std::remove_cvref_t<decltype(Target::TILE_SIZE)>, glm::ivec2> &&
+        std::same_as<std::remove_cvref_t<decltype(Target::TILE_SIZE)>, ivec2> &&
         std::same_as<std::remove_cvref_t<decltype(Target::DAR)>, float>,
         "invalid Target format");
-
-
-    constexpr inline glm::ivec2 HALF_RES = Target::RESOLUTION / 2;
 }

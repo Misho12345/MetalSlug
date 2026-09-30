@@ -22,20 +22,20 @@ namespace mse::gl
         return *this;
     }
 
-    void Buffer::create(const BufferType type, const void* data, const GLsizeiptr size)
+    void Buffer::create(const BufferType type, const void* data, const size_t size)
     {
         assert(data && "data pointer is nullptr");
         assert(size > 0 && "buffer size is 0");
 
         reset();
         glCreateBuffers(1, &id_);
-        glNamedBufferData(id_, size, data, GL_STATIC_DRAW);
+        glNamedBufferData(id_, static_cast<GLsizeiptr>(size), data, GL_STATIC_DRAW);
 
         type_ = type;
         size_ = size;
     }
 
-    void Buffer::create_persistent_(const BufferType type, const GLsizeiptr size, const GLbitfield flags)
+    void Buffer::create_persistent_(const BufferType type, const size_t size, const GLbitfield flags)
     {
         assert(size > 0 && "buffer size is 0");
         reset();
@@ -45,11 +45,11 @@ namespace mse::gl
         flags_ = flags;
 
         glCreateBuffers(1, &id_);
-        glNamedBufferStorage(id_, size, nullptr, flags);
-        mapped_ptr_ = glMapNamedBufferRange(id_, 0, size, flags);
+        glNamedBufferStorage(id_, static_cast<GLsizeiptr>(size), nullptr, flags);
+        mapped_ptr_ = glMapNamedBufferRange(id_, 0, static_cast<GLsizeiptr>(size), flags);
     }
 
-    void Buffer::write(const void* data, const GLsizeiptr size) const
+    void Buffer::write(const void* data, const size_t size) const
     {
         assert(id_ && "invalid buffer");
         assert(data && "data pointer is nullptr");
@@ -57,7 +57,7 @@ namespace mse::gl
         assert(size <= size_ && "data size exceeds buffer size");
 
         if (mapped_ptr_) memcpy(mapped_ptr_, data, size);
-        else glNamedBufferSubData(id_, 0, size, data);
+        else glNamedBufferSubData(id_, 0, static_cast<GLsizeiptr>(size), data);
     }
 
     void Buffer::reset()
@@ -93,19 +93,19 @@ namespace mse::gl
         glBindBufferBase(target, binding, id_);
     }
 
-    void Buffer::increase_size_(const GLsizeiptr new_size)
+    void Buffer::increase_size_(const size_t new_size)
     {
         if (new_size <= size_) return;
 
-        const GLuint     old_id         = id_;
-        const GLsizeiptr old_size       = size_;
-        const void*      old_mapped_ptr = mapped_ptr_;
+        const GLuint old_id         = id_;
+        const size_t old_size       = size_;
+        const void*  old_mapped_ptr = mapped_ptr_;
 
         id_         = 0;
         size_       = 0;
         mapped_ptr_ = nullptr;
 
-        const GLsizeiptr copy_size = min(old_size, new_size);
+        const size_t copy_size = min(old_size, new_size);
 
         if (old_mapped_ptr)
         {
@@ -115,7 +115,7 @@ namespace mse::gl
         else
         {
             create(type_, nullptr, new_size);
-            glCopyNamedBufferSubData(old_id, id_, 0, 0, copy_size);
+            glCopyNamedBufferSubData(old_id, id_, 0, 0, static_cast<GLsizeiptr>(copy_size));
         }
 
         if (old_id)

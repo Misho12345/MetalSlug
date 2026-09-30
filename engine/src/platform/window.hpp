@@ -36,9 +36,9 @@ namespace mse
         void poll_events() const;
         void swap_buffers() const;
 
-        [[nodiscard]] int32_t width() const { return size_.x; }
-        [[nodiscard]] int32_t height() const { return size_.y; }
-        [[nodiscard]] glm::uvec2 size() const { return size_; }
+        [[nodiscard]] uint32_t width() const { return size_.x; }
+        [[nodiscard]] uint32_t height() const { return size_.y; }
+        [[nodiscard]] uvec2 size() const { return size_; }
 
         [[nodiscard]]
         aabb bounds() const { return aabb{ {}, size_ }; }
@@ -46,18 +46,18 @@ namespace mse
         [[nodiscard]] float aspect_ratio() const { return static_cast<float>(size_.x) / size_.y; }
         [[nodiscard]] GLFWwindow* native_handle() const { return handle_; }
 
-        [[nodiscard]] glm::ivec2 output_offset() const { return output_offset_; }
-        [[nodiscard]] glm::ivec2 output_size() const { return output_size_; }
+        [[nodiscard]] uvec2 output_offset() const { return output_offset_; }
+        [[nodiscard]] uvec2 output_size() const { return output_size_; }
 
     private:
         Window() = default;
 
-        void update(glm::ivec2 new_size);
+        void update(ivec2 new_size);
 
-        glm::ivec2 size_{};
+        uvec2 size_{};
 
-        glm::ivec2 output_offset_{};
-        glm::ivec2 output_size_{};
+        uvec2 output_offset_{};
+        uvec2 output_size_{};
 
         GLFWwindow* handle_{ nullptr };
 

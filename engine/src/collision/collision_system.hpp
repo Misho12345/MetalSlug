@@ -19,8 +19,8 @@ namespace mse
     {
     public:
         static constexpr float GRAVITY = 9.81f;
-        static constexpr uint32_t X_GRID_CELL_SIZE = Target::TILE_SIZE.x * 4;
-        static constexpr uint32_t X_GRID_SIZE = (Target::RESOLUTION.x + X_GRID_CELL_SIZE - 1) / X_GRID_CELL_SIZE; // ceil
+        static constexpr uint32_t X_GRID_CELL_SIZE = Target::TILE_SIZE.x * 4u;
+        static constexpr uint32_t X_GRID_SIZE = (Target::RESOLUTION.x + X_GRID_CELL_SIZE - 1u) / X_GRID_CELL_SIZE; // ceil
 
         CollisionSystem(const CollisionSystem&)            = delete;
         CollisionSystem(CollisionSystem&&)                 = delete;
@@ -32,20 +32,20 @@ namespace mse
     private:
         struct EntityExtent final
         {
-            entity_id entity;
-            glm::uvec2 range;
+            entity_id entity{};
+            uvec2 range{};
         };
 
         struct CollisionPair final
         {
-            entity_id a;
-            entity_id b;
+            entity_id a{};
+            entity_id b{};
         };
 
         struct BucketEntry final
         {
-            entity_id entity;
-            uint32_t starting_grid_id;
+            entity_id entity{};
+            uint32_t starting_grid_id{};
         };
 
         CollisionSystem();
@@ -55,10 +55,13 @@ namespace mse
         // performs a pixel perfect check using
         static bool pp_check(const Scene& scene, entity_id a, entity_id b);
 
+
+        static void sweep_to_tile_map(Scene& scene, entity_id entity);
+
         // returns the time of collision (max 1.0f)
         static float sweep(
-            aabb bounds_a, glm::vec2 vel_a,
-            aabb bounds_b, glm::vec2 vel_b);
+            aabb bounds_a, vec2 vel_a,
+            aabb bounds_b, vec2 vel_b);
 
         vector<uint32_t> counter_{};
 

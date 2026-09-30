@@ -38,8 +38,8 @@ namespace mse
     }
 
     string::string(string&& other) noexcept :
-        size_{ std::exchange(other.size_, 0) },
-        capacity_{ std::exchange(other.capacity_, 0) },
+        size_{ std::exchange(other.size_, 0u) },
+        capacity_{ std::exchange(other.capacity_, 0u) },
         data_{ std::exchange(other.data_, nullptr) } {}
 
     string& string::operator=(const string& other)
@@ -68,8 +68,8 @@ namespace mse
         if (this == &other) return *this;
 
         delete[] data_;
-        size_     = std::exchange(other.size_, 0);
-        capacity_ = std::exchange(other.capacity_, 0);
+        size_     = std::exchange(other.size_, 0u);
+        capacity_ = std::exchange(other.capacity_, 0u);
         data_     = std::exchange(other.data_, nullptr);
 
         return *this;

@@ -38,7 +38,7 @@ namespace mse::gl
         template <typename T>
         void create(const BufferType type, span<const T> data)
         {
-            create(type, data.data(), static_cast<GLsizeiptr>(data.size() * sizeof(T)));
+            create(type, data.data(), data.size() * sizeof(T));
         }
 
         /**
@@ -55,11 +55,12 @@ namespace mse::gl
         template <typename T>
         void create_persistent(
             const BufferType type,
-            const GLsizeiptr count,
+            const size_t     count,
             const GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT)
         {
             create_persistent_(type, count * sizeof(T), flags);
         }
+
 
         void reset();
 
@@ -84,36 +85,33 @@ namespace mse::gl
          * copies the existing data to the new buffer if resize is needed.
          */
         template <typename T>
-        void increase_size(const size_t new_size)
-        {
-            increase_size_(static_cast<GLsizeiptr>(new_size) * sizeof(T));
-        }
+        void increase_size(const size_t new_size) { increase_size_(new_size * sizeof(T)); }
 
         [[nodiscard]]
         GLuint id() const { return id_; }
 
         template <typename T>
         [[nodiscard]]
-        GLsizeiptr size() const { return size_ / sizeof(T); }
+        size_t size() const { return size_ / sizeof(T); }
 
         operator bool() const { return id_; }
 
     private:
-        void increase_size_(GLsizeiptr new_size);
+        void increase_size_(size_t new_size);
 
-        void create(BufferType type, const void* data, GLsizeiptr size);
+        void create(BufferType type, const void* data, size_t size);
 
         void create_persistent_(
             BufferType type,
-            GLsizeiptr size,
+            size_t     size,
             GLbitfield flags);
 
-        void write(const void* data, GLsizeiptr size) const;
+        void write(const void* data, size_t size) const;
 
         BufferType type_{ BufferType::Vertex };
         GLuint     id_{ 0 };
 
-        GLsizeiptr size_{ 0 };
+        size_t     size_{ 0 };
         GLbitfield flags_{ 0 };
 
         void* mapped_ptr_{ nullptr };

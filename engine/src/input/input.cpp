@@ -44,16 +44,18 @@ namespace mse
     bool Input::just_pressed(const Key key) { return down(key) && get(instance().pressed_released_, key); }
     bool Input::just_released(const Key key) { return up(key) && get(instance().pressed_released_, key); }
 
-    void Input::set(char* flags, const Key key, const bool value)
+    void Input::set(uint8_t* flags, const Key key, const bool value)
     {
-        const int k = static_cast<int>(key);
-        if (value) flags[k / 8] |= (1 << (k % 8));
-        else flags[k / 8]       &= ~(1 << (k % 8));
+        const uint32_t k = static_cast<uint32_t>(key);
+        const int f = 1 << (k % 8);
+
+        if (value) flags[k / 8] |= f;
+        else flags[k / 8] &= ~f;
     }
 
-    bool Input::get(const char* flags, const Key key)
+    bool Input::get(const uint8_t* flags, const Key key)
     {
-        const int k = static_cast<int>(key);
+        const uint32_t k = static_cast<uint32_t>(key);
         return flags[k / 8] & (1 << (k % 8));
     }
 }

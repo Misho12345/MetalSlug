@@ -11,8 +11,8 @@ namespace mse
      */
     struct SpriteAnimationData final
     {
-        glm::ivec2 offset;
-        glm::ivec2 frame_size;
+        ivec2 offset;
+        uvec2 frame_size;
         uint32_t   frame_count;
         uint32_t   atlas_idx;
     };
@@ -35,15 +35,16 @@ namespace mse
         const uint8_t* origin;
 
         // struct will be 16 bytes either way because of padding, might as well store the height for assert checks
-        glm::ivec2 size;
+        uvec2 size;
 
         // returns a strip from the mask to compare with another one
         // the strip is of size sizeof(size_t), therefore containing data for 64 pixels for x64
         // assumes coords is a position that lies on the start of a byte, not in the middle
-        //
-        size_t range(glm::ivec2 coords, uint32_t max_size) const;
+        // allows coords.x to be negative (as long as it doesn't go out of bounds
+        [[nodiscard]]
+        size_t range(ivec2 coords, uint32_t max_size) const;
 
-        bool operator[](glm::ivec2 coords) const;
+        bool operator[](uvec2 coords) const;
     };
 
     /**
@@ -65,6 +66,7 @@ namespace mse
         [[nodiscard]] FrameMask mask(anim::Info info, uint32_t frame) const;
         [[nodiscard]] const SpriteAnimationData& anim_data(anim::Info info) const;
 
+        [[nodiscard]]
         const vector<SpriteAnimationData>& anim_data() const { return anim_data_; }
 
         [[nodiscard]]

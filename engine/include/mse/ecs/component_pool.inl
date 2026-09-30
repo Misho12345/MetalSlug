@@ -10,11 +10,10 @@ namespace mse
 
         if (lookup_[id.idx()] != -1)
         {
-            components_[lookup_[id.idx()]] = C{ std::forward<Args>(args)... };
-            return components_[lookup_[id.idx()]];
+            return components_[static_cast<size_t>(lookup_[id.idx()])] = C{ std::forward<Args>(args)... };
         }
 
-        lookup_[id.idx()] = components_.size();
+        lookup_[static_cast<size_t>(id.idx())] = static_cast<int32_t>(components_.size());
         owners_.emplace_back(id);
         components_.emplace_back(std::forward<Args>(args)...);
         return components_.back();
@@ -24,7 +23,7 @@ namespace mse
     const C* ComponentPool<C>::get(const entity_id id) const
     {
         if (id.idx() >= lookup_.size() || lookup_[id.idx()] == -1) return nullptr;
-        return &components_[lookup_[id.idx()]];
+        return &components_[static_cast<size_t>(lookup_[id.idx()])];
     }
 
     template <typename C>
@@ -38,13 +37,13 @@ namespace mse
     {
         if (!has(id)) return;
 
-        int32_t idx = lookup_[id.idx()];
-        int32_t last_idx = components_.size() - 1;
+        size_t idx = static_cast<size_t>(lookup_[id.idx()]);
+        size_t last_idx = components_.size() - 1_zu;
         const entity_id last_entity = owners_[last_idx];
 
         components_[idx] = std::move(components_[last_idx]);
         owners_[idx] = last_entity;
-        lookup_[last_entity.idx()] = idx;
+        lookup_[last_entity.idx()] = static_cast<int32_t>(idx);
 
         components_.pop_back();
         owners_.pop_back();

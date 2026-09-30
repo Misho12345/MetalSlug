@@ -37,16 +37,16 @@ namespace mse
             const aabb bounds = sr.bounds(t);
             FrameMask mask = App::priv_ctx().sprite_data_registry.mask(sr.info(), sr.frame());
 
-            for (int y = bounds.min.y; y < bounds.max.y; )
+            for (int32_t y = bounds.min.y; y < bounds.max.y; )
             {
-                int y1 = y + t.scale.y;
+                int32_t y1 = y + static_cast<int32_t>(t.scale.y);
 
-                for (int x = bounds.min.x; x < bounds.max.x; )
+                for (int32_t x = bounds.min.x; x < bounds.max.x; )
                 {
-                    int x1 = x + t.scale.x;
+                    int32_t x1 = x + static_cast<int32_t>(t.scale.x);
 
-                    const glm::ivec2 coords{ x, y };
-                    if (mask[(coords - bounds.min) / t.scale])
+                    const ivec2 coords{ x, y };
+                    if (mask[(coords - bounds.min) / ivec2(t.scale)])
                         ui.draw_box({ coords, { x1, y1 } }, PIXEL_COLOR, 1.0f);
 
                     x = x1;
@@ -61,9 +61,9 @@ namespace mse
     {
         const DebugUI& ui = App::priv_ctx().debug_ui;
         const TileType* t = App::priv_ctx().tile_map.data();
-        const glm::ivec2 size = App::priv_ctx().tile_map.size();
+        const ivec2 size = App::priv_ctx().tile_map.size();
 
-        for (glm::ivec2 c{}; c.y < size.y; ++c.y)
+        for (ivec2 c{}; c.y < size.y; ++c.y)
         {
             for (c.x = 0; c.x < size.x; ++c.x, ++t)
             {

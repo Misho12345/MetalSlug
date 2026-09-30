@@ -10,8 +10,8 @@ namespace mse
 
     struct Transform final
     {
-        glm::ivec2 position{ 0, 0 };
-        glm::ivec2 scale{ 1 };
+        ivec2 position{ 0, 0 };
+        uvec2 scale{ 1 };
         float      rotation{ 0.0f };
     };
 
@@ -22,7 +22,7 @@ namespace mse
         SpriteRenderer(const Scene& scene, const entity_id id, E animation)
             : SpriteRenderer(scene, id, anim::info(animation)) {}
 
-        glm::vec2 parallax_factor{ 1.0f, 1.0f };
+        vec2 parallax_factor{ 1.0f, 1.0f };
 
         float frame_dur{ 0.1f };
         int32_t layer{ 0 };
@@ -43,9 +43,9 @@ namespace mse
         void stop();
         void update(float dt, uint32_t frame_count);
 
-        [[nodiscard]] glm::ivec2 size() const;
+        [[nodiscard]] ivec2 size() const;
         [[nodiscard]] aabb bounds(const Transform& tr) const;
-        [[nodiscard]] aabb screen_bounds(const Transform& tr, glm::ivec2 cam_pos) const;
+        [[nodiscard]] aabb screen_bounds(const Transform& tr, ivec2 cam_pos) const;
 
     private:
         SpriteRenderer(const Scene& scene, entity_id id, anim::Info info);
@@ -62,16 +62,16 @@ namespace mse
     struct MSE_API SpriteCollider final
     {
         explicit SpriteCollider(const Scene& scene, entity_id id);
-        SpriteCollider(const Scene& scene, entity_id id, glm::ivec2 _offset, glm::ivec2 _size);
+        SpriteCollider(const Scene& scene, entity_id id, ivec2 _offset, ivec2 _size);
 
         [[nodiscard]]
         aabb bounds(const Transform& tr) const;
 
-        glm::vec2 velocity{ 0.0f, 0.0f };
-        glm::vec2 pos_remainder{};
+        vec2 velocity{ 0.0f, 0.0f };
+        vec2 pos_remainder{};
 
-        glm::ivec2 offset{};
-        glm::ivec2 size{ 32 };
+        ivec2 offset{};
+        uvec2 size{ 32 };
 
         uint32_t layer{};
         uint32_t target_layer{};

@@ -12,7 +12,7 @@ struct InstanceData
     vec2 parallax_factor;
 
     ivec2 position;
-    ivec2 scale;
+    uvec2 scale;
     float rotation;
 
     uint anim_idx;
@@ -22,7 +22,7 @@ struct InstanceData
 struct SpriteAnimationData
 {
     ivec2 offset;
-    ivec2 frame_size;
+    uvec2 frame_size;
     uint frame_count;
     uint atlas_idx;
 };

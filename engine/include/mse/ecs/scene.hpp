@@ -110,8 +110,8 @@ namespace mse
         }
 
 
-        [[nodiscard]] glm::ivec2 camera_pos() const { return get<Transform>(camera_).position; }
-        [[nodiscard]] glm::ivec2 camera_pos_screen() const { return camera_pos() - HALF_RES; }
+        [[nodiscard]] ivec2 camera_pos() const { return get<Transform>(camera_).position; }
+        [[nodiscard]] ivec2 camera_pos_screen() const { return camera_pos() - Target::RESOLUTION / 2; }
 
     private:
         ComponentPool<Transform>      transform_pool_;

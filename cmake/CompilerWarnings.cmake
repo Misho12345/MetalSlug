@@ -20,6 +20,7 @@ function(enable_warnings target)
                 /wd4324    # structure was padded due to alignment specifier
                 /w14263    # member function doesn't override any base class virtual
                 /w14265    # class has virtual functions but no virtual destructor
+                /w44365    # implicit sign conversion
         )
     else ()
         # Common GCC/Clang warnings
@@ -34,6 +35,7 @@ function(enable_warnings target)
                 -Wshadow
                 -Wnull-dereference
                 -Wdouble-promotion
+                -Wsign-conversion
         )
 
         # GCC-specific warnings

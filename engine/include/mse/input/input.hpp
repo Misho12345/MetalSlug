@@ -7,7 +7,7 @@ namespace mse
      * @brief Enumeration of keyboard keys
      * @note don't use Key::_COUNT
      */
-    enum class Key
+    enum class Key : uint32_t
     {
         A = GLFW_KEY_A,
         B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
@@ -100,12 +100,12 @@ namespace mse
 
         static constexpr size_t key_byte_count = (static_cast<size_t>(Key::_COUNT) + 7) / 8;
 
-        char up_down_[key_byte_count]; // false = down; true = up
-        char pressed_released_[key_byte_count]; // true = pressed if down, released if up, false = nothing
+        uint8_t up_down_[key_byte_count]; // false = down; true = up
+        uint8_t pressed_released_[key_byte_count]; // true = pressed if down, released if up, false = nothing
 
         // flags is either up_down_ or pressed_released_
-        static void set(char* flags, Key key, bool value);
-        static bool get(const char* flags, Key key);
+        static void set(uint8_t* flags, Key key, bool value);
+        static bool get(const uint8_t* flags, Key key);
 
         friend ::mse::PrivCtx;
     };

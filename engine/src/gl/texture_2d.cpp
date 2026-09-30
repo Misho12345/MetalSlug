@@ -93,12 +93,19 @@ namespace mse::gl
         if (size_.z > 1 || force_array)
         {
             glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &id_);
-            glTextureStorage3D(id_, 1, to_gl(desc.format), size_.x, size_.y, size_.z);
+            glTextureStorage3D(
+                id_, 1, to_gl(desc.format),
+                static_cast<GLsizei>(size_.x),
+                static_cast<GLsizei>(size_.y),
+                static_cast<GLsizei>(size_.z));
         }
         else
         {
             glCreateTextures(GL_TEXTURE_2D, 1, &id_);
-            glTextureStorage2D(id_, 1, to_gl(desc.format), size_.x, size_.y);
+            glTextureStorage2D(
+                id_, 1, to_gl(desc.format),
+                static_cast<GLsizei>(size_.x),
+                static_cast<GLsizei>(size_.y));
         }
 
         glTextureParameteri(id_, GL_TEXTURE_WRAP_S, to_gl(desc.wrap));

@@ -8,14 +8,16 @@
 #include <stb_image_write.h>
 
 
-Box::Box(const char* _image_path, const int _sprite_id, const int _anim_id, const int _frame_count)
+Box::Box(const char* _image_path, const uint32_t _sprite_id, const uint32_t _anim_id, const uint32_t _frame_count)
     : image_path{ _image_path },
       sprite_id{ _sprite_id },
       anim_id{ _anim_id },
       frame_count{ _frame_count }
 {
-    int t;
-    data = reinterpret_cast<uint32_t*>(stbi_load(image_path, &w, &h, &t, 4));
+    int w_, h_, t;
+    data = reinterpret_cast<uint32_t*>(stbi_load(image_path, &w_, &h_, &t, 4));
+    w = static_cast<uint32_t>(w_);
+    h = static_cast<uint32_t>(h_);
 }
 
 Box::~Box() { if (data) stbi_image_free(data); }
@@ -69,15 +71,18 @@ void Atlas::save(const char* atlas_path) const
         if (box->rotated)
         {
             // copy pixel by pixel because it's rotated
-            for (int x = 0; x < box->h; ++x)
+            for (uint32_t x = 0; x < box->h; ++x)
             {
-                for (int y = 0; y < box->w; ++y, ++p) { data[(box->x + x + (box->y + y) * SIZE)] = *p; }
+                for (uint32_t y = 0; y < box->w; ++y, ++p)
+                {
+                    data[(box->x + x + (box->y + y) * SIZE)] = *p;
+                }
             }
         }
         else
         {
             // copy row by row
-            for (int y = 0; y < box->h; ++y, p += box->w)
+            for (uint32_t y = 0; y < box->h; ++y, p += box->w)
             {
                 memcpy(data + (box->x + (box->y + y) * SIZE), p, box->w * sizeof(uint32_t));
             }
@@ -101,7 +106,7 @@ void save_masks(const mse::span<const Box> boxes, const char* mask_path)
 
     uint8_t* data = new uint8_t[total_size]();
     uint8_t* dp = data;
-    int bit = 0;
+    uint32_t bit = 0;
 
     for (const Box& box : boxes)
     {
@@ -110,14 +115,14 @@ void save_masks(const mse::span<const Box> boxes, const char* mask_path)
         // the parts of the mask for the specific frame in the entire animation data block
 
         const uint32_t* p       = box.data;
-        const int       frame_w = box.w / box.frame_count;
+        const uint32_t  frame_w = box.w / box.frame_count;
 
-        for (int f = 0; f < box.frame_count; ++f)
+        for (uint32_t f = 0; f < box.frame_count; ++f)
         {
             const size_t off_x = frame_w * f;
-            for (int y = 0; y < box.h; ++y)
+            for (uint32_t y = 0; y < box.h; ++y)
             {
-                for (int x = 0; x < frame_w; ++x)
+                for (uint32_t x = 0; x < frame_w; ++x)
                 {
                    const uint32_t v = p[off_x + x + y * box.w];
 

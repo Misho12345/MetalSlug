@@ -43,12 +43,16 @@ namespace mse
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        glViewport(0, 0, window.width(), window.height());
+        glViewport(
+            0, 0,
+            static_cast<GLsizei>(window.width()),
+            static_cast<GLsizei>(window.height()));
+
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        const glm::ivec2 offset = window.output_offset();
-        const glm::ivec2 size = window.output_size();
+        const ivec2 offset = window.output_offset();
+        const ivec2 size = window.output_size();
         glViewport(offset.x, offset.y, size.x, size.y);
 
         shader.use();

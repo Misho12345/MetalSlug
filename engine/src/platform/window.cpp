@@ -69,7 +69,7 @@ namespace mse
     }
 
 
-    void Window::update(const glm::ivec2 new_size)
+    void Window::update(const ivec2 new_size)
     {
         size_ = new_size;
 
@@ -77,7 +77,7 @@ namespace mse
 
         if (ar > Target::DAR)
         {
-            output_size_.x   = static_cast<int32_t>(size_.y * Target::DAR);
+            output_size_.x   = static_cast<uint32_t>(size_.y * Target::DAR);
             output_size_.y   = size_.y;
             output_offset_.x = (size_.x - output_size_.x) / 2;
             output_offset_.y = 0u;
@@ -85,7 +85,7 @@ namespace mse
         else
         {
             output_size_.x = size_.x;
-            output_size_.y = static_cast<int32_t>(size_.x / Target::DAR);
+            output_size_.y = static_cast<uint32_t>(size_.x / Target::DAR);
             output_offset_.x = 0u;
             output_offset_.y = (size_.y - output_size_.y) / 2;
         }

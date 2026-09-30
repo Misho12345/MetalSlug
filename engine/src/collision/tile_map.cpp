@@ -8,7 +8,7 @@ namespace mse
         const string csv = FileIO::read(path);
         if (csv.empty()) return false;
 
-        int width = 0, height = 0;
+        uint32_t width = 0, height = 0;
 
         for (const char* c = csv.data(); *c; ++c)
         {

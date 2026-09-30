@@ -11,14 +11,14 @@ namespace mse
     }
 
 
-    size_t FrameMask::range(const glm::ivec2 coords, const uint32_t max_size) const {
-        assert(coords.y >= 0 && coords.y < size.y);
+    size_t FrameMask::range(const ivec2 coords, const uint32_t max_size) const {
+        assert(coords.y >= 0 && static_cast<uint32_t>(coords.y) < size.y);
 
         // does not leak to the next row
-        assert(static_cast<int>(max_size) + coords.x <= size.x);
+        assert(static_cast<uint32_t>(max_size + coords.x) <= size.x);
 
-        const size_t idx = coords.x + coords.y * size.x;
-        assert(idx % 8 == 0); // starts from the beginning of a byte
+        const uint32_t idx = coords.x + coords.y * size.x;
+        assert(idx % 8 == 0u); // starts from the beginning of a byte
 
 
         // not *(size_t*)(...) because the memory is not aligned and that's technically UB
@@ -29,14 +29,11 @@ namespace mse
         return ret & ((1_zu << max_size) - 1);
     }
 
-    bool FrameMask::operator[](const glm::ivec2 coords) const
+    bool FrameMask::operator[](const uvec2 coords) const
     {
-        assert(
-            coords.x >= 0 && coords.x < size.x &&
-            coords.y >= 0 && coords.y < size.y);
+        assert(coords.x < size.x && coords.y < size.y);
 
-        const size_t idx = coords.x + coords.y * size.x;
-
+        const uint32_t idx = coords.x + coords.y * size.x;
         return origin[idx / 8] & (1 << (idx % 8));
     }
 
@@ -117,7 +114,7 @@ namespace mse
                 }
 
                 anim::Info info {
-                    v["sprite_id"].get<int>(),
+                    v["sprite_id"].get<int32_t>(),
                     v["anim_id"].get<uint32_t>()
                 };
 
@@ -126,7 +123,7 @@ namespace mse
                 data.frame_count = anim::frame_count(info);
                 data.offset      = { v["x"].get<uint32_t>(), v["y"].get<uint32_t>() };
                 data.frame_size  = { v["w"].get<uint32_t>() / data.frame_count, v["h"].get<uint32_t>() };
-                data.atlas_idx   = std::stoi(atlas.key());
+                data.atlas_idx   = static_cast<uint32_t>(std::stoi(atlas.key()));
             }
         }
 

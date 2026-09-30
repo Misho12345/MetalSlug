@@ -8,7 +8,7 @@ namespace mse
 {
     namespace
     {
-        constexpr int size_t_bits = sizeof(size_t) * 8;
+        constexpr uint32_t size_t_bits = sizeof(size_t) * 8;
 
         bool zero(const float x) { return x > -FLT_EPSILON && x < FLT_EPSILON; }
     }
@@ -35,7 +35,7 @@ namespace mse
         extents_.clear();
         pairs_.clear();
 
-        const glm::ivec2 camera_pos = scene.camera_pos_screen();
+        const ivec2 camera_pos = scene.camera_pos_screen();
 
         assert(entities.size() == sc_comps.size());
 
@@ -44,17 +44,17 @@ namespace mse
             const entity_id entity = entities[i];
             SpriteCollider& sc = sc_comps[i];
 
-            // sc.velocity += GRAVITY * Target::FRAME_TIME;
+            sc.velocity.y -= GRAVITY * Target::FRAME_TIME;
             sc.pos_remainder += sc.velocity * Target::FRAME_TIME;
-
+            sweep_to_tile_map(scene, entity);
 
             const Transform&      tr = scene.get<Transform>(entity);
             const SpriteRenderer& sr = scene.get<SpriteRenderer>(entity);
 
             if (sc.layer == 0 && (sc.target_layer == 0 || !sc.callback)) continue;
-            if (sr.parallax_factor != glm::vec2{ 1.0f, 1.0f })
+            if (sr.parallax_factor != vec2{ 1.0f, 1.0f })
             {
-                printf("Collisions with sprites with non-zero parallax factor are not possible");
+                printf("Collisions with sprites with non-default parallax factor are not possible");
                 continue;
             }
 
@@ -64,13 +64,15 @@ namespace mse
             if (!(bounds & aabb::screen)) continue;
 
             // clamp to grid size
-            const uint32_t min_idx = max(bounds.min.x / X_GRID_CELL_SIZE, 0u);
-            const uint32_t max_idx = min(bounds.max.x / X_GRID_CELL_SIZE, X_GRID_SIZE - 1u);
+            // first is not min.x / size, but like that because operator(int, uint) gives uint
+            // which messes makes negative values become super big positive ones
+            const uint32_t min_idx = max(bounds.min.x, 0) / X_GRID_CELL_SIZE;
+            const uint32_t max_idx = min(bounds.max.x / X_GRID_CELL_SIZE, X_GRID_SIZE - 1);
 
             // get the cells it'll lie in
             for (uint32_t j = min_idx; j <= max_idx; ++j) ++counter_[j];
 
-            extents_.emplace_back(entity, glm::uvec2{ min_idx, max_idx });
+            extents_.emplace_back(entity, uvec2{ min_idx, max_idx });
         }
 
 
@@ -114,7 +116,7 @@ namespace mse
             SpriteCollider& sc = sc_comps[i];
             Transform&      tr = scene.get<Transform>(entities[i]);
 
-            const glm::ivec2 floored = glm::floor(sc.pos_remainder);
+            const ivec2 floored = glm::floor(sc.pos_remainder);
 
             tr.position      += floored;
             sc.pos_remainder -= floored;
@@ -129,6 +131,7 @@ namespace mse
             if (sc_b.callback) sc_b.callback(pair.a, sc_a.layer);
         }
     }
+
 
 
     bool CollisionSystem::collision_check(Scene& scene, const entity_id a, const entity_id b)
@@ -150,14 +153,14 @@ namespace mse
         const float min2 = min_size * min_size;
 
         // pos_remainder is increased by vel * dt in ::step()
-        const glm::vec2 move = sc_a.pos_remainder - sc_b.pos_remainder;
+        const vec2 move = sc_a.pos_remainder - sc_b.pos_remainder;
 
         const float move_len2 = glm::length2(move);
-        const glm::vec2 pos_a = tr_a.position;
+        const vec2 pos_a = tr_a.position;
 
         if (min2 > move_len2)
         {
-            const glm::vec2 abs_rel_vel = glm::abs(move);
+            const vec2 abs_rel_vel = glm::abs(move);
             bool collided = false;
 
             if (abs_rel_vel.x > 1.0f || abs_rel_vel.y > 1.0f)
@@ -178,15 +181,15 @@ namespace mse
 
         const float move_len = glm::sqrt(move_len2);
         const float steps_f = move_len / min_size;
-        const glm::vec2 step = move / steps_f;
+        const vec2 step = move / steps_f;
 
-        uint32_t steps_u = glm::ceil(steps_f);
+        uint32_t steps_u = static_cast<uint32_t>(glm::ceil(steps_f));
 
         bool should_break = false;
 
-        for (glm::vec2 pos = pos_a; !should_break; tr_a.position = glm::floor(pos += step))
+        for (vec2 pos = pos_a; !should_break; tr_a.position = glm::floor(pos += step))
         {
-            if (!--steps_u)
+            if (!steps_u--)
             {
                 tr_a.position = pos_a + glm::floor(move);
                 should_break = true;
@@ -231,23 +234,23 @@ namespace mse
         if (!overlap) return false;
 
         // get scaled down overlap size and local positions of where the overlap starts for the 2 sprites
-        const glm::ivec2 size = overlap.size() / tr_a.scale;
+        const uvec2 size = overlap.size() / tr_a.scale;
 
-        glm::ivec2 local_a = (overlap.min - tr_a.position) / tr_a.scale + sr_a.size() / 2;
-        glm::ivec2 local_b = (overlap.min - tr_b.position) / tr_b.scale + sr_b.size() / 2;
+        uvec2 local_a = (overlap.min - tr_a.position) / ivec2(tr_a.scale) + sr_a.size() / 2;
+        uvec2 local_b = (overlap.min - tr_b.position) / ivec2(tr_b.scale) + sr_b.size() / 2;
 
         // The masks (mask_a and mask_b) contain a pointer to a buffer with packed data (see sprite_data_registry.hpp)
         const FrameMask mask_a = reg.mask(sr_a.info(), sr_a.frame());
         const FrameMask mask_b = reg.mask(sr_b.info(), sr_b.frame());
 
-        for (int y = 0; y < size.y; ++y, ++local_a.y, ++local_b.y)
+        for (uint32_t y = 0; y < size.y; ++y, ++local_a.y, ++local_b.y)
         {
             // because .range() for the masks requires the coords it's sampled from is byte-aligned
             // in case the first chunks are not aligned i have to read from the beginning of the byte
 
             // how many bits are to the left from the coords till the start of the byte
-            const int lbits_a = (local_a.x + local_a.y * sr_a.size().x) % 8;
-            const int lbits_b = (local_b.x + local_b.y * sr_b.size().x) % 8;
+            const uint32_t lbits_a = (local_a.x + local_a.y * sr_a.size().x) % 8;
+            const uint32_t lbits_b = (local_b.x + local_b.y * sr_b.size().x) % 8;
 
             // for example
             // for frame with size 21x16 and coords = (15, 15)
@@ -257,13 +260,13 @@ namespace mse
 
             if (lbits_a == lbits_b) // the 2 chunks have the same alignment, easier to handle
             {
-                for (int x = -lbits_a; x < size.x; x += size_t_bits)
+                for (int32_t x = -static_cast<int32_t>(lbits_a); x < static_cast<int32_t>(size.x); x += size_t_bits)
                 {
-                    const int max = size.x - x;
+                    const uint32_t max = size.x - x;
 
-                    size_t block_a = mask_a.range(local_a + glm::ivec2{ x, 0 }, max);
-                    size_t block_b = mask_b.range(local_b + glm::ivec2{ x, 0 }, max);
-                    const size_t mask = x < 0 ? ~((1_zu << lbits_a) - 1) : ~0_zu;
+                    size_t block_a = mask_a.range(local_a + uvec2{ x, 0 }, max);
+                    size_t block_b = mask_b.range(local_b + uvec2{ x, 0 }, max);
+                    const size_t mask = x < 0 ? ~((1_zu << lbits_a) - 1_zu) : ~0_zu;
 
                     if (block_a & block_b & mask) return true;
                 }
@@ -276,10 +279,10 @@ namespace mse
                 // B: - - -|1   1 1 0 0 ...; lbits = 3; rbits = 61; => 1
 
                 const FrameMask *mask1, *mask2;
-                glm::ivec2 local1, local2;
-                int lbits1, lbits2;
+                uvec2 local1, local2;
+                uint32_t lbits1, lbits2;
 
-                int diff = lbits_b - lbits_a;
+                int32_t diff = static_cast<int32_t>(lbits_b) - static_cast<int32_t>(lbits_a);
 
                 if (diff > 0)
                 {
@@ -296,7 +299,7 @@ namespace mse
                     diff = -diff;
                 }
 
-                int rev_diff = size_t_bits - diff;
+                uint32_t rev_diff = size_t_bits - diff;
 
 
                 // (imagine 8 bit chunk size)
@@ -342,15 +345,17 @@ namespace mse
 
                 // STEP 0
                 size_t block1;
-                size_t block2 = mask2->range(local2 - glm::ivec2{ lbits2, 0 }, size.x + lbits2);
+                size_t block2 = mask2->range(
+                    local2 - uvec2{ lbits2, 0 },
+                    size.x + lbits2);
 
                 // start from the beginning of the byte and advance by the chunk size
-                for (int x = -lbits1; x < size.x; x += size_t_bits)
+                for (int32_t x = -static_cast<int32_t>(lbits1); x < static_cast<int32_t>(size.x); x += size_t_bits)
                 {
-                    const int max = size.x - x;
+                    const uint32_t max = size.x - x;
 
                     // STEP 0, 4, ...
-                    block1 = mask1->range(local1 + glm::ivec2{ x, 0 }, max);
+                    block1 = mask1->range(local1 + uvec2{ x, 0 }, max);
 
                     if (x < 0)
                     {
@@ -364,7 +369,7 @@ namespace mse
                     if (max < size_t_bits) break; // last => no trailing bits for 2
 
                     // STEP 2, ...
-                    block2 = mask2->range(local2 + glm::ivec2{ x - diff + size_t_bits, 0 }, max);
+                    block2 = mask2->range(local2 + uvec2{ x - diff + size_t_bits, 0 }, max);
 
                     // STEP 3, ...
                     if ((block1 >> rev_diff) & block2) return true;
@@ -376,11 +381,22 @@ namespace mse
     }
 
 
-    float CollisionSystem::sweep(
-        const aabb bounds_a, const glm::vec2 vel_a,
-        const aabb bounds_b, const glm::vec2 vel_b)
+
+    void CollisionSystem::sweep_to_tile_map(Scene& scene, const entity_id entity)
     {
-        const glm::vec2 vel = (vel_a - vel_b) * Target::FRAME_TIME;
+        Transform& tr = scene.get<Transform>(entity);
+        SpriteCollider& sc = scene.get<SpriteCollider>(entity);
+        SpriteRenderer& sr = scene.get<SpriteRenderer>(entity);
+
+        TileMap& tm = App::priv_ctx().tile_map;
+    }
+
+
+    float CollisionSystem::sweep(
+        const aabb bounds_a, const vec2 vel_a,
+        const aabb bounds_b, const vec2 vel_b)
+    {
+        const vec2 vel = (vel_a - vel_b) * Target::FRAME_TIME;
 
         const bool vel_x_zero = zero(vel.x);
         const bool vel_y_zero = zero(vel.y);
@@ -394,9 +410,9 @@ namespace mse
         };
 
         // already inside
-        if (box.contains_excl(glm::vec2{ 0.0f })) return 1.0f;
+        if (box.contains_excl(vec2{ 0.0f })) return 1.0f;
 
-        glm::vec2 enter, exit;
+        vec2 enter, exit;
 
         if (vel_x_zero)
         {

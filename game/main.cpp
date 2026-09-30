@@ -9,7 +9,7 @@ namespace
     entity_id player_legs, player_body;
     entity_id slon;
 
-    glm::vec2 get_input()
+    vec2 get_input()
     {
         const bool w = Input::down(Key::W);
         const bool a = Input::down(Key::A);
@@ -17,11 +17,11 @@ namespace
         const bool d = Input::down(Key::D);
 
         return w - s || a - d
-                   ? glm::normalize(glm::vec2{
+                   ? glm::normalize(vec2{
                        static_cast<float>(d) - static_cast<float>(a),
                        static_cast<float>(s) - static_cast<float>(w)
                    })
-                   : glm::vec2{};
+                   : vec2{};
     }
 
     uint32_t to(auto val) { return static_cast<uint32_t>(val); }
@@ -42,9 +42,9 @@ void Game::init()
     player_body = scene.create_entity();
     slon        = scene.create_entity();
 
-    scene.set<Transform>(player_legs, glm::ivec2{ 150, 64 });
+    scene.set<Transform>(player_legs, glm::ivec2{ 170, 50 });
     scene.set<Transform>(player_body);
-    scene.set<Transform>(slon, glm::ivec2{ 160, 150 });
+    scene.set<Transform>(slon, ivec2{ 100, 100 });
 
     scene.set<SpriteRenderer>(player_legs, player::Legs::Idle);
     scene.set<SpriteRenderer>(player_body, player::Body::Idle);
@@ -69,28 +69,12 @@ void Game::update()
 {
     Scene& s = ctx().scene;
 
-    Transform& legs = s.get<Transform>(player_legs);
-    Transform& body = s.get<Transform>(player_body);
-
     SpriteRenderer& body_sr = s.get<SpriteRenderer>(player_body);
 
     if (Input::just_pressed(Key::Space)) body_sr.play(player::Body::Drinking);
     else if (Input::just_released(Key::Space)) body_sr.play(player::Body::Tired);
 
-
-    if (Input::just_pressed(Key::Minus))
-    {
-        legs.scale = glm::max(legs.scale - 1, glm::ivec2{ 1 });
-        body.scale = glm::max(body.scale - 1, glm::ivec2{ 1 });
-    }
-
-    if (Input::just_pressed(Key::Equal))
-    {
-        legs.scale = glm::max(legs.scale + 1, glm::ivec2{ 1 });
-        body.scale = glm::max(body.scale + 1, glm::ivec2{ 1 });
-    }
-
-    const glm::vec2 input = get_input();
+    const vec2 input = get_input();
     s.get<SpriteCollider>(player_legs).velocity = input * 50.0f;
 }
 
@@ -105,7 +89,7 @@ void Game::late_update()
     const SpriteRenderer& legs_sr = s.get<SpriteRenderer>(player_legs);
     const SpriteRenderer& body_sr = s.get<SpriteRenderer>(player_body);
 
-    cam.position = body.position = legs.position - glm::ivec2{
+    cam.position = body.position = legs.position - ivec2{
         0, (
             legs_sr.size().y * legs.scale.y +
             body_sr.size().y * body.scale.y

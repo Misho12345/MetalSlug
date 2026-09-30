@@ -29,7 +29,7 @@ int main(const int argc, const char** argv)
     validate_args(argc, argv);
 
     // get the number of actual image files to be packed into atlases
-    size_t files_count = argc - 3;
+    size_t files_count = argc - 3u;
     for (size_t i = 2; i < argc - 2u; )
     {
         files_count -= 2;
@@ -56,14 +56,19 @@ int main(const int argc, const char** argv)
 
     for (size_t i = 1; i < argc - 3u; )
     {
-        int sprite_id = std::stoi(argv[i]);
-        int num_anim = std::stoi(argv[i + 1]);
+        uint32_t sprite_id = static_cast<uint32_t>(std::stoi(argv[i]));
+        const uint32_t num_anim = static_cast<uint32_t>(std::stoi(argv[i + 1]));
 
-        int j = 0;
+        uint32_t j = 0;
 
         for (; j < num_anim; ++j)
         {
-            boxes.emplace_back(argv[i + j * 2 + 2], sprite_id, j, std::stoi(argv[i + j * 2 + 3]));
+            boxes.emplace_back(
+                argv[i + j * 2u + 2u],
+                sprite_id,
+                j,
+                static_cast<uint32_t>(std::stoi(argv[i + j * 2u + 3u])));
+
             box_ptrs.emplace_back(&boxes.back());
         }
 
@@ -74,12 +79,12 @@ int main(const int argc, const char** argv)
     {
         const Box* box_a = *static_cast<const Box* const*>(a);
         const Box* box_b = *static_cast<const Box* const*>(b);
-        return box_b->h - box_a->h; // descending by height
+        return static_cast<int>(box_b->h) - static_cast<int>(box_a->h); // descending by height
     });
 
     atlases.emplace_back();
 
-    int  x = 0, y = 0, h_off = box_ptrs[0]->h;
+    uint32_t x = 0, y = 0, h_off = box_ptrs[0]->h;
 
     json j;
     j["atlases"] = json::array();

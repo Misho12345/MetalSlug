@@ -9,7 +9,7 @@ namespace mse
 {
     namespace
     {
-        ImVec2 to_vec2(const glm::vec2 vec) { return ImVec2{ vec.x, vec.y }; }
+        ImVec2 to_vec2(const vec2 vec) { return ImVec2{ vec.x, vec.y }; }
         ImU32  to_imu32(const glm::u8vec4 vec) { return IM_COL32(vec.x, vec.y, vec.z, vec.w); }
     }
 
@@ -47,13 +47,13 @@ namespace mse
 
     void DebugUI::draw_box(const aabb box, const glm::u8vec4 color, const float thickness) const
     {
-        static constexpr glm::vec2 resf = Target::RESOLUTION;
+        static constexpr vec2 resf = Target::RESOLUTION;
         const aabb cam_local = box - App::ctx().scene.camera_pos_screen();
 
         if (!(cam_local & aabb::screen)) return;
 
         const Window& win = App::priv_ctx().window;
-        const aabb rel = cam_local * (glm::vec2(win.output_size()) / resf) + win.output_offset();
+        const aabb rel = cam_local * (vec2(win.output_size()) / resf) + win.output_offset();
 
         ImGui::GetForegroundDrawList()->AddRect(
             to_vec2(rel.min), to_vec2(rel.max),

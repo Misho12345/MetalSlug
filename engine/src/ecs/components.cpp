@@ -40,21 +40,21 @@ namespace mse
         frame_ %= frame_count;
     }
 
-    glm::ivec2 SpriteRenderer::size() const
+    ivec2 SpriteRenderer::size() const
     {
         return App::priv_ctx().sprite_data_registry.anim_data(info_).frame_size;
     }
 
     aabb SpriteRenderer::bounds(const Transform& tr) const
     {
-        const glm::ivec2 s = size() * tr.scale;
-        const glm::ivec2 hs = s / 2;
+        const ivec2 s = size() * ivec2(tr.scale);
+        const ivec2 hs = s / 2;
         return aabb{ -hs, s - hs } + tr.position;
     }
 
-    aabb SpriteRenderer::screen_bounds(const Transform& tr, const glm::ivec2 cam_pos) const
+    aabb SpriteRenderer::screen_bounds(const Transform& tr, const ivec2 cam_pos) const
     {
-        return bounds(tr) - glm::ivec2(glm::vec2(cam_pos) * parallax_factor);
+        return bounds(tr) - ivec2(vec2(cam_pos) * parallax_factor);
     }
 
     SpriteRenderer::SpriteRenderer(const Scene& scene, const entity_id id, const anim::Info info) : info_(info)
@@ -71,7 +71,7 @@ namespace mse
         size = scene.get<SpriteRenderer>(id).size();
     }
 
-    SpriteCollider::SpriteCollider(const Scene& scene, const entity_id id, const glm::ivec2 _offset, const glm::ivec2 _size)
+    SpriteCollider::SpriteCollider(const Scene& scene, const entity_id id, const ivec2 _offset, const ivec2 _size)
     {
         assert(scene.has<Transform>(id) && "SpriteCollider requires a Transform component");
         assert(scene.has<SpriteRenderer>(id) && "SpriteCollider requires a SpriteRenderer component");
@@ -82,8 +82,8 @@ namespace mse
 
     aabb SpriteCollider::bounds(const Transform& tr) const
     {
-        const glm::ivec2 s = size * tr.scale;
-        const glm::ivec2 hs = s / 2;
+        const ivec2 s = size * tr.scale;
+        const ivec2 hs = s / 2;
         return aabb{ -hs, s - hs } + (offset + tr.position);
     }
 }

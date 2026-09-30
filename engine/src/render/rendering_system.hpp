@@ -34,17 +34,17 @@ namespace mse
         /// @brief struct for CameraData UBO
         struct alignas(16) CameraData final
         {
-            glm::mat4 projection;
-            glm::vec2 camera_pos;
+            mat4 projection;
+            vec2 camera_pos;
         };
 
         /// @brief struct for InstanceData SSBO
         struct alignas(8) InstanceData final
         {
-            glm::vec2 parallax_factor;
+            vec2 parallax_factor;
 
-            glm::ivec2 position;
-            glm::ivec2 scale;
+            ivec2 position;
+            ivec2 scale;
             float      rotation;
 
             uint32_t  anim_idx;

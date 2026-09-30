@@ -7,8 +7,8 @@ namespace mse
     {
         static aabb screen;
 
-        glm::ivec2 min;
-        glm::ivec2 max;
+        ivec2 min;
+        ivec2 max;
 
         constexpr bool operator&(const aabb& other) const
         {
@@ -35,55 +35,55 @@ namespace mse
         }
 
         [[nodiscard]]
-        constexpr bool contains_excl(const glm::ivec2 point) const
+        constexpr bool contains_excl(const ivec2 point) const
         {
             return point.x > min.x && point.x < max.x &&
                     point.y > min.y && point.y < max.y;
         }
 
         [[nodiscard]]
-        constexpr bool contains(const glm::ivec2 point) const
+        constexpr bool contains(const ivec2 point) const
         {
             return point.x >= min.x && point.x <= max.x &&
                     point.y >= min.y && point.y <= max.y;
         }
 
-        [[nodiscard]] glm::ivec2 center() const { return (min + max) / 2; }
-        [[nodiscard]] glm::ivec2 size() const { return max - min; }
+        [[nodiscard]] ivec2 center() const { return (min + max) / 2; }
+        [[nodiscard]] uvec2 size() const { return max - min; }
 
 
 
-        [[nodiscard]] aabb operator+(const glm::ivec2 rhs) const { return { min + rhs, max + rhs }; }
-        [[nodiscard]] aabb operator-(const glm::ivec2 rhs) const { return { min - rhs, max - rhs }; }
+        [[nodiscard]] aabb operator+(const ivec2 rhs) const { return { min + rhs, max + rhs }; }
+        [[nodiscard]] aabb operator-(const ivec2 rhs) const { return { min - rhs, max - rhs }; }
 
-        [[nodiscard]] aabb operator*(const glm::ivec2 rhs) const { return { min * rhs, max * rhs }; }
-        [[nodiscard]] aabb operator*(const glm::vec2 rhs) const { return { glm::vec2(min) * rhs, glm::vec2(max) * rhs }; }
+        [[nodiscard]] aabb operator*(const ivec2 rhs) const { return { min * rhs, max * rhs }; }
+        [[nodiscard]] aabb operator*(const vec2 rhs) const { return { vec2(min) * rhs, vec2(max) * rhs }; }
 
-        [[nodiscard]] aabb operator/(const glm::ivec2 rhs) const { return { min / rhs, max / rhs }; }
-        [[nodiscard]] aabb operator/(const glm::vec2 rhs) const { return { glm::vec2(min) / rhs, glm::vec2(max) / rhs }; }
+        [[nodiscard]] aabb operator/(const ivec2 rhs) const { return { min / rhs, max / rhs }; }
+        [[nodiscard]] aabb operator/(const vec2 rhs) const { return { vec2(min) / rhs, vec2(max) / rhs }; }
 
-        aabb& operator+=(const glm::ivec2 rhs)
+        aabb& operator+=(const ivec2 rhs)
         {
             min += rhs;
             max += rhs;
             return *this;
         }
 
-        aabb& operator-=(const glm::ivec2 rhs)
+        aabb& operator-=(const ivec2 rhs)
         {
             min -= rhs;
             max -= rhs;
             return *this;
         }
 
-        aabb& operator*=(const glm::ivec2 rhs)
+        aabb& operator*=(const ivec2 rhs)
         {
             min *= rhs;
             max *= rhs;
             return *this;
         }
 
-        aabb& operator/=(const glm::ivec2 rhs)
+        aabb& operator/=(const ivec2 rhs)
         {
             min /= rhs;
             max /= rhs;

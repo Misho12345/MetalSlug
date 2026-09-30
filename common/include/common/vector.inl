@@ -120,7 +120,7 @@ namespace mse
     template <typename... Args> requires std::constructible_from<T, Args...>
     void vector<T>::emplace_back(Args&&... args)
     {
-        if (capacity_ < size_ + 1) reserve(capacity_ * 2);
+        if (capacity_ < size_ + 1u) reserve(capacity_ * 2u);
         new(data_ + size_++) T(std::forward<Args>(args)...);
     }
 

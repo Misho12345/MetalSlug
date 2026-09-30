@@ -7,7 +7,7 @@ in flat uint v_FrameIdx;
 struct SpriteAnimationData
 {
     ivec2 offset;
-    ivec2 frame_size;
+    uvec2 frame_size;
     uint frame_count;
     uint atlas_idx;
 };
