@@ -19,8 +19,6 @@ namespace mse
     void DebugDraw::draw_colliders(const Scene& scene) const
     {
         const DebugUI& ui = App::priv_ctx().debug_ui;
-        const Transform* cam = scene.try_get<Transform>(scene.camera());
-        if (!cam) return;
 
         const ComponentPool<SpriteCollider>& collider_pool = scene.pool<SpriteCollider>();
 
@@ -31,25 +29,30 @@ namespace mse
 
         for (size_t i = 0; i < owners.size(); ++i)
         {
-            const Transform* t = scene.try_get<Transform>(owners[i]);
-            if (!t) continue;
+            const Transform& t = scene.get<Transform>(owners[i]);
+            const SpriteRenderer& sr = scene.get<SpriteRenderer>(owners[i]);
 
-            ui.draw_box(colliders[i].bounds(*t) - cam->position, HITBOX_COLOR);
+            ui.draw_box(colliders[i].bounds(t), HITBOX_COLOR);
 
-            if (const SpriteRenderer* sr = scene.try_get<SpriteRenderer>(owners[i]))
+            const aabb bounds = sr.bounds(t);
+            FrameMask mask = App::priv_ctx().sprite_data_registry.mask(sr.info(), sr.frame());
+
+            for (int y = bounds.min.y; y < bounds.max.y; )
             {
-                aabb bounds = sr->screen_bounds(*t, cam->position);
-                FrameMask mask = App::priv_ctx().sprite_data_registry.mask(sr->info(), sr->frame());
+                int y1 = y + t.scale.y;
 
-                for (int y = bounds.min.y; y < bounds.max.y; y += t->scale.y)
+                for (int x = bounds.min.x; x < bounds.max.x; )
                 {
-                    for (int x = bounds.min.x; x < bounds.max.x; x += t->scale.x)
-                    {
-                        glm::ivec2 coords{ x, y };
-                        if (mask[(coords - bounds.min) / t->scale])
-                            ui.draw_box({ coords, coords + t->scale }, PIXEL_COLOR, 1.0f);
-                    }
+                    int x1 = x + t.scale.x;
+
+                    const glm::ivec2 coords{ x, y };
+                    if (mask[(coords - bounds.min) / t.scale])
+                        ui.draw_box({ coords, { x1, y1 } }, PIXEL_COLOR, 1.0f);
+
+                    x = x1;
                 }
+
+                y = y1;
             }
         }
     }
@@ -60,14 +63,12 @@ namespace mse
         const TileType* t = App::priv_ctx().tile_map.data();
         const glm::ivec2 size = App::priv_ctx().tile_map.size();
 
-        for (int y = 0; y < size.y; ++y)
+        for (glm::ivec2 c{}; c.y < size.y; ++c.y)
         {
-            for (int x = 0; x < size.x; ++x, ++t)
+            for (c.x = 0; c.x < size.x; ++c.x, ++t)
             {
                 if (*t == TileType::Air) continue;
-
-                const glm::ivec2 coords{ x, y };
-                ui.draw_box(aabb{ coords, coords + 1 } * Target::TILE_SIZE, tile_color(*t));
+                ui.draw_box(aabb{ c, c + 1 } * Target::TILE_SIZE, tile_color(*t));
             }
         }
     }

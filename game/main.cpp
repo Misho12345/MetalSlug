@@ -23,16 +23,16 @@ namespace
                    })
                    : glm::vec2{};
     }
+
+    uint32_t to(auto val) { return static_cast<uint32_t>(val); }
+
+    enum class Layer
+    {
+        Player = 1 << 0,
+        Enemy  = 1 << 1
+    };
 }
 
-enum class Layer
-{
-    Player = 1 << 0,
-    Enemy = 1 << 1
-};
-
-
-uint32_t to(auto val) { return static_cast<uint32_t>(val); }
 
 void Game::init()
 {
@@ -50,15 +50,15 @@ void Game::init()
     scene.set<SpriteRenderer>(player_body, player::Body::Idle);
     scene.set<SpriteRenderer>(slon, Enemy::Slon);
 
-    scene.set<SpriteCollider>(player_legs, player_legs).layer = to(Layer::Player);
-    scene.set<SpriteCollider>(player_body, player_body).layer = to(Layer::Player);
+    scene.set<SpriteCollider>(player_legs).layer = to(Layer::Player);
+    scene.set<SpriteCollider>(player_body).layer = to(Layer::Player);
 
-    SpriteCollider& sc_slon = scene.set<SpriteCollider>(slon, slon);
+    SpriteCollider& slon_sc = scene.set<SpriteCollider>(slon);
 
-    sc_slon.layer = to(Layer::Enemy);
+    slon_sc.layer = to(Layer::Enemy);
 
-    sc_slon.target_layer = to(Layer::Player);
-    sc_slon.callback = +[](entity_id id, uint32_t mask)
+    slon_sc.target_layer = to(Layer::Player);
+    slon_sc.callback = +[](const entity_id id, const uint32_t mask)
     {
         assert(mask & to(Layer::Player));
         ctx().scene.get<Transform>(id).rotation += 3.0_deg;
@@ -72,21 +72,11 @@ void Game::update()
     Transform& legs = s.get<Transform>(player_legs);
     Transform& body = s.get<Transform>(player_body);
 
-    SpriteRenderer& legs_sr = s.get<SpriteRenderer>(player_legs);
     SpriteRenderer& body_sr = s.get<SpriteRenderer>(player_body);
-
-    body.position = legs.position - glm::ivec2{ 0, (legs_sr.size().y * legs.scale.y + body_sr.size().y * body.scale.y) / 2 };
 
     if (Input::just_pressed(Key::Space)) body_sr.play(player::Body::Drinking);
     else if (Input::just_released(Key::Space)) body_sr.play(player::Body::Tired);
 
-    if (Input::just_pressed(Key::Enter))
-    {
-        printf(
-            "%f, %f\n",
-            static_cast<double>(legs.position.x),
-            static_cast<double>(legs.position.y));
-    }
 
     if (Input::just_pressed(Key::Minus))
     {
@@ -102,4 +92,31 @@ void Game::update()
 
     const glm::vec2 input = get_input();
     s.get<SpriteCollider>(player_legs).velocity = input * 50.0f;
+}
+
+void Game::late_update()
+{
+    Scene& s = ctx().scene;
+    Transform& cam = s.get<Transform>(s.camera());
+
+    const Transform& legs = s.get<Transform>(player_legs);
+    Transform& body = s.get<Transform>(player_body);
+
+    const SpriteRenderer& legs_sr = s.get<SpriteRenderer>(player_legs);
+    const SpriteRenderer& body_sr = s.get<SpriteRenderer>(player_body);
+
+    cam.position = body.position = legs.position - glm::ivec2{
+        0, (
+            legs_sr.size().y * legs.scale.y +
+            body_sr.size().y * body.scale.y
+        ) / 2
+    };
+
+    if (Input::just_pressed(Key::Enter))
+    {
+        printf(
+            "%f, %f\n",
+            static_cast<double>(cam.position.x),
+            static_cast<double>(cam.position.y));
+    }
 }

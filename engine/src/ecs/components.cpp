@@ -57,16 +57,25 @@ namespace mse
         return bounds(tr) - glm::ivec2(glm::vec2(cam_pos) * parallax_factor);
     }
 
-
-    SpriteCollider::SpriteCollider(const entity_id id)
+    SpriteRenderer::SpriteRenderer(const Scene& scene, const entity_id id, const anim::Info info) : info_(info)
     {
-        const SpriteRenderer* sr = App::ctx().scene.try_get<SpriteRenderer>(id);
-        if (!sr) return;
-        size = sr->size();
+        assert(scene.has<Transform>(id) && "SpriteRenderer requires a Transform component");
     }
 
-    SpriteCollider::SpriteCollider(const glm::ivec2 _offset, const glm::ivec2 _size)
+
+    SpriteCollider::SpriteCollider(const Scene& scene, const entity_id id)
     {
+        assert(scene.has<Transform>(id) && "SpriteCollider requires a Transform component");
+        assert(scene.has<SpriteRenderer>(id) && "SpriteCollider requires a SpriteRenderer component");
+
+        size = scene.get<SpriteRenderer>(id).size();
+    }
+
+    SpriteCollider::SpriteCollider(const Scene& scene, const entity_id id, const glm::ivec2 _offset, const glm::ivec2 _size)
+    {
+        assert(scene.has<Transform>(id) && "SpriteCollider requires a Transform component");
+        assert(scene.has<SpriteRenderer>(id) && "SpriteCollider requires a SpriteRenderer component");
+
         offset = _offset;
         size = _size;
     }

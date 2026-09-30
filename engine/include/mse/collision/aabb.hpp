@@ -55,8 +55,12 @@ namespace mse
 
         [[nodiscard]] aabb operator+(const glm::ivec2 rhs) const { return { min + rhs, max + rhs }; }
         [[nodiscard]] aabb operator-(const glm::ivec2 rhs) const { return { min - rhs, max - rhs }; }
+
         [[nodiscard]] aabb operator*(const glm::ivec2 rhs) const { return { min * rhs, max * rhs }; }
+        [[nodiscard]] aabb operator*(const glm::vec2 rhs) const { return { glm::vec2(min) * rhs, glm::vec2(max) * rhs }; }
+
         [[nodiscard]] aabb operator/(const glm::ivec2 rhs) const { return { min / rhs, max / rhs }; }
+        [[nodiscard]] aabb operator/(const glm::vec2 rhs) const { return { glm::vec2(min) / rhs, glm::vec2(max) / rhs }; }
 
         aabb& operator+=(const glm::ivec2 rhs)
         {

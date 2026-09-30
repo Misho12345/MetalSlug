@@ -75,4 +75,7 @@ namespace mse
         std::same_as<std::remove_cvref_t<decltype(Target::TILE_SIZE)>, glm::ivec2> &&
         std::same_as<std::remove_cvref_t<decltype(Target::DAR)>, float>,
         "invalid Target format");
+
+
+    constexpr inline glm::ivec2 HALF_RES = Target::RESOLUTION / 2;
 }

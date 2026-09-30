@@ -1,10 +1,13 @@
 #pragma once
-#include "entity_id.hpp"
 #include "mse/pch.hpp"
+
+#include "entity_id.hpp"
 #include "mse/collision/aabb.hpp"
 
 namespace mse
 {
+    class Scene;
+
     struct Transform final
     {
         glm::ivec2 position{ 0, 0 };
@@ -16,9 +19,10 @@ namespace mse
     struct MSE_API SpriteRenderer final
     {
         template <anim::sprite_enum E>
-        SpriteRenderer(E animation) : info_(anim::info(animation)) {}
+        SpriteRenderer(const Scene& scene, const entity_id id, E animation)
+            : SpriteRenderer(scene, id, anim::info(animation)) {}
 
-        glm::vec2 parallax_factor{ 0.0f };
+        glm::vec2 parallax_factor{ 1.0f, 1.0f };
 
         float frame_dur{ 0.1f };
         int32_t layer{ 0 };
@@ -44,6 +48,8 @@ namespace mse
         [[nodiscard]] aabb screen_bounds(const Transform& tr, glm::ivec2 cam_pos) const;
 
     private:
+        SpriteRenderer(const Scene& scene, entity_id id, anim::Info info);
+
         void play(uint32_t anim_id, bool restart_if_same);
 
         anim::Info info_;
@@ -55,8 +61,8 @@ namespace mse
 
     struct MSE_API SpriteCollider final
     {
-        explicit SpriteCollider(entity_id id);
-        SpriteCollider(glm::ivec2 _offset, glm::ivec2 _size);
+        explicit SpriteCollider(const Scene& scene, entity_id id);
+        SpriteCollider(const Scene& scene, entity_id id, glm::ivec2 _offset, glm::ivec2 _size);
 
         [[nodiscard]]
         aabb bounds(const Transform& tr) const;

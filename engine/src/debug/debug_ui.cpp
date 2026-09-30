@@ -47,14 +47,13 @@ namespace mse
 
     void DebugUI::draw_box(const aabb box, const glm::u8vec4 color, const float thickness) const
     {
-        if (!(box & aabb::screen)) return;
+        static constexpr glm::vec2 resf = Target::RESOLUTION;
+        const aabb cam_local = box - App::ctx().scene.camera_pos_screen();
 
-        static constexpr glm::vec2 res = Target::RESOLUTION;
+        if (!(cam_local & aabb::screen)) return;
 
         const Window& win = App::priv_ctx().window;
-        const Scene& s = App::ctx().scene;
-
-        const aabb rel = (box - s.get<Transform>(s.camera()).position) * win.output_size() / res + win.output_offset();
+        const aabb rel = cam_local * (glm::vec2(win.output_size()) / resf) + win.output_offset();
 
         ImGui::GetForegroundDrawList()->AddRect(
             to_vec2(rel.min), to_vec2(rel.max),

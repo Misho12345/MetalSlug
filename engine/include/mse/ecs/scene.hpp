@@ -22,7 +22,13 @@ namespace mse
         C& set(entity_id entity, Args&&... args)
         {
             assert(valid(entity) && "Entity is not valid");
-            return pool<C>().set(entity, std::forward<Args>(args)...);
+
+            // inject scene and entity id if the constructor of the component enables it
+            if constexpr (requires{ C(*this, entity, std::forward<Args>(args)...); })
+            {
+                return pool<C>().set(entity, *this, entity, std::forward<Args>(args)...);
+            }
+            else return pool<C>().set(entity, std::forward<Args>(args)...);
         }
 
         template <typename C>
@@ -102,6 +108,10 @@ namespace mse
             else if constexpr (std::same_as<C, SpriteRenderer>) return sprite_renderer_pool_;
             else static_assert(always_false<C>, "Component type not supported in Scene");
         }
+
+
+        [[nodiscard]] glm::ivec2 camera_pos() const { return get<Transform>(camera_).position; }
+        [[nodiscard]] glm::ivec2 camera_pos_screen() const { return camera_pos() - HALF_RES; }
 
     private:
         ComponentPool<Transform>      transform_pool_;

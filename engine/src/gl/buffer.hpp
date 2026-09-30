@@ -49,6 +49,8 @@ namespace mse::gl
          * @param flags Buffer mapping flags.
          * @note
          * The buffer is persistent and can be mapped for writing.
+         * This is for an immutable persistent buffer, I'm too lazy to implement ring buffering,
+         * so for changing UBOs a normal create() + write() is what should be used
          */
         template <typename T>
         void create_persistent(
@@ -62,6 +64,15 @@ namespace mse::gl
         void reset();
 
         void bind(GLuint binding) const;
+
+
+        /**
+         * @brief Writes data to the buffer
+         * @tparam T The type of an element in the data
+         * @param data A span containing the data to be stored in the buffer.
+         */
+        template <typename T>
+        void write(span<const T> data) const { write(data.data(), data.size() * sizeof(T)); }
 
         template <typename T>
         [[nodiscard]]
@@ -96,6 +107,8 @@ namespace mse::gl
             BufferType type,
             GLsizeiptr size,
             GLbitfield flags);
+
+        void write(const void* data, GLsizeiptr size) const;
 
         BufferType type_{ BufferType::Vertex };
         GLuint     id_{ 0 };

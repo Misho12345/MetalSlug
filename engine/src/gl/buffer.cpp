@@ -24,6 +24,9 @@ namespace mse::gl
 
     void Buffer::create(const BufferType type, const void* data, const GLsizeiptr size)
     {
+        assert(data && "data pointer is nullptr");
+        assert(size > 0 && "buffer size is 0");
+
         reset();
         glCreateBuffers(1, &id_);
         glNamedBufferData(id_, size, data, GL_STATIC_DRAW);
@@ -34,6 +37,7 @@ namespace mse::gl
 
     void Buffer::create_persistent_(const BufferType type, const GLsizeiptr size, const GLbitfield flags)
     {
+        assert(size > 0 && "buffer size is 0");
         reset();
 
         type_ = type;
@@ -43,6 +47,17 @@ namespace mse::gl
         glCreateBuffers(1, &id_);
         glNamedBufferStorage(id_, size, nullptr, flags);
         mapped_ptr_ = glMapNamedBufferRange(id_, 0, size, flags);
+    }
+
+    void Buffer::write(const void* data, const GLsizeiptr size) const
+    {
+        assert(id_ && "invalid buffer");
+        assert(data && "data pointer is nullptr");
+        assert(size > 0 && "data size is zero");
+        assert(size <= size_ && "data size exceeds buffer size");
+
+        if (mapped_ptr_) memcpy(mapped_ptr_, data, size);
+        else glNamedBufferSubData(id_, 0, size, data);
     }
 
     void Buffer::reset()

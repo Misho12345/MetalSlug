@@ -35,7 +35,7 @@ namespace mse
         extents_.clear();
         pairs_.clear();
 
-        const glm::vec2 camera_pos = scene.get<Transform>(scene.camera()).position;
+        const glm::ivec2 camera_pos = scene.camera_pos_screen();
 
         assert(entities.size() == sc_comps.size());
 
@@ -48,19 +48,17 @@ namespace mse
             sc.pos_remainder += sc.velocity * Target::FRAME_TIME;
 
 
-            const Transform*      tr = scene.try_get<Transform>(entity);
-            const SpriteRenderer* sr = scene.try_get<SpriteRenderer>(entity);
-
-            if (!tr || !sr) continue;
+            const Transform&      tr = scene.get<Transform>(entity);
+            const SpriteRenderer& sr = scene.get<SpriteRenderer>(entity);
 
             if (sc.layer == 0 && (sc.target_layer == 0 || !sc.callback)) continue;
-            if (sr->parallax_factor != glm::vec2{})
+            if (sr.parallax_factor != glm::vec2{ 1.0f, 1.0f })
             {
                 printf("Collisions with sprites with non-zero parallax factor are not possible");
                 continue;
             }
 
-            aabb bounds = sr->screen_bounds(*tr, camera_pos);
+            aabb bounds = sr.screen_bounds(tr, camera_pos);
             bounds |= bounds + sc.pos_remainder;
 
             if (!(bounds & aabb::screen)) continue;
@@ -114,14 +112,12 @@ namespace mse
         for (size_t i = 0; i < entities.size(); ++i)
         {
             SpriteCollider& sc = sc_comps[i];
-            Transform*      tr = scene.try_get<Transform>(entities[i]);
-
-            if (!tr) continue;
+            Transform&      tr = scene.get<Transform>(entities[i]);
 
             const glm::ivec2 floored = glm::floor(sc.pos_remainder);
 
-            tr->position       += floored;
-            sc.pos_remainder   -= floored;
+            tr.position      += floored;
+            sc.pos_remainder -= floored;
         }
 
         for (const CollisionPair& pair : pairs_)

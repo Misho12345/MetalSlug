@@ -87,6 +87,15 @@ namespace mse
 
         // just for the qsort lambda
         int32_t* s_layers;
+
+
+        const glm::mat4 proj = glm::ortho(
+            0.0f,
+            static_cast<float>(Target::RESOLUTION.x),
+            static_cast<float>(Target::RESOLUTION.y),
+            0.0f,
+            -1.0f, 1.0f
+        );
     }
 
 
@@ -143,6 +152,7 @@ namespace mse
 
     void RenderingSystem::render_sprites(const Scene& scene)
     {
+        update_camera_data(scene);
         update_instances_buffer(scene);
 
         sprite_shader_.use();
@@ -175,6 +185,17 @@ namespace mse
     }
 
 
+    void RenderingSystem::update_camera_data(const Scene& scene) const
+    {
+        const CameraData data
+        {
+            .projection = proj,
+            .camera_pos = scene.camera_pos_screen()
+        };
+
+        camera_data_.write<CameraData>({ &data, 1 });
+    }
+
     void RenderingSystem::update_instances_buffer(const Scene& scene)
     {
         const ComponentPool<SpriteRenderer>& sprite_pool = scene.pool<SpriteRenderer>();
@@ -186,17 +207,17 @@ namespace mse
 
         assert(sprites.size() == entities.size());
 
-        const glm::vec2 cam_pos = scene.get<Transform>(scene.camera()).position;
+        const glm::ivec2 cam_pos = scene.camera_pos_screen();
 
         // collect all the instances
         for (size_t i = 0; i < sprites.size(); ++i)
         {
             const SpriteRenderer& sprite = sprites[i];
-            const Transform* tr = scene.try_get<Transform>(entities[i]);
+            const Transform& tr = scene.get<Transform>(entities[i]);
 
-            if (sprite.hidden || !tr) continue;
+            if (sprite.hidden) continue;
 
-            if (!(sprite.screen_bounds(*tr, cam_pos) & aabb::screen)) continue;
+            if (!(sprite.screen_bounds(tr, cam_pos) & aabb::screen)) continue;
 
             size_t idx = layers_.find(sprite.layer);
 
@@ -215,9 +236,9 @@ namespace mse
 
             instances_[idx].emplace_back(
                     sprite.parallax_factor,
-                    tr->position,
-                    tr->scale,
-                    tr->rotation,
+                    tr.position,
+                    tr.scale,
+                    tr.rotation,
                     anim::global_anim_id(sprite.info()),
                     sprite.frame());
         }
@@ -266,14 +287,8 @@ namespace mse
     {
         CameraData data
         {
-            .projection = glm::ortho(
-                0.0f,
-                static_cast<float>(Target::RESOLUTION.x),
-                static_cast<float>(Target::RESOLUTION.y),
-                0.0f,
-                -1.0f, 1.0f
-            ),
-            .camera_pos = scene.get<Transform>(scene.camera()).position
+            .projection = proj,
+            .camera_pos = scene.camera_pos_screen()
         };
 
         camera_data_.create<CameraData>(gl::BufferType::Uniform, { &data, 1 });

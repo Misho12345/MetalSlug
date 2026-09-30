@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mse/app.hpp"
+#include "mse/collision/aabb.hpp"
 
 namespace mse
 {

@@ -51,6 +51,7 @@ namespace mse
             uint32_t  frame_idx;
         };
 
+        void update_camera_data(const Scene& scene) const;
         void update_instances_buffer(const Scene& scene);
 
         void init_camera_data(const Scene& scene);

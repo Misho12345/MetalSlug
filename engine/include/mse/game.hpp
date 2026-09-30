@@ -12,6 +12,7 @@ class Game final : public mse::App
 public:
     void init() override;
     void update() override;
+    void late_update() override;
 
     static Game& instance()
     {

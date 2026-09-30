@@ -36,6 +36,7 @@ namespace mse
 
         virtual void init() = 0;
         virtual void update() = 0;
+        virtual void late_update() = 0;
 
         [[nodiscard]]
         static App& instance() { return *instance_; }
