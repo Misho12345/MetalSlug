@@ -70,6 +70,9 @@ namespace mse
         vec2 velocity{ 0.0f, 0.0f };
         vec2 move{};
 
+        float gravity{ 900.0f };
+        float max_fall_speed{ 300.0f };
+
         ivec2 offset{};
         uvec2 size{ 32 };
 
@@ -79,5 +82,8 @@ namespace mse
         lambda<void(*)(entity_id, uint32_t)> callback{ nullptr };
 
         bool collide_with_tile_map = true;
+
+        // set by collision system
+        bool grounded = false;
     };
 }

@@ -18,7 +18,6 @@ namespace mse
     class CollisionSystem final
     {
     public:
-        static constexpr float GRAVITY = 9.81f;
         static constexpr uint32_t X_GRID_CELL_SIZE = Target::TILE_SIZE.x * 4u;
         static constexpr uint32_t X_GRID_SIZE = (Target::RESOLUTION.x + X_GRID_CELL_SIZE - 1u) / X_GRID_CELL_SIZE; // ceil
 

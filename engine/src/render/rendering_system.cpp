@@ -131,8 +131,8 @@ namespace mse
         }
 
         if (!sprite_shader_.create(
-            "assets/shaders/sprite_atlas.vert",
-            "assets/shaders/sprite_atlas.frag"))
+            "assets/shaders/sprite.vert",
+            "assets/shaders/sprite.frag"))
         {
             printf("failed to create sprite shader\n");
             return false;

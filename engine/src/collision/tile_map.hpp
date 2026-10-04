@@ -1,6 +1,5 @@
 #pragma once
 #include "mse/pch.hpp"
-#include "mse/ecs/entity_id.hpp"
 
 namespace mse
 {

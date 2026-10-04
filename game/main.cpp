@@ -15,6 +15,12 @@ namespace
         Player = 1 << 0,
         Enemy  = 1 << 1
     };
+
+    constexpr float JUMP_HEIGHT    = 56.0f;
+    constexpr float JUMP_APEX_TIME = 0.36f; // from takeoff to the highest point
+
+    constexpr float JUMP_GRAVITY  = 2.0f * JUMP_HEIGHT / (JUMP_APEX_TIME * JUMP_APEX_TIME);
+    constexpr float JUMP_VELOCITY = 2.0f * JUMP_HEIGHT / JUMP_APEX_TIME;
 }
 
 
@@ -36,8 +42,15 @@ void Game::init()
     scene.set<SpriteRenderer>(player_body, player::Body::Idle);
     scene.set<SpriteRenderer>(player_legs, player::Legs::Idle);
 
-    scene.set<SpriteCollider>(player_body).layer = (uint32_t)Layer::Player;
-    scene.set<SpriteCollider>(player_legs).layer = (uint32_t)Layer::Player;
+    // the body is placed on the legs in late_update, so it shouldn't fall or collide with tiles
+    SpriteCollider& body_sc = scene.set<SpriteCollider>(player_body);
+    body_sc.layer                 = (uint32_t)Layer::Player;
+    body_sc.gravity               = 0.0f;
+    body_sc.collide_with_tile_map = false;
+
+    SpriteCollider& legs_sc = scene.set<SpriteCollider>(player_legs);
+    legs_sc.layer   = (uint32_t)Layer::Player;
+    legs_sc.gravity = JUMP_GRAVITY;
 
     // slon
     scene.set<Transform>(slon, ivec2{ 100, 100 });
@@ -78,9 +91,8 @@ void Game::update()
     if (Input::down(Key::D)) ++dir;
 
     legs_cs.velocity.x = dir * 100.0f;
-    legs_cs.velocity.y *= Target::FRAME_TIME;
 
-    if (Input::just_pressed(Key::W)) legs_cs.velocity.y = -5000.0f;
+    if (legs_cs.grounded && Input::just_pressed(Key::W)) legs_cs.velocity.y = -JUMP_VELOCITY;
 }
 
 void Game::late_update()

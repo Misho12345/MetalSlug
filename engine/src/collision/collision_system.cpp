@@ -10,7 +10,8 @@ namespace mse
     {
         constexpr uint32_t size_t_bits = sizeof(size_t) * 8;
 
-        bool zero(const float x) { return x > -FLT_EPSILON && x < FLT_EPSILON; }
+        // how far a body can be lifted onto the surface under its center
+        constexpr int max_step = TILE_SIZE_i.y / 2;
     }
 
     CollisionSystem::CollisionSystem() : counter_(X_GRID_SIZE + 1)
@@ -44,7 +45,8 @@ namespace mse
             const entity_id entity = entities[i];
             SpriteCollider& sc = sc_comps[i];
 
-            sc.velocity.y += GRAVITY * 1000.0f * Target::FRAME_TIME;
+            sc.velocity.y = min(sc.velocity.y + sc.gravity * Target::FRAME_TIME, sc.max_fall_speed);
+
             sc.move += sc.velocity * Target::FRAME_TIME;
 
             if (sc.collide_with_tile_map) clamp_move_to_tile_map(scene, entity);
@@ -381,6 +383,8 @@ namespace mse
         return false;
     }
 
+
+
     void CollisionSystem::clamp_move_to_tile_map(Scene& scene, const entity_id entity)
     {
         const Transform& tr = scene.get<Transform>(entity);
@@ -389,169 +393,181 @@ namespace mse
         const TileMap&  tm            = App::priv_ctx().tile_map;
         const ivec2     tm_offset     = scene.get<Transform>(scene.bg_entity).position;
         const uvec2     tm_image_size = scene.get<SpriteRenderer>(scene.bg_entity).size();
-        const TileType* tiles         = tm.data();
 
-        const ivec2 tm_size    = tm.size();
-        const ivec2 tm_size_px = tm_size * TILE_SIZE_i;
+        const TileType* tiles   = tm.data();
+        const ivec2     tm_size = tm.size();
 
         // local to tile map space
         aabb bounds = sc.bounds(tr) - (tm_offset - ivec2(tm_image_size / 2));
 
-        if (glm::abs(sc.move.x) < 1.0f && glm::abs(sc.move.y) < 1.0f) return;
-        if (!(bounds & aabb{ {}, tm_size_px })) return;
+        const bool was_grounded = sc.grounded;
+        sc.grounded = false;
 
-        // tile coordinate helpers
-        const lambda to_tile_min = [&](const int px, const int a)
+        const lambda to_tile = [](const int px, const int a)
         {
-            return glm::clamp(px / TILE_SIZE_i[a], 0, tm_size[a] - 1);
+            // floors (negative px -> negative tile)
+            return (px < 0 ? px - TILE_SIZE_i[a] + 1 : px) / TILE_SIZE_i[a];
         };
 
-        const lambda to_tile_max = [&](const int px, const int a)
+        const lambda tile_at = [&](const int tx, const int ty)
         {
-            return glm::clamp((px > 0 ? px - 1 : 0) / TILE_SIZE_i[a], 0, tm_size[a] - 1);
+            // everything outside the map is air
+            return tx < 0 || ty < 0 || tx >= tm_size.x || ty >= tm_size.y
+                       ? TileType::Air
+                       : tiles[tx + ty * tm_size.x];
         };
 
-        // slope surface height at x
-        const lambda get_slope_y = [&](const int tx, const int ty, const TileType type, const float x_center) -> float
+        // ends the move along the axis after dist px
+        const lambda stop = [&](const int a, const int dist)
         {
-            const float tile_left = (float)(tx * TILE_SIZE_i.x);
-            const float r         = glm::clamp((x_center - tile_left) / (float)TILE_SIZE_i.x, 0.0f, 1.0f);
-
-            // uphill right (\) vs uphill left (/)
-            const float local_y = (type == TileType::SlopeR)
-                                      ? (1.0f - r) * (float)TILE_SIZE_i.y
-                                      : r * (float)TILE_SIZE_i.y;
-
-            return (float)(ty * TILE_SIZE_i.y) + local_y;
+            sc.move[a] = (float)dist;
+            sc.velocity[a] = 0.0f;
         };
 
-        // axis sweep
+        // is the tile a wall (a == 0) / ceiling (a == 1) for something entering it in direction step
+        const lambda blocks = [&](const int tx, const int ty, const int a, const int step)
+        {
+            const TileType tile = tile_at(tx, ty);
+
+            // the slope that goes up in the direction of movement
+            const TileType uphill = step > 0 ? TileType::SlopeR : TileType::SlopeL;
+
+            switch (tile)
+            {
+                case TileType::Air: [[fallthrough]];
+                case TileType::Platform: return false;
+
+                // slopes are walls only from their tall side
+                case TileType::SlopeL: [[fallthrough]];
+                case TileType::SlopeR: return a == 1 || tile != uphill;
+
+                // the floor at the high end of a slope is where the slope leads to, not a wall
+                case TileType::Floor: return a == 1 || tile_at(tx - step, ty) != uphill;
+
+                default: assert(!"not implemented"); return false;
+            }
+        };
+
+        // axis sweep (walls for x, ceilings for y)
         const lambda sweep = [&](const int a)
         {
-            if (sc.move[a] == 0.0f) return;
-
             const int p    = 1 - a;
-            const int dir  = sc.move[a] > 0.0f ? 1 : 0;
+            const int dist = (int)sc.move[a];
+            const int dir  = dist > 0 ? 1 : 0;
             const int step = dir ? 1 : -1;
 
-            // perpendicular range
-            const int p_start  = to_tile_min(bounds.min[p], p);
-            const int p_target = to_tile_max(bounds.max[p], p);
+            // perpendicular range (max is exclusive)
+            const int p_start  = to_tile(bounds.min[p], p);
+            const int p_target = to_tile(bounds.max[p] - 1, p);
 
-            // primary axis range (gets leading edge based on direction)
-            const int lead     = bounds[dir][a];
-            const int a_start  = dir ? to_tile_max(lead, a) : to_tile_min(lead, a);
-            const int a_target = dir ? to_tile_max(lead + (int)sc.move[a], a) : to_tile_min(lead + (int)sc.move[a], a);
+            // primary axis range
+            // from the first tile after the leading edge (the ones it's already in can't be ran into)
+            // to the one the leading edge ends up in
+            const int lead     = bounds[dir][a] - dir;
+            const int a_start  = to_tile(lead, a) + step;
+            const int a_target = to_tile(lead + dist, a);
 
-            for (int ta = a_start; step > 0 ? ta <= a_target : ta >= a_target; ta += step)
+            for (int ta = a_start; ta * step <= a_target * step; ta += step)
             {
                 for (int tp = p_start; tp <= p_target; ++tp)
                 {
-                    const int      tx   = a == 0 ? ta : tp;
-                    const int      ty   = a == 0 ? tp : ta;
-                    const TileType tile = tiles[tx + ty * tm_size.x];
+                    if (!blocks(a ? tp : ta, a ? ta : tp, a, step)) continue;
 
-                    if (a == 0) // x axis
-                    {
-                        const float x_center = (float)(bounds.min.x + bounds.max.x) * 0.5f + sc.move.x;
-
-                        switch (tile)
-                        {
-                            case TileType::Air: [[fallthrough]];
-                            case TileType::Platform: continue;
-
-                            case TileType::SlopeL:
-                            {
-                                // SlopeL: high on left, low on right.
-                                // Non-sloping side is on the right (blocks moving right into it).
-                                // Sloping surface allows walking/climbing.
-                                if (dir) // moving right -> walking along slope
-                                {
-                                    const float target_y = get_slope_y(tx, ty, tile, x_center);
-                                    sc.move.y            = target_y - (float)bounds.max.y;
-                                    continue;
-                                }
-
-                                // moving left into the flat right wall of SlopeL -> block
-                                sc.move.x = min(0.0f, (float)((tx + 1) * TILE_SIZE_i.x) - bounds.min.x);
-                                return;
-                            }
-
-                            case TileType::SlopeR:
-                            {
-                                // SlopeR: low on left, high on right.
-                                // Non-sloping side is on the left (blocks moving left into it).
-                                // Sloping surface allows walking/climbing.
-                                if (!dir) // moving left -> walking along slope
-                                {
-                                    const float target_y = get_slope_y(tx, ty, tile, x_center);
-                                    sc.move.y            = target_y - (float)bounds.max.y;
-                                    continue;
-                                }
-
-                                // moving right into the flat left wall of SlopeR -> block
-                                sc.move.x = max(0.0f, (float)(tx * TILE_SIZE_i.x) - bounds.max.x);
-                                return;
-                            }
-
-                            case TileType::Floor:
-                                sc.move.x = dir
-                                  ? max(0.0f, (float)(ta * TILE_SIZE_i.x) - bounds.max.x)
-                                  : min(0.0f, (float)((ta + 1) * TILE_SIZE_i.x) - bounds.min.x);
-                                return;
-
-                            default: assert(!"not implemented");
-                        }
-                    }
-                    else // y axis
-                    {
-                        const float x_center = (float)(bounds.min.x + bounds.max.x) * 0.5f;
-
-                        switch (tile)
-                        {
-                            case TileType::Air: continue;
-
-                            case TileType::SlopeL: [[fallthrough]];
-                            case TileType::SlopeR:
-                            {
-                                if (!dir) // moving up into slope from underneath -> block from bottom
-                                {
-                                    sc.move.y = min(0.0f, (float)((ty + 1) * TILE_SIZE_i.y) - bounds.min.y);
-                                    return;
-                                }
-
-                                // falling down onto slope surface
-                                const float slope_y = get_slope_y(tx, ty, tile, x_center);
-                                if ((float)bounds.max.y + sc.move.y >= slope_y)
-                                {
-                                    sc.move.y = max(0.0f, slope_y - (float)bounds.max.y);
-                                    return;
-                                }
-
-                                continue;
-                            }
-
-                            case TileType::Platform: if (!dir) continue; // ignore up
-                                [[fallthrough]];
-
-                            case TileType::Floor:
-                                sc.move.y = dir
-                                    ? max(0.0f, (float)(ta * TILE_SIZE_i.y) - bounds.max.y)
-                                    : min(0.0f, (float)((ta + 1) * TILE_SIZE_i.y) - bounds.min.y);
-                                return;
-
-                            default: assert(!"not implemented");
-                        }
-                    }
+                    // up to the near side of the tile
+                    stop(a, (ta + 1 - dir) * TILE_SIZE_i[a] - bounds[dir][a]);
+                    return;
                 }
             }
         };
 
-        // x axis sweep (handles horizontal movement and slope elevation changes)
-        sweep(0);
-        bounds += sc.move;
+        // finds the highest surface under the box and lands on it if it's close enough
+        const lambda land = [&](const int dx)
+        {
+            const int bottom   = bounds.max.y;
+            const int center_x = bounds.center().x;
+            const int center_t = to_tile(center_x, 0);
 
-        // y axis sweep (handles vertical falls, jumps, and bottom slope collisions)
-        sweep(1);
+            // if grounded, follow the ground down (slopes) instead of flying off and falling back on it
+            const int reach = (int)sc.move.y + (was_grounded ? glm::abs(dx) + 2 : 0);
+
+            const int y_start  = to_tile(bottom - max_step, 1);
+            const int y_target = to_tile(bottom + reach, 1);
+            const int x_start  = to_tile(bounds.min.x, 0);
+            const int x_target = to_tile(bounds.max.x - 1, 0);
+
+            int surface = INT_MAX;
+
+            for (int ty = y_start; ty <= y_target; ++ty)
+            {
+                for (int tx = x_start; tx <= x_target; ++tx)
+                {
+                    const TileType tile = tile_at(tx, ty);
+
+                    // on which side of the tile the center is (0 if it's above/in it)
+                    const int side = (center_t > tx) - (center_t < tx);
+
+                    int  s       = ty * TILE_SIZE_i.y; // surface of this tile
+                    bool step_up = false;              // can it be above the bottom (up to max_step)
+
+                    switch (tile)
+                    {
+                        case TileType::Air: continue;
+
+                        case TileType::Floor: [[fallthrough]];
+                        case TileType::Platform:
+                            // the tile a slope goes down from doesn't hold the box when its center is on that slope
+                            // (otherwise it hangs on the ledge and then drops, instead of walking down)
+                            if (side && tile_at(tx + side, ty) == (side > 0 ? TileType::SlopeL : TileType::SlopeR)) continue;
+
+                            // getting off the top of a slope leaves the bottom a pixel or two under the next tile
+                            // only when walking, otherwise jumping through a platform would snap onto it
+                            step_up = !side && was_grounded;
+                            break;
+
+                        case TileType::SlopeL: [[fallthrough]];
+                        case TileType::SlopeR:
+                        {
+                            const bool right = tile == TileType::SlopeR;
+
+                            // center is past the low end
+                            if (side == (right ? -1 : 1)) continue;
+
+                            // center is past the high end -> only the high corner counts (the tile's top, like a ledge)
+                            if (side) break;
+
+                            // SlopeR (/): low on the left, high on the right;
+                            // SlopeL (\): the opposite
+                            const int drop = (center_x - tx * TILE_SIZE_i.x) * TILE_SIZE_i.y / TILE_SIZE_i.x;
+
+                            s += right ? TILE_SIZE_i.y - drop : drop;
+                            step_up = true; // going uphill the surface is always a bit above the bottom
+                            break;
+                        }
+
+                        default: assert(!"not implemented");
+                    }
+
+                    // it's next to / inside the tile, not above it
+                    if (s < bottom - (step_up ? max_step : 0)) continue;
+
+                    surface = min(surface, s); // smaller y = higher
+                }
+            }
+
+            if (surface > bottom + reach) return; // nothing close enough -> in the air
+
+            stop(1, surface - bottom);
+            sc.grounded = true;
+        };
+
+        // x axis sweep, then y from the new x
+        // (only x is added to the bounds - the y sweep has to start from where the box is)
+        sweep(0);
+
+        const int dx = (int)sc.move.x;
+        bounds += ivec2{ dx, 0 };
+
+        if ((int)sc.move.y < 0) sweep(1);         // going up
+        else if (sc.velocity.y >= 0.0f) land(dx); // falling / standing (not if it just jumped)
     }
 }

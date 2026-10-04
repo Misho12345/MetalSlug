@@ -15,7 +15,7 @@
 
 // Engine-related headers
 #include "common/common.hpp"
-    #include "anim.hpp"
+#include "anim.hpp"
 
 // Third-party libraries
 #include <nlohmann/json.hpp>
