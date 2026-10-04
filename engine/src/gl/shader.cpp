@@ -7,7 +7,7 @@ namespace mse::gl
 {
     Shader::~Shader()
     {
-        if (id_ > 0) glDeleteProgram(static_cast<GLuint>(id_));
+        if (id_ > 0) glDeleteProgram((GLuint)id_);
     }
 
     bool Shader::create(const string_view vertex, const string_view fragment)
@@ -38,13 +38,13 @@ namespace mse::gl
         const GLint frag_stage = ShaderCompiler::compile_stage(GL_FRAGMENT_SHADER, frag_src);
         if (frag_stage < 0)
         {
-            glDeleteShader(static_cast<GLuint>(vert_stage));
+            glDeleteShader((GLuint)vert_stage);
             return false;
         }
 
         const GLuint stages[] = {
-            static_cast<GLuint>(vert_stage),
-            static_cast<GLuint>(frag_stage)
+            (GLuint)vert_stage,
+            (GLuint)frag_stage
         };
 
         id_ = ShaderCompiler::link_program(stages);
@@ -57,13 +57,13 @@ namespace mse::gl
 
     void Shader::use() const
     {
-        if (id_ > 0) glUseProgram(static_cast<GLuint>(id_));
+        if (id_ > 0) glUseProgram((GLuint)id_);
     }
 
     void Shader::unuse() { glUseProgram(0); }
 
     GLint Shader::uniform_location(const char* name) const
     {
-        return id_ > 0 ? glGetUniformLocation(static_cast<GLuint>(id_), name) : -1;
+        return id_ > 0 ? glGetUniformLocation((GLuint)id_, name) : -1;
     }
 }

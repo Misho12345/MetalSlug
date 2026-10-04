@@ -27,10 +27,13 @@ namespace mse
         void begin_frame() const;
         void render() const;
 
-        void draw_box(aabb box, glm::u8vec4 color, float thickness = 5.0f) const;
+        void draw_box(aabb box, color color, float thickness = 2.0f) const;
+        void draw_line(ivec2 start, ivec2 end, color color, float thickness = 2.0f) const;
 
     private:
         DebugUI() = default;
+
+        static void get_screen_transform(vec2& out_scale, vec2& out_offset);
 
         friend ::mse::PrivCtx;
     };

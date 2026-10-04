@@ -91,8 +91,8 @@ namespace mse
 
         const mat4 proj = glm::ortho(
             0.0f,
-            static_cast<float>(Target::RESOLUTION.x),
-            static_cast<float>(Target::RESOLUTION.y),
+            (float)Target::RESOLUTION.x,
+            (float)Target::RESOLUTION.y,
             0.0f,
             -1.0f, 1.0f
         );
@@ -131,8 +131,8 @@ namespace mse
         }
 
         if (!sprite_shader_.create(
-            "assets/shaders/sprite.vert",
-            "assets/shaders/sprite.frag"))
+            "assets/shaders/sprite_atlas.vert",
+            "assets/shaders/sprite_atlas.frag"))
         {
             printf("failed to create sprite shader\n");
             return false;
@@ -178,7 +178,7 @@ namespace mse
 
             glDrawArraysInstancedBaseInstance(GL_TRIANGLES,
                 0, 6,
-                static_cast<GLsizei>(layer.size()), acc_size);
+                (GLsizei)layer.size(), acc_size);
 
             acc_size += layer.size();
         }
@@ -263,8 +263,8 @@ namespace mse
         qsort(order_.data(), order_.size(), sizeof(size_t),
             [](const void* a, const void* b) -> int
             {
-                const size_t idx_a = *static_cast<const size_t*>(a);
-                const size_t idx_b = *static_cast<const size_t*>(b);
+                const size_t idx_a = *(const size_t*)a;
+                const size_t idx_b = *(const size_t*)b;
 
                 return s_layers[idx_a] - s_layers[idx_b];
             });

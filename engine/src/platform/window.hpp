@@ -43,7 +43,7 @@ namespace mse
         [[nodiscard]]
         aabb bounds() const { return aabb{ {}, size_ }; }
 
-        [[nodiscard]] float aspect_ratio() const { return static_cast<float>(size_.x) / size_.y; }
+        [[nodiscard]] float aspect_ratio() const { return (float)size_.x / (float)size_.y; }
         [[nodiscard]] GLFWwindow* native_handle() const { return handle_; }
 
         [[nodiscard]] uvec2 output_offset() const { return output_offset_; }

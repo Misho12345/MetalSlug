@@ -41,7 +41,10 @@ namespace mse
             switch (*c - '0')
             {
                 case 0: data_[i] = TileType::Floor; break;
-                default: assert(false && "not implemented"); break;
+                case 1: data_[i] = TileType::Platform; break;
+                case 2: data_[i] = TileType::SlopeL; break;
+                case 3: data_[i] = TileType::SlopeR; break;
+                default: assert(!"not implemented"); break;
             }
 
             ++i;

@@ -77,7 +77,7 @@ namespace mse::gl
 
         template <typename T>
         [[nodiscard]]
-        T* mapped_data() const { return static_cast<T*>(mapped_ptr_); }
+        T* mapped_data() const { return (T*)mapped_ptr_; }
 
         /**
          * @brief Increases the size of the buffer to the specified new size.

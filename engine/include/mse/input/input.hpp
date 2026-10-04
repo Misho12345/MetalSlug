@@ -98,7 +98,7 @@ namespace mse
     private:
         Input() = default;
 
-        static constexpr size_t key_byte_count = (static_cast<size_t>(Key::_COUNT) + 7) / 8;
+        static constexpr size_t key_byte_count = ((size_t)Key::_COUNT + 7) / 8;
 
         uint8_t up_down_[key_byte_count]; // false = down; true = up
         uint8_t pressed_released_[key_byte_count]; // true = pressed if down, released if up, false = nothing

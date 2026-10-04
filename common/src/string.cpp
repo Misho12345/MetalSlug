@@ -19,7 +19,7 @@ namespace mse
     string::~string() { delete[] data_; }
 
     string::string(const size_t init_cap) :
-        capacity_{ max(init_cap, static_cast<size_t>(1)) },
+        capacity_{ max(init_cap, (size_t)1) },
         data_{ new char[capacity_] } { data_[0] = '\0'; }
 
     string::string(const size_t size, const char fill) : string{ size + 1 }
@@ -154,7 +154,7 @@ namespace mse
         }
         else if (new_size >= capacity_)
         {
-            size_t new_cap = max(capacity_, static_cast<size_t>(1));
+            size_t new_cap = max(capacity_, (size_t)1);
             while (new_size >= new_cap) new_cap *= 2;
             reserve(new_cap);
         }

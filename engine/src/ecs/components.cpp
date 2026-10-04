@@ -40,14 +40,14 @@ namespace mse
         frame_ %= frame_count;
     }
 
-    ivec2 SpriteRenderer::size() const
+    uvec2 SpriteRenderer::size() const
     {
         return App::priv_ctx().sprite_data_registry.anim_data(info_).frame_size;
     }
 
     aabb SpriteRenderer::bounds(const Transform& tr) const
     {
-        const ivec2 s = size() * ivec2(tr.scale);
+        const ivec2 s = size() * tr.scale;
         const ivec2 hs = s / 2;
         return aabb{ -hs, s - hs } + tr.position;
     }

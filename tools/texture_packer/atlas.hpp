@@ -31,7 +31,7 @@ struct Box final
 class Atlas final
 {
 public:
-    static constexpr uint32_t SIZE = 2048;
+    static constexpr uint32_t SIZE = 4096;
 
     Atlas() = default;
     ~Atlas() = default;

@@ -1,5 +1,6 @@
 #pragma once
 #include "mse/pch.hpp"
+#include "mse/ecs/entity_id.hpp"
 
 namespace mse
 {
@@ -9,8 +10,9 @@ namespace mse
     {
         Air,
         Floor,
-        // Ladder,
-        // OneWay
+        Platform,
+        SlopeL,
+        SlopeR
     };
 
     /**
@@ -28,14 +30,14 @@ namespace mse
         [[nodiscard]]
         bool load(string_view path);
 
-        [[nodiscard]] ivec2 size() const { return size_; }
         [[nodiscard]] const TileType* data() const { return data_.data(); }
+        [[nodiscard]] uvec2 size() const { return size_; }
 
     private:
         TileMap() = default;
 
         vector<TileType> data_;
-        ivec2            size_{};
+        uvec2 size_{};
 
         friend ::mse::PrivCtx;
     };

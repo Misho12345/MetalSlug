@@ -29,7 +29,7 @@ namespace mse::gl
 
         reset();
         glCreateBuffers(1, &id_);
-        glNamedBufferData(id_, static_cast<GLsizeiptr>(size), data, GL_STATIC_DRAW);
+        glNamedBufferData(id_, (GLsizeiptr)size, data, GL_STATIC_DRAW);
 
         type_ = type;
         size_ = size;
@@ -45,8 +45,8 @@ namespace mse::gl
         flags_ = flags;
 
         glCreateBuffers(1, &id_);
-        glNamedBufferStorage(id_, static_cast<GLsizeiptr>(size), nullptr, flags);
-        mapped_ptr_ = glMapNamedBufferRange(id_, 0, static_cast<GLsizeiptr>(size), flags);
+        glNamedBufferStorage(id_, (GLsizeiptr)size, nullptr, flags);
+        mapped_ptr_ = glMapNamedBufferRange(id_, 0, (GLsizeiptr)size, flags);
     }
 
     void Buffer::write(const void* data, const size_t size) const
@@ -57,7 +57,7 @@ namespace mse::gl
         assert(size <= size_ && "data size exceeds buffer size");
 
         if (mapped_ptr_) memcpy(mapped_ptr_, data, size);
-        else glNamedBufferSubData(id_, 0, static_cast<GLsizeiptr>(size), data);
+        else glNamedBufferSubData(id_, 0, (GLsizeiptr)size, data);
     }
 
     void Buffer::reset()
@@ -86,7 +86,7 @@ namespace mse::gl
             case BufferType::Storage: target = GL_SHADER_STORAGE_BUFFER; break;
             default:
                 // you cannot bind vertex and instance buffers
-                assert(false && "Unsupported buffer type for binding");
+                assert(!"Unsupported buffer type for binding");
                 target = {};
         }
 
@@ -115,7 +115,7 @@ namespace mse::gl
         else
         {
             create(type_, nullptr, new_size);
-            glCopyNamedBufferSubData(old_id, id_, 0, 0, static_cast<GLsizeiptr>(copy_size));
+            glCopyNamedBufferSubData(old_id, id_, 0, 0, (GLsizeiptr)copy_size);
         }
 
         if (old_id)

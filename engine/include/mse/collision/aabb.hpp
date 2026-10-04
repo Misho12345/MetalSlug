@@ -10,6 +10,17 @@ namespace mse
         ivec2 min;
         ivec2 max;
 
+        /**
+         * @brief access element in aabb
+         * @param v idx of element (0 or 1)
+         * @return min for v == 0; max for v == 1
+         */
+        constexpr ivec2 operator[](const int v) const
+        {
+            assert(v == 0 || v == 1 && "v must be 0 or 1");
+            return v ? max : min;
+        }
+
         constexpr bool operator&(const aabb& other) const
         {
             return min.x < other.max.x && min.y < other.max.y &&

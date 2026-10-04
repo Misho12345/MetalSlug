@@ -37,13 +37,13 @@ namespace mse
         void play(const E animation, const bool restart_if_same = false)
         {
             assert(anim::sprite_id<E> == info_.sprite_id && "SpriteRenderer::play: sprite_id mismatch");
-            play(static_cast<uint32_t>(animation), restart_if_same);
+            play((uint32_t)animation, restart_if_same);
         }
 
         void stop();
         void update(float dt, uint32_t frame_count);
 
-        [[nodiscard]] ivec2 size() const;
+        [[nodiscard]] uvec2 size() const;
         [[nodiscard]] aabb bounds(const Transform& tr) const;
         [[nodiscard]] aabb screen_bounds(const Transform& tr, ivec2 cam_pos) const;
 
@@ -68,7 +68,7 @@ namespace mse
         aabb bounds(const Transform& tr) const;
 
         vec2 velocity{ 0.0f, 0.0f };
-        vec2 pos_remainder{};
+        vec2 move{};
 
         ivec2 offset{};
         uvec2 size{ 32 };
@@ -76,6 +76,8 @@ namespace mse
         uint32_t layer{};
         uint32_t target_layer{};
 
-        void (*callback)(entity_id, uint32_t){ nullptr };
+        lambda<void(*)(entity_id, uint32_t)> callback{ nullptr };
+
+        bool collide_with_tile_map = true;
     };
 }

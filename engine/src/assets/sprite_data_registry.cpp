@@ -12,10 +12,10 @@ namespace mse
 
 
     size_t FrameMask::range(const ivec2 coords, const uint32_t max_size) const {
-        assert(coords.y >= 0 && static_cast<uint32_t>(coords.y) < size.y);
+        assert(coords.y >= 0 && (uint32_t)coords.y < size.y);
 
         // does not leak to the next row
-        assert(static_cast<uint32_t>(max_size + coords.x) <= size.x);
+        assert((uint32_t)(max_size + coords.x) <= size.x);
 
         const uint32_t idx = coords.x + coords.y * size.x;
         assert(idx % 8 == 0u); // starts from the beginning of a byte
@@ -123,7 +123,7 @@ namespace mse
                 data.frame_count = anim::frame_count(info);
                 data.offset      = { v["x"].get<uint32_t>(), v["y"].get<uint32_t>() };
                 data.frame_size  = { v["w"].get<uint32_t>() / data.frame_count, v["h"].get<uint32_t>() };
-                data.atlas_idx   = static_cast<uint32_t>(std::stoi(atlas.key()));
+                data.atlas_idx   = (uint32_t)std::stoi(atlas.key());
             }
         }
 

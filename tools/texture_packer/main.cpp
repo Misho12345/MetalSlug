@@ -56,8 +56,8 @@ int main(const int argc, const char** argv)
 
     for (size_t i = 1; i < argc - 3u; )
     {
-        uint32_t sprite_id = static_cast<uint32_t>(std::stoi(argv[i]));
-        const uint32_t num_anim = static_cast<uint32_t>(std::stoi(argv[i + 1]));
+        uint32_t sprite_id = (uint32_t)std::stoi(argv[i]);
+        const uint32_t num_anim = (uint32_t)std::stoi(argv[i + 1]);
 
         uint32_t j = 0;
 
@@ -67,7 +67,7 @@ int main(const int argc, const char** argv)
                 argv[i + j * 2u + 2u],
                 sprite_id,
                 j,
-                static_cast<uint32_t>(std::stoi(argv[i + j * 2u + 3u])));
+                (uint32_t)std::stoi(argv[i + j * 2u + 3u]));
 
             box_ptrs.emplace_back(&boxes.back());
         }
@@ -77,9 +77,9 @@ int main(const int argc, const char** argv)
 
     qsort(box_ptrs.data(), files_count, sizeof(Box*), [](const void* a, const void* b)
     {
-        const Box* box_a = *static_cast<const Box* const*>(a);
-        const Box* box_b = *static_cast<const Box* const*>(b);
-        return static_cast<int>(box_b->h) - static_cast<int>(box_a->h); // descending by height
+        const Box* box_a = *(const Box* const*)a;
+        const Box* box_b = *(const Box* const*)b;
+        return (int)box_b->h - (int)box_a->h; // descending by height
     });
 
     atlases.emplace_back();

@@ -13,20 +13,6 @@ namespace mse
      */
     class DebugDraw final
     {
-        static constexpr glm::u8vec4 HITBOX_COLOR{ 0, 255, 0, 255 };
-        static constexpr glm::u8vec4 PIXEL_COLOR{ 0, 200, 200, 255 };
-
-        static constexpr glm::u8vec4 tile_color(const TileType type)
-        {
-            switch (type)
-            {
-                case TileType::Floor: return glm::u8vec4{ 255, 0, 0, 255 };
-                default: assert(false && "not implemented or air");
-            }
-
-            return {};
-        }
-
     public:
         DebugDraw(const DebugDraw&)            = delete;
         DebugDraw(DebugDraw&&)                 = delete;
@@ -40,9 +26,9 @@ namespace mse
         DebugDraw() = default;
 
         void draw_colliders(const Scene& scene) const;
-        void draw_tile_map() const;
+        void draw_tile_map(const Scene& scene) const;
 
-        bool active_{ false };
+        bool active_{ true };
 
         friend ::mse::PrivCtx;
     };

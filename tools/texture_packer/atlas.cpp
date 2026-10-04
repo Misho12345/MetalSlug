@@ -15,9 +15,9 @@ Box::Box(const char* _image_path, const uint32_t _sprite_id, const uint32_t _ani
       frame_count{ _frame_count }
 {
     int w_, h_, t;
-    data = reinterpret_cast<uint32_t*>(stbi_load(image_path, &w_, &h_, &t, 4));
-    w = static_cast<uint32_t>(w_);
-    h = static_cast<uint32_t>(h_);
+    data = (uint32_t*)(stbi_load(image_path, &w_, &h_, &t, 4));
+    w = (uint32_t)w_;
+    h = (uint32_t)h_;
 }
 
 Box::~Box() { if (data) stbi_image_free(data); }

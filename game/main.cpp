@@ -8,23 +8,7 @@ namespace
 {
     entity_id player_legs, player_body;
     entity_id slon;
-
-    vec2 get_input()
-    {
-        const bool w = Input::down(Key::W);
-        const bool a = Input::down(Key::A);
-        const bool s = Input::down(Key::S);
-        const bool d = Input::down(Key::D);
-
-        return w - s || a - d
-                   ? glm::normalize(vec2{
-                       static_cast<float>(d) - static_cast<float>(a),
-                       static_cast<float>(s) - static_cast<float>(w)
-                   })
-                   : vec2{};
-    }
-
-    uint32_t to(auto val) { return static_cast<uint32_t>(val); }
+    entity_id bg;
 
     enum class Layer
     {
@@ -40,29 +24,43 @@ void Game::init()
 
     player_legs = scene.create_entity();
     player_body = scene.create_entity();
-    slon        = scene.create_entity();
+    slon = scene.create_entity();
+    bg = scene.create_entity();
 
-    scene.set<Transform>(player_legs, glm::ivec2{ 170, 50 });
+    scene.bg_entity = bg;
+
+    // player and slon
     scene.set<Transform>(player_body);
-    scene.set<Transform>(slon, ivec2{ 100, 100 });
+    scene.set<Transform>(player_legs, ivec2{ 100, -50 });
 
-    scene.set<SpriteRenderer>(player_legs, player::Legs::Idle);
     scene.set<SpriteRenderer>(player_body, player::Body::Idle);
-    scene.set<SpriteRenderer>(slon, Enemy::Slon);
+    scene.set<SpriteRenderer>(player_legs, player::Legs::Idle);
 
-    scene.set<SpriteCollider>(player_legs).layer = to(Layer::Player);
-    scene.set<SpriteCollider>(player_body).layer = to(Layer::Player);
+    scene.set<SpriteCollider>(player_body).layer = (uint32_t)Layer::Player;
+    scene.set<SpriteCollider>(player_legs).layer = (uint32_t)Layer::Player;
+
+    // slon
+    scene.set<Transform>(slon, ivec2{ 100, 100 });
+    scene.set<SpriteRenderer>(slon, Enemy::Slon);
 
     SpriteCollider& slon_sc = scene.set<SpriteCollider>(slon);
 
-    slon_sc.layer = to(Layer::Enemy);
+    slon_sc.layer = (uint32_t)Layer::Enemy;
 
-    slon_sc.target_layer = to(Layer::Player);
+    slon_sc.target_layer = (uint32_t)Layer::Player;
     slon_sc.callback = +[](const entity_id id, const uint32_t mask)
     {
-        assert(mask & to(Layer::Player));
+        assert(mask & (uint32_t)Layer::Player);
         ctx().scene.get<Transform>(id).rotation += 3.0_deg;
     };
+
+    // bg
+    Transform& bg_tr = scene.set<Transform>(bg);
+    SpriteRenderer& bg_sr = scene.set<SpriteRenderer>(bg, Bg::Mission1);
+
+    bg_sr.layer = -100;
+    bg_tr.position.x += (int32_t)bg_sr.size().x / 2;
+    bg_tr.position.y += ((int32_t)bg_sr.size().y - Target::RESOLUTION.y) / 2;
 }
 
 void Game::update()
@@ -70,12 +68,19 @@ void Game::update()
     Scene& s = ctx().scene;
 
     SpriteRenderer& body_sr = s.get<SpriteRenderer>(player_body);
+    SpriteCollider& legs_cs = s.get<SpriteCollider>(player_legs);
 
     if (Input::just_pressed(Key::Space)) body_sr.play(player::Body::Drinking);
     else if (Input::just_released(Key::Space)) body_sr.play(player::Body::Tired);
 
-    const vec2 input = get_input();
-    s.get<SpriteCollider>(player_legs).velocity = input * 50.0f;
+    float dir{};
+    if (Input::down(Key::A)) --dir;
+    if (Input::down(Key::D)) ++dir;
+
+    legs_cs.velocity.x = dir * 100.0f;
+    legs_cs.velocity.y *= Target::FRAME_TIME;
+
+    if (Input::just_pressed(Key::W)) legs_cs.velocity.y = -5000.0f;
 }
 
 void Game::late_update()
@@ -100,7 +105,7 @@ void Game::late_update()
     {
         printf(
             "%f, %f\n",
-            static_cast<double>(cam.position.x),
-            static_cast<double>(cam.position.y));
+            (double)cam.position.x,
+            (double)cam.position.y);
     }
 }

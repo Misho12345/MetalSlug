@@ -34,7 +34,7 @@ namespace mse
     void PostProcessor::bind() const
     {
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        glViewport(0, 0, Target::RESOLUTION.x, Target::RESOLUTION.y);
+        glViewport(0, 0, RESOLUTION_i.x, RESOLUTION_i.y);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
     }
@@ -45,8 +45,8 @@ namespace mse
 
         glViewport(
             0, 0,
-            static_cast<GLsizei>(window.width()),
-            static_cast<GLsizei>(window.height()));
+            (GLsizei)window.width(),
+            (GLsizei)window.height());
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);

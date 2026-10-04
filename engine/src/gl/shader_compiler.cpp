@@ -27,7 +27,7 @@ namespace mse::gl
             return -1;
         }
 
-        return static_cast<GLint>(shader);
+        return (GLint)shader;
     }
 
     GLint ShaderCompiler::link_program(const span<const GLuint> shaders)
@@ -56,7 +56,7 @@ namespace mse::gl
             return -1;
         }
 
-        return static_cast<GLint>(program);
+        return (GLint)program;
     }
 
     string ShaderCompiler::shader_log(const GLuint shader)
@@ -66,7 +66,7 @@ namespace mse::gl
 
         if (length <= 1) return {};
 
-        string log(static_cast<size_t>(length), '\0');
+        string log((size_t)length, '\0');
         glGetShaderInfoLog(shader, length, nullptr, log.data());
         trim_log(log);
         return log;
@@ -79,7 +79,7 @@ namespace mse::gl
 
         if (length <= 1) return {};
 
-        string log(static_cast<size_t>(length), '\0');
+        string log((size_t)length, '\0');
         glGetProgramInfoLog(program, length, nullptr, log.data());
         trim_log(log);
         return log;

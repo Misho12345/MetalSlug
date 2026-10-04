@@ -111,7 +111,9 @@ namespace mse
 
 
         [[nodiscard]] ivec2 camera_pos() const { return get<Transform>(camera_).position; }
-        [[nodiscard]] ivec2 camera_pos_screen() const { return camera_pos() - Target::RESOLUTION / 2; }
+        [[nodiscard]] ivec2 camera_pos_screen() const { return camera_pos() - HALF_RESOLUTION_i; }
+
+        entity_id bg_entity{};
 
     private:
         ComponentPool<Transform>      transform_pool_;

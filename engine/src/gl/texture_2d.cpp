@@ -13,7 +13,7 @@ namespace mse::gl
                 case TextureFormat::RGBA8: return GL_RGBA8;
             }
 
-            assert(false);
+            assert(!"not implemented");
             return {};
         }
 
@@ -25,7 +25,7 @@ namespace mse::gl
                 case TextureFormat::RGBA8: return GL_RGBA;
             }
 
-            assert(false);
+            assert(!"ot implemented");
             return {};
         }
 
@@ -37,7 +37,7 @@ namespace mse::gl
                 case TextureFilter::Linear: return GL_LINEAR;
             }
 
-            assert(false);
+            assert(!"not implemented");
             return {};
         }
 
@@ -49,7 +49,7 @@ namespace mse::gl
                 case TextureWrap::Repeat: return GL_REPEAT;
             }
 
-            assert(false);
+            assert(!"not implemented");
             return {};
         }
 
@@ -61,7 +61,7 @@ namespace mse::gl
                 case TextureFormat::RGBA8: return 4;
             }
 
-            assert(false);
+            assert(!"not implemented");
             return {};
         }
     }
@@ -95,17 +95,17 @@ namespace mse::gl
             glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &id_);
             glTextureStorage3D(
                 id_, 1, to_gl(desc.format),
-                static_cast<GLsizei>(size_.x),
-                static_cast<GLsizei>(size_.y),
-                static_cast<GLsizei>(size_.z));
+                (GLsizei)size_.x,
+                (GLsizei)size_.y,
+                (GLsizei)size_.z);
         }
         else
         {
             glCreateTextures(GL_TEXTURE_2D, 1, &id_);
             glTextureStorage2D(
                 id_, 1, to_gl(desc.format),
-                static_cast<GLsizei>(size_.x),
-                static_cast<GLsizei>(size_.y));
+                (GLsizei)size_.x,
+                (GLsizei)size_.y);
         }
 
         glTextureParameteri(id_, GL_TEXTURE_WRAP_S, to_gl(desc.wrap));

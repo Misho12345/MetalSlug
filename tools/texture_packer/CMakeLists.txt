@@ -222,7 +222,7 @@ string(APPEND anim_header "
     struct Info { int sprite_id; uint32_t anim_id; };
 
     template <sprite_enum E>
-    constexpr Info info(E e) { return { sprite_id<E>, static_cast<uint32_t>(e) }; }
+    constexpr Info info(E e) { return { sprite_id<E>, (uint32_t)e }; }
 
     inline constexpr uint32_t total_sprite_count = ${idx};
     inline constexpr uint32_t total_anim_count = ${anim_count};

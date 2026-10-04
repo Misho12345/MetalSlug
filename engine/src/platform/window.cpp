@@ -59,7 +59,7 @@ namespace mse
         glfwSetWindowUserPointer(handle_, this);
         glfwSetFramebufferSizeCallback(handle_, [](GLFWwindow* window, const int width, const int height)
         {
-            if (Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window)))
+            if (Window* win = (Window*)glfwGetWindowUserPointer(window))
                 win->update({ width, height });
         });
 
@@ -77,7 +77,7 @@ namespace mse
 
         if (ar > Target::DAR)
         {
-            output_size_.x   = static_cast<uint32_t>(size_.y * Target::DAR);
+            output_size_.x   = (uint32_t)(size_.y * Target::DAR);
             output_size_.y   = size_.y;
             output_offset_.x = (size_.x - output_size_.x) / 2;
             output_offset_.y = 0u;
@@ -85,7 +85,7 @@ namespace mse
         else
         {
             output_size_.x = size_.x;
-            output_size_.y = static_cast<uint32_t>(size_.x / Target::DAR);
+            output_size_.y = (uint32_t)(size_.x / Target::DAR);
             output_offset_.x = 0u;
             output_offset_.y = (size_.y - output_size_.y) / 2;
         }

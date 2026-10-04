@@ -44,9 +44,10 @@ namespace mse
             const entity_id entity = entities[i];
             SpriteCollider& sc = sc_comps[i];
 
-            sc.velocity.y -= GRAVITY * Target::FRAME_TIME;
-            sc.pos_remainder += sc.velocity * Target::FRAME_TIME;
-            sweep_to_tile_map(scene, entity);
+            sc.velocity.y += GRAVITY * 1000.0f * Target::FRAME_TIME;
+            sc.move += sc.velocity * Target::FRAME_TIME;
+
+            if (sc.collide_with_tile_map) clamp_move_to_tile_map(scene, entity);
 
             const Transform&      tr = scene.get<Transform>(entity);
             const SpriteRenderer& sr = scene.get<SpriteRenderer>(entity);
@@ -59,7 +60,7 @@ namespace mse
             }
 
             aabb bounds = sr.screen_bounds(tr, camera_pos);
-            bounds |= bounds + sc.pos_remainder;
+            bounds |= bounds + sc.move;
 
             if (!(bounds & aabb::screen)) continue;
 
@@ -116,10 +117,10 @@ namespace mse
             SpriteCollider& sc = sc_comps[i];
             Transform&      tr = scene.get<Transform>(entities[i]);
 
-            const ivec2 floored = glm::floor(sc.pos_remainder);
+            const ivec2 whole(sc.move);
 
-            tr.position      += floored;
-            sc.pos_remainder -= floored;
+            tr.position += whole;
+            sc.move -= whole;
         }
 
         for (const CollisionPair& pair : pairs_)
@@ -146,17 +147,17 @@ namespace mse
             !(sc_b.target_layer & sc_a.layer))
             return false;
 
-        const float min_size = static_cast<float>(min(
+        const float min_size = (float)min(
             sc_a.size.x, sc_a.size.y,
-            sc_b.size.x, sc_b.size.y));
+            sc_b.size.x, sc_b.size.y);
 
         const float min2 = min_size * min_size;
 
         // pos_remainder is increased by vel * dt in ::step()
-        const vec2 move = sc_a.pos_remainder - sc_b.pos_remainder;
+        const vec2 move = sc_a.move - sc_b.move;
 
         const float move_len2 = glm::length2(move);
-        const vec2 pos_a = tr_a.position;
+        const ivec2 pos_a = tr_a.position;
 
         if (min2 > move_len2)
         {
@@ -165,7 +166,7 @@ namespace mse
 
             if (abs_rel_vel.x > 1.0f || abs_rel_vel.y > 1.0f)
             {
-                tr_a.position += glm::floor(move);
+                tr_a.position += ivec2(move);
 
                 collided =
                     sc_a.bounds(tr_a) & sc_b.bounds(tr_b) &&
@@ -183,15 +184,15 @@ namespace mse
         const float steps_f = move_len / min_size;
         const vec2 step = move / steps_f;
 
-        uint32_t steps_u = static_cast<uint32_t>(glm::ceil(steps_f));
+        uint32_t steps_u = (uint32_t)glm::ceil(steps_f);
 
         bool should_break = false;
 
-        for (vec2 pos = pos_a; !should_break; tr_a.position = glm::floor(pos += step))
+        for (vec2 pos = pos_a; !should_break; tr_a.position = ivec2(pos += step))
         {
             if (!steps_u--)
             {
-                tr_a.position = pos_a + glm::floor(move);
+                tr_a.position = pos_a + ivec2(move);
                 should_break = true;
             }
 
@@ -236,8 +237,8 @@ namespace mse
         // get scaled down overlap size and local positions of where the overlap starts for the 2 sprites
         const uvec2 size = overlap.size() / tr_a.scale;
 
-        uvec2 local_a = (overlap.min - tr_a.position) / ivec2(tr_a.scale) + sr_a.size() / 2;
-        uvec2 local_b = (overlap.min - tr_b.position) / ivec2(tr_b.scale) + sr_b.size() / 2;
+        uvec2 local_a = (overlap.min - tr_a.position) / ivec2(tr_a.scale) + ivec2(sr_a.size()) / 2;
+        uvec2 local_b = (overlap.min - tr_b.position) / ivec2(tr_b.scale) + ivec2(sr_b.size()) / 2;
 
         // The masks (mask_a and mask_b) contain a pointer to a buffer with packed data (see sprite_data_registry.hpp)
         const FrameMask mask_a = reg.mask(sr_a.info(), sr_a.frame());
@@ -260,7 +261,7 @@ namespace mse
 
             if (lbits_a == lbits_b) // the 2 chunks have the same alignment, easier to handle
             {
-                for (int32_t x = -static_cast<int32_t>(lbits_a); x < static_cast<int32_t>(size.x); x += size_t_bits)
+                for (int32_t x = -(int32_t)lbits_a; x < (int32_t)size.x; x += size_t_bits)
                 {
                     const uint32_t max = size.x - x;
 
@@ -282,7 +283,7 @@ namespace mse
                 uvec2 local1, local2;
                 uint32_t lbits1, lbits2;
 
-                int32_t diff = static_cast<int32_t>(lbits_b) - static_cast<int32_t>(lbits_a);
+                int32_t diff = (int32_t)lbits_b - (int32_t)lbits_a;
 
                 if (diff > 0)
                 {
@@ -350,7 +351,7 @@ namespace mse
                     size.x + lbits2);
 
                 // start from the beginning of the byte and advance by the chunk size
-                for (int32_t x = -static_cast<int32_t>(lbits1); x < static_cast<int32_t>(size.x); x += size_t_bits)
+                for (int32_t x = -(int32_t)lbits1; x < (int32_t)size.x; x += size_t_bits)
                 {
                     const uint32_t max = size.x - x;
 
@@ -380,72 +381,177 @@ namespace mse
         return false;
     }
 
-
-
-    void CollisionSystem::sweep_to_tile_map(Scene& scene, const entity_id entity)
+    void CollisionSystem::clamp_move_to_tile_map(Scene& scene, const entity_id entity)
     {
-        Transform& tr = scene.get<Transform>(entity);
-        SpriteCollider& sc = scene.get<SpriteCollider>(entity);
-        SpriteRenderer& sr = scene.get<SpriteRenderer>(entity);
+        const Transform& tr = scene.get<Transform>(entity);
+        SpriteCollider&  sc = scene.get<SpriteCollider>(entity);
 
-        TileMap& tm = App::priv_ctx().tile_map;
-    }
+        const TileMap&  tm            = App::priv_ctx().tile_map;
+        const ivec2     tm_offset     = scene.get<Transform>(scene.bg_entity).position;
+        const uvec2     tm_image_size = scene.get<SpriteRenderer>(scene.bg_entity).size();
+        const TileType* tiles         = tm.data();
 
+        const ivec2 tm_size    = tm.size();
+        const ivec2 tm_size_px = tm_size * TILE_SIZE_i;
 
-    float CollisionSystem::sweep(
-        const aabb bounds_a, const vec2 vel_a,
-        const aabb bounds_b, const vec2 vel_b)
-    {
-        const vec2 vel = (vel_a - vel_b) * Target::FRAME_TIME;
+        // local to tile map space
+        aabb bounds = sc.bounds(tr) - (tm_offset - ivec2(tm_image_size / 2));
 
-        const bool vel_x_zero = zero(vel.x);
-        const bool vel_y_zero = zero(vel.y);
+        if (glm::abs(sc.move.x) < 1.0f && glm::abs(sc.move.y) < 1.0f) return;
+        if (!(bounds & aabb{ {}, tm_size_px })) return;
 
-        // still or same velocity
-        if (vel_x_zero && vel_y_zero) return 1.0f;
-
-        aabb box{
-            .min = bounds_b.min - bounds_a.max, // same as B.min - half_size - A
-            .max = bounds_b.max - bounds_a.min  // same as B.max + half_size - A
+        // tile coordinate helpers
+        const lambda to_tile_min = [&](const int px, const int a)
+        {
+            return glm::clamp(px / TILE_SIZE_i[a], 0, tm_size[a] - 1);
         };
 
-        // already inside
-        if (box.contains_excl(vec2{ 0.0f })) return 1.0f;
-
-        vec2 enter, exit;
-
-        if (vel_x_zero)
+        const lambda to_tile_max = [&](const int px, const int a)
         {
-            if (box.min.x > 0.0f || box.max.x < 0.0f) return 1.0f; // miss
-            enter.x = -INFINITY;
-            exit.x  = INFINITY;
-        }
-        else
-        {
-            const float t1 = box.min.x / vel.x;
-            const float t2 = box.max.x / vel.x;
-            enter.x        = min(t1, t2);
-            exit.x         = max(t1, t2);
-        }
+            return glm::clamp((px > 0 ? px - 1 : 0) / TILE_SIZE_i[a], 0, tm_size[a] - 1);
+        };
 
-        if (vel_y_zero)
+        // slope surface height at x
+        const lambda get_slope_y = [&](const int tx, const int ty, const TileType type, const float x_center) -> float
         {
-            if (box.min.y > 0.0f || box.max.y < 0.0f) return 1.0f; // miss
-            enter.y = -INFINITY;
-            exit.y  = INFINITY;
-        }
-        else
+            const float tile_left = (float)(tx * TILE_SIZE_i.x);
+            const float r         = glm::clamp((x_center - tile_left) / (float)TILE_SIZE_i.x, 0.0f, 1.0f);
+
+            // uphill right (\) vs uphill left (/)
+            const float local_y = (type == TileType::SlopeR)
+                                      ? (1.0f - r) * (float)TILE_SIZE_i.y
+                                      : r * (float)TILE_SIZE_i.y;
+
+            return (float)(ty * TILE_SIZE_i.y) + local_y;
+        };
+
+        // axis sweep
+        const lambda sweep = [&](const int a)
         {
-            const float t1 = box.min.y / vel.y;
-            const float t2 = box.max.y / vel.y;
-            enter.y        = min(t1, t2);
-            exit.y         = max(t1, t2);
-        }
+            if (sc.move[a] == 0.0f) return;
 
-        const float t_enter = max(enter.x, enter.y);
-        const float t_exit  = min(exit.x, exit.y);
+            const int p    = 1 - a;
+            const int dir  = sc.move[a] > 0.0f ? 1 : 0;
+            const int step = dir ? 1 : -1;
 
-        if (t_enter <= t_exit && t_exit > 0.0f && t_enter < 1.0f) return max(t_enter, 0.0f);
-        return 1.0f;
+            // perpendicular range
+            const int p_start  = to_tile_min(bounds.min[p], p);
+            const int p_target = to_tile_max(bounds.max[p], p);
+
+            // primary axis range (gets leading edge based on direction)
+            const int lead     = bounds[dir][a];
+            const int a_start  = dir ? to_tile_max(lead, a) : to_tile_min(lead, a);
+            const int a_target = dir ? to_tile_max(lead + (int)sc.move[a], a) : to_tile_min(lead + (int)sc.move[a], a);
+
+            for (int ta = a_start; step > 0 ? ta <= a_target : ta >= a_target; ta += step)
+            {
+                for (int tp = p_start; tp <= p_target; ++tp)
+                {
+                    const int      tx   = a == 0 ? ta : tp;
+                    const int      ty   = a == 0 ? tp : ta;
+                    const TileType tile = tiles[tx + ty * tm_size.x];
+
+                    if (a == 0) // x axis
+                    {
+                        const float x_center = (float)(bounds.min.x + bounds.max.x) * 0.5f + sc.move.x;
+
+                        switch (tile)
+                        {
+                            case TileType::Air: [[fallthrough]];
+                            case TileType::Platform: continue;
+
+                            case TileType::SlopeL:
+                            {
+                                // SlopeL: high on left, low on right.
+                                // Non-sloping side is on the right (blocks moving right into it).
+                                // Sloping surface allows walking/climbing.
+                                if (dir) // moving right -> walking along slope
+                                {
+                                    const float target_y = get_slope_y(tx, ty, tile, x_center);
+                                    sc.move.y            = target_y - (float)bounds.max.y;
+                                    continue;
+                                }
+
+                                // moving left into the flat right wall of SlopeL -> block
+                                sc.move.x = min(0.0f, (float)((tx + 1) * TILE_SIZE_i.x) - bounds.min.x);
+                                return;
+                            }
+
+                            case TileType::SlopeR:
+                            {
+                                // SlopeR: low on left, high on right.
+                                // Non-sloping side is on the left (blocks moving left into it).
+                                // Sloping surface allows walking/climbing.
+                                if (!dir) // moving left -> walking along slope
+                                {
+                                    const float target_y = get_slope_y(tx, ty, tile, x_center);
+                                    sc.move.y            = target_y - (float)bounds.max.y;
+                                    continue;
+                                }
+
+                                // moving right into the flat left wall of SlopeR -> block
+                                sc.move.x = max(0.0f, (float)(tx * TILE_SIZE_i.x) - bounds.max.x);
+                                return;
+                            }
+
+                            case TileType::Floor:
+                                sc.move.x = dir
+                                  ? max(0.0f, (float)(ta * TILE_SIZE_i.x) - bounds.max.x)
+                                  : min(0.0f, (float)((ta + 1) * TILE_SIZE_i.x) - bounds.min.x);
+                                return;
+
+                            default: assert(!"not implemented");
+                        }
+                    }
+                    else // y axis
+                    {
+                        const float x_center = (float)(bounds.min.x + bounds.max.x) * 0.5f;
+
+                        switch (tile)
+                        {
+                            case TileType::Air: continue;
+
+                            case TileType::SlopeL: [[fallthrough]];
+                            case TileType::SlopeR:
+                            {
+                                if (!dir) // moving up into slope from underneath -> block from bottom
+                                {
+                                    sc.move.y = min(0.0f, (float)((ty + 1) * TILE_SIZE_i.y) - bounds.min.y);
+                                    return;
+                                }
+
+                                // falling down onto slope surface
+                                const float slope_y = get_slope_y(tx, ty, tile, x_center);
+                                if ((float)bounds.max.y + sc.move.y >= slope_y)
+                                {
+                                    sc.move.y = max(0.0f, slope_y - (float)bounds.max.y);
+                                    return;
+                                }
+
+                                continue;
+                            }
+
+                            case TileType::Platform: if (!dir) continue; // ignore up
+                                [[fallthrough]];
+
+                            case TileType::Floor:
+                                sc.move.y = dir
+                                    ? max(0.0f, (float)(ta * TILE_SIZE_i.y) - bounds.max.y)
+                                    : min(0.0f, (float)((ta + 1) * TILE_SIZE_i.y) - bounds.min.y);
+                                return;
+
+                            default: assert(!"not implemented");
+                        }
+                    }
+                }
+            }
+        };
+
+        // x axis sweep (handles horizontal movement and slope elevation changes)
+        sweep(0);
+        bounds += sc.move;
+
+        // y axis sweep (handles vertical falls, jumps, and bottom slope collisions)
+        sweep(1);
     }
 }

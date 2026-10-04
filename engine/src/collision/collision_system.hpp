@@ -56,12 +56,8 @@ namespace mse
         static bool pp_check(const Scene& scene, entity_id a, entity_id b);
 
 
-        static void sweep_to_tile_map(Scene& scene, entity_id entity);
+        static void clamp_move_to_tile_map(Scene& scene, entity_id entity);
 
-        // returns the time of collision (max 1.0f)
-        static float sweep(
-            aabb bounds_a, vec2 vel_a,
-            aabb bounds_b, vec2 vel_b);
 
         vector<uint32_t> counter_{};
 

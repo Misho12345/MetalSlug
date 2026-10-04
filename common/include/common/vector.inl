@@ -10,9 +10,9 @@ namespace mse
     template <typename T> requires (!std::same_as<T, void>)
     template <std::integral C>
     vector<T>::vector(const C size) :
-        size_{ static_cast<size_t>(size) },
-        capacity_{ static_cast<size_t>(size) },
-        data_{ static_cast<T*>(operator new(sizeof(T) * capacity_)) }
+        size_{ (size_t)size },
+        capacity_{ (size_t)size },
+        data_{ (T*)operator new(sizeof(T) * capacity_) }
     {
         for (size_t i = 0; i < size_; ++i) new(data_ + i) T{};
     }
@@ -23,7 +23,7 @@ namespace mse
     vector<T>::vector(Args&&... args) :
         size_{ sizeof...(Args) },
         capacity_{ sizeof...(Args) },
-        data_{ static_cast<T*>(operator new(sizeof(T) * capacity_)) }
+        data_{ (T*)operator new(sizeof(T) * capacity_) }
     {
         size_t idx{};
         (new(data_ + idx++) T(std::forward<Args>(args)), ...);
@@ -35,7 +35,7 @@ namespace mse
     template <typename T> requires (!std::same_as<T, void>)
     vector<T>::vector(const vector& other) : size_{ other.size_ }, capacity_{ other.capacity_ }
     {
-        data_ = static_cast<T*>(::operator new(sizeof(T) * other.capacity_));
+        data_ = (T*)::operator new(sizeof(T) * other.capacity_);
         copy_mem(data_, other.data_, other.size_);
     }
 
@@ -152,7 +152,7 @@ namespace mse
         if (new_cap == 0) new_cap = 1;
         if (new_cap <= capacity_) return;
 
-        T* new_data = static_cast<T*>(operator new(sizeof(T) * new_cap));
+        T* new_data = (T*)operator new(sizeof(T) * new_cap);
         move_realloc(new_data, data_, size_);
         ::operator delete(data_);
 
@@ -175,7 +175,7 @@ namespace mse
 
         if (new_size > capacity_)
         {
-            size_t new_cap = max(capacity_, static_cast<size_t>(1));
+            size_t new_cap = max(capacity_, (size_t)1);
             while (new_size > new_cap) new_cap *= 2;
             reserve(new_cap);
         }
