@@ -61,7 +61,7 @@ void Atlas::add(Box* box) { boxes_.emplace_back(box); }
 
 void Atlas::save(const char* atlas_path) const
 {
-    uint32_t* data = new uint32_t[SIZE * SIZE]();
+    mse::vector<uint32_t> data(SIZE * SIZE);
 
     // save to texture atlas
     for (const Box* box : boxes_)
@@ -84,13 +84,12 @@ void Atlas::save(const char* atlas_path) const
             // copy row by row
             for (uint32_t y = 0; y < box->h; ++y, p += box->w)
             {
-                memcpy(data + (box->x + (box->y + y) * SIZE), p, box->w * sizeof(uint32_t));
+                memcpy(&data[box->x + (box->y + y) * SIZE], p, box->w * sizeof(uint32_t));
             }
         }
     }
 
-    stbi_write_png(atlas_path, SIZE, SIZE, sizeof(uint32_t), data, SIZE * sizeof(uint32_t));
-    delete[] data;
+    stbi_write_png(atlas_path, SIZE, SIZE, sizeof(uint32_t), data.data(), SIZE * sizeof(uint32_t));
 }
 
 void save_masks(const mse::span<const Box> boxes, const char* mask_path)
@@ -104,8 +103,8 @@ void save_masks(const mse::span<const Box> boxes, const char* mask_path)
         total_size += (box.w / box.frame_count * box.h + 7) / 8 * box.frame_count;
     }
 
-    uint8_t* data = new uint8_t[total_size]();
-    uint8_t* dp = data;
+    mse::vector<uint8_t> data(total_size);
+    uint8_t* dp = data.data();
     uint32_t bit = 0;
 
     for (const Box& box : boxes)
@@ -147,6 +146,5 @@ void save_masks(const mse::span<const Box> boxes, const char* mask_path)
         }
     }
 
-    mse::FileIO::write(mask_path, { data, total_size });
-    delete[] data;
+    mse::FileIO::write(mask_path, data);
 }
