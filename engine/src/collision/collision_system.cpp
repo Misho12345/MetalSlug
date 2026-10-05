@@ -155,7 +155,7 @@ namespace mse
 
         const float min2 = min_size * min_size;
 
-        // pos_remainder is increased by vel * dt in ::step()
+        // move is increased by vel * dt in ::step()
         const vec2 move = sc_a.move - sc_b.move;
 
         const float move_len2 = glm::length2(move);
