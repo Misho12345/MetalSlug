@@ -83,6 +83,8 @@ void Game::update()
     SpriteRenderer& body_sr = s.get<SpriteRenderer>(player_body);
     SpriteCollider& legs_cs = s.get<SpriteCollider>(player_legs);
 
+    if (Input::just_pressed(Key::Enter))  body_sr.flip_x ^= 1;
+
     if (Input::just_pressed(Key::Space)) body_sr.play(player::Body::Drinking);
     else if (Input::just_released(Key::Space)) body_sr.play(player::Body::Tired);
 
@@ -112,12 +114,4 @@ void Game::late_update()
             body_sr.size().y * body.scale.y
         ) / 2
     };
-
-    if (Input::just_pressed(Key::Enter))
-    {
-        printf(
-            "%f, %f\n",
-            (double)cam.position.x,
-            (double)cam.position.y);
-    }
 }

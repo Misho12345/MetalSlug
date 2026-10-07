@@ -240,7 +240,8 @@ namespace mse
                     tr.scale,
                     tr.rotation,
                     anim::global_anim_id(sprite.info()),
-                    sprite.frame());
+                    sprite.frame(),
+                    sprite.flip_x);
         }
 
 

@@ -45,10 +45,12 @@ namespace mse
 
             ivec2 position;
             ivec2 scale;
-            float      rotation;
+            float rotation;
 
-            uint32_t  anim_idx;
-            uint32_t  frame_idx;
+            uint32_t anim_idx;
+            uint32_t frame_idx;
+
+            uint32_t flip_x;
         };
 
         void update_camera_data(const Scene& scene) const;

@@ -136,9 +136,14 @@ int main(const int argc, const char** argv)
     }
 
     snprintf(path, sizeof(path), "%s/mask", argv[argc - 1]);
-    printf("saving %s\n", path);
+
+    char path_flipped[256];
+    snprintf(path_flipped, sizeof(path_flipped), "%s/mask_flipped", argv[argc - 1]);
+
+    printf("saving %s and %s\n", path, path_flipped);
+
     // using the original box order so the masks order matchers what anim.hpp will provide
-    save_masks(boxes, path);
+    save_masks(boxes, path, path_flipped);
 
     snprintf(path, sizeof(path), "%s/meta.json", argv[argc - 1]);
     printf("saving %s\n", path);

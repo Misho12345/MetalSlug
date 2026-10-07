@@ -43,4 +43,4 @@ private:
     mse::vector<Box*>  boxes_{ nullptr };
 };
 
-void save_masks(mse::span<const Box> boxes, const char* mask_path);
+void save_masks(mse::span<const Box> boxes, const char* mask_path, const char* flipped_mask_path);

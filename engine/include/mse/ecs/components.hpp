@@ -29,6 +29,7 @@ namespace mse
 
         bool paused{ false };
         bool hidden{ false };
+        bool flip_x{ false };
 
         [[nodiscard]] anim::Info info() const { return info_; }
         [[nodiscard]] uint32_t   frame() const { return frame_; }

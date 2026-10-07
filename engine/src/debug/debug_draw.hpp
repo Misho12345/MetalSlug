@@ -28,7 +28,7 @@ namespace mse
         void draw_colliders(const Scene& scene) const;
         void draw_tile_map(const Scene& scene) const;
 
-        bool active_{ true };
+        bool active_{ false };
 
         friend ::mse::PrivCtx;
     };

@@ -46,7 +46,7 @@ namespace mse
             ui.draw_box(colliders[i].bounds(t), HITBOX_COLOR, 5.0f);
 
             const aabb bounds = sr.bounds(t);
-            FrameMask mask = App::priv_ctx().sprite_data_registry.mask(sr.info(), sr.frame());
+            FrameMask mask = App::priv_ctx().sprite_data_registry.mask(sr.info(), sr.frame(), sr.flip_x);
 
             for (int32_t y = bounds.min.y; y < bounds.max.y; )
             {

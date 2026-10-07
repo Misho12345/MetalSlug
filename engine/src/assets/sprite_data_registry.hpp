@@ -63,7 +63,7 @@ namespace mse
         // load the animation data and masks buffer from texture_packer output
         bool init();
 
-        [[nodiscard]] FrameMask mask(anim::Info info, uint32_t frame) const;
+        [[nodiscard]] FrameMask mask(anim::Info info, uint32_t frame, bool flipped) const;
         [[nodiscard]] const SpriteAnimationData& anim_data(anim::Info info) const;
 
         [[nodiscard]]
@@ -79,8 +79,10 @@ namespace mse
         bool load_mask();
 
         vector<SpriteAnimationData> anim_data_{}; // key: global anim id
-        vector<size_t> mask_offsets_{};           // key: global frame id
+
+        vector<size_t>  mask_offsets_{}; // key: global frame id
         vector<uint8_t> masks_buf_{ nullptr };
+        vector<uint8_t> flipped_masks_buf_{ nullptr };
 
         uint32_t atlas_count_{};
 

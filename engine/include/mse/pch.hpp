@@ -55,6 +55,7 @@ namespace mse
     using vec2 = glm::f32vec2;
     using ivec2 = glm::i32vec2;
     using uvec2 = glm::u32vec2;
+    using glm::bvec2;
 
     using color = glm::u8vec4;
 

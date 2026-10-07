@@ -16,23 +16,23 @@ Box::Box(const char* _image_path, const uint32_t _sprite_id, const uint32_t _ani
 {
     int w_, h_, t;
     data = (uint32_t*)(stbi_load(image_path, &w_, &h_, &t, 4));
-    w = (uint32_t)w_;
-    h = (uint32_t)h_;
+    w    = (uint32_t)w_;
+    h    = (uint32_t)h_;
 }
 
 Box::~Box() { if (data) stbi_image_free(data); }
 
-Box::Box(Box&& other) noexcept :
-    image_path{ std::exchange(other.image_path, nullptr) },
-    data{ std::exchange(other.data, nullptr) },
-    x{ other.x },
-    y{ other.y },
-    w{ other.w },
-    h{ other.h },
-    sprite_id{ other.sprite_id },
-    anim_id{ other.anim_id },
-    frame_count{ other.frame_count },
-    rotated{ other.rotated } {}
+Box::Box(Box&& other) noexcept
+    : image_path{ std::exchange(other.image_path, nullptr) },
+      data{ std::exchange(other.data, nullptr) },
+      x{ other.x },
+      y{ other.y },
+      w{ other.w },
+      h{ other.h },
+      sprite_id{ other.sprite_id },
+      anim_id{ other.anim_id },
+      frame_count{ other.frame_count },
+      rotated{ other.rotated } {}
 
 Box& Box::operator=(Box&& other) noexcept
 {
@@ -92,7 +92,7 @@ void Atlas::save(const char* atlas_path) const
     stbi_write_png(atlas_path, SIZE, SIZE, sizeof(uint32_t), data.data(), SIZE * sizeof(uint32_t));
 }
 
-void save_masks(const mse::span<const Box> boxes, const char* mask_path)
+void save_masks(const mse::span<const Box> boxes, const char* mask_path, const char* flipped_mask_path)
 {
     size_t total_size = 0;
 
@@ -104,7 +104,11 @@ void save_masks(const mse::span<const Box> boxes, const char* mask_path)
     }
 
     mse::vector<uint8_t> data(total_size);
+    mse::vector<uint8_t> data_flipped(total_size);
+
     uint8_t* dp = data.data();
+    uint8_t* fdp = data_flipped.data();
+
     uint32_t bit = 0;
 
     for (const Box& box : boxes)
@@ -124,15 +128,18 @@ void save_masks(const mse::span<const Box> boxes, const char* mask_path)
                 for (uint32_t x = 0; x < frame_w; ++x)
                 {
                    const uint32_t v = p[off_x + x + y * box.w];
+                   const uint32_t fv = p[off_x + frame_w - x - 1 + y * box.w];
 
-                    // if more than half solid - mark solid and advance to the next bit
-                    if (((v & 0xff000000) >> 24) > 128) *dp |= 1 << bit; // not (7 - bit) because little endian
+                   // if more than half solid - mark solid and advance to the next bit
+                   if (((v & 0xff000000) >> 24) > 128) *dp |= 1 << bit; // not (7 - bit) because little endian
+                   if (((fv & 0xff000000) >> 24) > 128) *fdp |= 1 << bit;
 
-                    if (++bit >= 8)
-                    {
-                        bit = 0;
-                        ++dp;
-                    }
+                   if (++bit >= 8)
+                   {
+                       bit = 0;
+                       ++dp;
+                       ++fdp;
+                   }
                 }
             }
 
@@ -141,9 +148,11 @@ void save_masks(const mse::span<const Box> boxes, const char* mask_path)
             {
                 bit = 0;
                 ++dp;
+                ++fdp;
             }
         }
     }
 
     mse::FileIO::write(mask_path, data);
+    mse::FileIO::write(flipped_mask_path, data_flipped);
 }

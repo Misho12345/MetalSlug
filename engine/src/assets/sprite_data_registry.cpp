@@ -133,10 +133,17 @@ namespace mse
     bool SpriteDataRegistry::load_mask()
     {
         masks_buf_ = FileIO::read<uint8_t>("texture_packer/mask");
+        flipped_masks_buf_ = FileIO::read<uint8_t>("texture_packer/mask_flipped");
 
         if (masks_buf_.empty())
         {
             printf("empty or nonexistent mask file");
+            return false;
+        }
+
+        if (flipped_masks_buf_.empty())
+        {
+            printf("empty or nonexistent flipped mask file");
             return false;
         }
 
@@ -154,17 +161,19 @@ namespace mse
 
         // give enough padding to be able to give a range from FrameMask without going out of bounds
         masks_buf_.resize(masks_buf_.size() + sizeof(size_t));
+        flipped_masks_buf_.resize(flipped_masks_buf_.size() + sizeof(size_t));
 
         return true;
     }
 
 
-    FrameMask SpriteDataRegistry::mask(const anim::Info info, const uint32_t frame) const
+    FrameMask SpriteDataRegistry::mask(const anim::Info info, const uint32_t frame, const bool flipped) const
     {
         const SpriteAnimationData& data = anim_data(info);
 
         return {
-            .origin = masks_buf_.data() + mask_offsets_[anim::global_frame_id(info, frame)],
+            .origin = (flipped ? flipped_masks_buf_.data() : masks_buf_.data()) +
+                mask_offsets_[anim::global_frame_id(info, frame)],
             .size = data.frame_size
         };
     }

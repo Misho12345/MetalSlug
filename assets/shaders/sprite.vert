@@ -17,6 +17,8 @@ struct InstanceData
 
     uint anim_idx;
     uint frame_idx;
+
+    bool flip_x;
 };
 
 struct SpriteAnimationData
@@ -58,7 +60,8 @@ void main()
     InstanceData instance = instances[gl_InstanceID + gl_BaseInstance];
 
     vec2 base_pos = QUAD_POS[gl_VertexID];
-    v_TexCoord = base_pos;
+
+    v_TexCoord = abs(vec2(instance.flip_x, 0) - base_pos);
     v_AnimationIdx = instance.anim_idx;
     v_FrameIdx = instance.frame_idx;
 

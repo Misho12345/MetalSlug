@@ -242,8 +242,8 @@ namespace mse
         uvec2 local_b = (overlap.min - tr_b.position) / ivec2(tr_b.scale) + ivec2(sr_b.size()) / 2;
 
         // The masks (mask_a and mask_b) contain a pointer to a buffer with packed data (see sprite_data_registry.hpp)
-        const FrameMask mask_a = reg.mask(sr_a.info(), sr_a.frame());
-        const FrameMask mask_b = reg.mask(sr_b.info(), sr_b.frame());
+        const FrameMask mask_a = reg.mask(sr_a.info(), sr_a.frame(), sr_a.flip_x);
+        const FrameMask mask_b = reg.mask(sr_b.info(), sr_b.frame(), sr_b.flip_x);
 
         for (uint32_t y = 0; y < size.y; ++y, ++local_a.y, ++local_b.y)
         {
