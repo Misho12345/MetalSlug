@@ -8,7 +8,11 @@ namespace mse
 {
     App::App() :
         ctx_{ make_unique<GameCtx>() },
-        priv_ctx_{ make_unique<PrivCtx>() } { instance_ = this; }
+        priv_ctx_{ make_unique<PrivCtx>() }
+    {
+        assert(!instance_ && "Cannot have multiple App instances");
+        instance_ = this;
+    }
 
     App::~App() = default;
 

@@ -14,7 +14,7 @@ namespace mse
         capacity_{ (size_t)size },
         data_{ (T*)operator new(sizeof(T) * capacity_) }
     {
-        for (size_t i = 0; i < size_; ++i) new(data_ + i) T{};
+        for (size_t i = 0; i < size_; ++i) new(data_ + i) T();
     }
 
     template <typename T> requires (!std::same_as<T, void>)
@@ -96,12 +96,12 @@ namespace mse
     template <typename... Args> requires std::constructible_from<T, Args...>
     void vector<T>::emplace_front(Args&&... args)
     {
-        emplace(std::forward<Args>(args)..., 0);
+        insert(std::forward<Args>(args)..., 0);
     }
 
     template <typename T> requires (!std::same_as<T, void>)
     template <typename... Args> requires std::constructible_from<T, Args...>
-    void vector<T>::emplace(size_t idx, Args&&... args)
+    void vector<T>::insert(size_t idx, Args&&... args)
     {
         if (idx == size_) emplace_back(std::forward<Args>(args)...);
         else

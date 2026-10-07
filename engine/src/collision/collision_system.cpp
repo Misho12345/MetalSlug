@@ -107,9 +107,9 @@ namespace mse
                 for (BucketEntry* b = a + 1; b < end; ++b)
                 {
                     // if it's not the first cell they meet in, skip to avoid double checks
-                    if (max(a->starting_grid_id, b->starting_grid_id) != c) continue;
-
-                    if (collision_check(scene, a->entity, b->entity)) pairs_.emplace_back(a->entity, b->entity);
+                    if (max(a->starting_grid_id, b->starting_grid_id) == c &&
+                        collision_check(scene, a->entity, b->entity))
+                        pairs_.emplace_back(a->entity, b->entity);
                 }
             }
         }
@@ -119,8 +119,7 @@ namespace mse
             SpriteCollider& sc = sc_comps[i];
             Transform&      tr = scene.get<Transform>(entities[i]);
 
-            const ivec2 whole(sc.move);
-
+            const ivec2 whole = sc.move;
             tr.position += whole;
             sc.move -= whole;
         }
@@ -130,8 +129,8 @@ namespace mse
             const SpriteCollider& sc_a = scene.get<SpriteCollider>(pair.a);
             const SpriteCollider& sc_b = scene.get<SpriteCollider>(pair.b);
 
-            if (sc_a.callback) sc_a.callback(pair.b, sc_b.layer);
-            if (sc_b.callback) sc_b.callback(pair.a, sc_a.layer);
+            if (sc_a.target_layer & sc_b.layer && sc_a.callback) sc_a.callback(pair.b, sc_b.layer);
+            if (sc_b.target_layer & sc_a.layer && sc_b.callback) sc_b.callback(pair.a, sc_a.layer);
         }
     }
 
@@ -320,7 +319,7 @@ namespace mse
                 // 2: 0 0 R Q  P O N -
                 //
                 // STEP 2:
-                // the next chunk of 2 is requested, and the bytes from 1 which
+                // the next chunk of 2 is requested, and the bits from 1 which
                 // weren't checked because they weren't in 2 have to be checked now
                 //
                 // 1: [G F] E D  C B A -
@@ -403,13 +402,13 @@ namespace mse
         const bool was_grounded = sc.grounded;
         sc.grounded = false;
 
-        const lambda to_tile = [](const int px, const int a)
+        const Auto to_tile = [](const int px, const int a)
         {
             // floors (negative px -> negative tile)
             return (px < 0 ? px - TILE_SIZE_i[a] + 1 : px) / TILE_SIZE_i[a];
         };
 
-        const lambda tile_at = [&](const int tx, const int ty)
+        const Auto tile_at = [&](const int tx, const int ty)
         {
             // everything outside the map is air
             return tx < 0 || ty < 0 || tx >= tm_size.x || ty >= tm_size.y
@@ -418,14 +417,14 @@ namespace mse
         };
 
         // ends the move along the axis after dist px
-        const lambda stop = [&](const int a, const int dist)
+        const Auto stop = [&](const int a, const int dist)
         {
             sc.move[a] = (float)dist;
             sc.velocity[a] = 0.0f;
         };
 
         // is the tile a wall (a == 0) / ceiling (a == 1) for something entering it in direction step
-        const lambda blocks = [&](const int tx, const int ty, const int a, const int step)
+        const Auto blocks = [&](const int tx, const int ty, const int a, const int step)
         {
             const TileType tile = tile_at(tx, ty);
 
@@ -449,7 +448,7 @@ namespace mse
         };
 
         // axis sweep (walls for x, ceilings for y)
-        const lambda sweep = [&](const int a)
+        const Auto sweep = [&](const int a)
         {
             const int p    = 1 - a;
             const int dist = (int)sc.move[a];
@@ -481,7 +480,7 @@ namespace mse
         };
 
         // finds the highest surface under the box and lands on it if it's close enough
-        const lambda land = [&](const int dx)
+        const Auto land = [&](const int dx)
         {
             const int bottom   = bounds.max.y;
             const int center_x = bounds.center().x;

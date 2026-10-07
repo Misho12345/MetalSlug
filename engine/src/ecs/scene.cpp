@@ -37,7 +37,7 @@ namespace mse
         free_entities_.emplace_back(entity.idx());
 
         transform_pool_.remove(entity);
-        sprite_renderer_pool_.remove(entity);
+        sprite_collider_pool_.remove(entity);
         sprite_renderer_pool_.remove(entity);
     }
 }

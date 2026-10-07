@@ -38,9 +38,6 @@ namespace mse
         virtual void update() = 0;
         virtual void late_update() = 0;
 
-        [[nodiscard]]
-        static App& instance() { return *instance_; }
-
         /// @brief Access to public engine systems
         [[nodiscard]]
         static GameCtx& ctx() { return *instance_->ctx_; }

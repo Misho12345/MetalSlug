@@ -21,13 +21,9 @@ namespace mse
     {
         unique_ptr() = default;
         unique_ptr(std::nullptr_t) {}
-
         ~unique_ptr() { delete ptr_; }
-
-        /// @brief Constructs a unique_ptr that owns the given pointer
         unique_ptr(T* ptr) : ptr_{ ptr } {}
 
-        /// @brief Constructs a unique_ptr that owns a new object of type T constructed with the given arguments
         template <typename... Args>
         explicit unique_ptr(Args&&... args) : ptr_{ new T(std::forward<Args>(args)...) } {}
 

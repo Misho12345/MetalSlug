@@ -10,7 +10,7 @@ namespace mse
 
         if (lookup_[id.idx()] != -1)
         {
-            return components_[(size_t)lookup_[id.idx()]] = C{ std::forward<Args>(args)... };
+            return components_[(size_t)lookup_[id.idx()]] = C(std::forward<Args>(args)...);
         }
 
         lookup_[(size_t)id.idx()] = (int32_t)components_.size();

@@ -15,6 +15,6 @@
 
 #include "file_io.hpp"
 
-#include "lambda.hpp"
+#include "auto.hpp"
 
 constexpr size_t operator ""_zu(const unsigned long long n) { return n; }

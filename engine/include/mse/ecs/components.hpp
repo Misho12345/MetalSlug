@@ -79,7 +79,7 @@ namespace mse
         uint32_t layer{};
         uint32_t target_layer{};
 
-        lambda<void(*)(entity_id, uint32_t)> callback{ nullptr };
+        void (*callback)(entity_id, uint32_t){ nullptr };
 
         bool collide_with_tile_map = true;
 

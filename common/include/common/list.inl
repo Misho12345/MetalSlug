@@ -121,7 +121,7 @@ namespace mse
 
     template <typename T>
     template <typename... Args> requires std::constructible_from<T, Args...>
-    void list<T>::emplace(const size_t idx, Args&&... args)
+    void list<T>::insert(const size_t idx, Args&&... args)
     {
         if (idx == 0) { emplace_front(std::forward<Args>(args)...); return; }
         if (idx >= size_) { emplace_back(std::forward<Args>(args)...); return; }

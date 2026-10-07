@@ -84,7 +84,6 @@ namespace mse::gl
         VAO(const VAO&)            = delete;
         VAO& operator=(const VAO&) = delete;
         VAO(VAO&& other) noexcept;
-
         VAO& operator=(VAO&& other) noexcept;
 
         /**

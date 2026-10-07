@@ -182,7 +182,7 @@ namespace mse
         void push_front(const T& value) { emplace_front(value); }
 
         /// @brief Inserts a copy of the specified value to the list at the specified index
-        void push(size_t idx, const T& value) { emplace(idx, value); }
+        void push(size_t idx, const T& value) { insert(idx, value); }
 
         /// @brief Inserts a copy of the specified value to the back of the list
         void push_back(const T& value) { emplace_back(value); }
@@ -193,7 +193,7 @@ namespace mse
         void push_front(T&& value) { emplace_front(std::move(value)); }
 
         /// @brief Moves the specified value to the list at the specified index
-        void push(size_t idx, T&& value) { emplace(idx, std::move(value)); }
+        void push(size_t idx, T&& value) { insert(idx, std::move(value)); }
 
         /// @brief Moves the specified value to the back of the list
         void push_back(T&& value) { emplace_back(std::move(value)); }
@@ -214,7 +214,7 @@ namespace mse
          * @param args Arguments to construct the new element
          */
         template <typename... Args> requires std::constructible_from<T, Args...>
-        void emplace(size_t idx, Args&&... args);
+        void insert(size_t idx, Args&&... args);
 
 
         /**
