@@ -2,6 +2,7 @@
 #include "mse/pch.hpp"
 #include "input/input.hpp"
 #include "ecs/scene.hpp"
+#include "state_machine/state_machine_system.hpp"
 
 namespace mse
 {
@@ -13,6 +14,7 @@ namespace mse
     struct GameCtx
     {
         Scene scene;
+        StateMachineSystem state_machines;
     };
 
     /**

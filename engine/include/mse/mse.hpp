@@ -8,6 +8,8 @@
 #include "ecs/entity_id.hpp"
 #include "ecs/scene.hpp"
 
+#include "state_machine/state_machine.hpp"
+
 #include "input/input.hpp"
 
 #include "app.hpp"

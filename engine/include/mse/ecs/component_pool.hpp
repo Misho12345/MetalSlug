@@ -1,6 +1,7 @@
 #pragma once
 #include "mse/pch.hpp"
 #include "entity_id.hpp"
+#include "icomponent_pool.hpp"
 
 namespace mse
 {
@@ -12,10 +13,11 @@ namespace mse
      * @see scene.hpp
      */
     template <typename C>
-    class ComponentPool final
+    class ComponentPool final : public IComponentPool
     {
     public:
         ComponentPool() = default;
+        ~ComponentPool() override = default;
 
         /**
          * @brief Set/Create the component for the given entity_id
@@ -55,7 +57,7 @@ namespace mse
          * @brief Remove the component for the given entity_id
          * @param id The entity_id to remove the component for
          */
-        void remove(entity_id id);
+        void remove(entity_id id) override;
 
         [[nodiscard]] vector<C>& components() { return components_; }
         [[nodiscard]] const vector<C>& components() const { return components_; }

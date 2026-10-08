@@ -36,8 +36,6 @@ namespace mse
         ++versions_[entity.idx()];
         free_entities_.emplace_back(entity.idx());
 
-        transform_pool_.remove(entity);
-        sprite_collider_pool_.remove(entity);
-        sprite_renderer_pool_.remove(entity);
+        for (unique_ptr<IComponentPool>& pool : pools_) pool->remove(entity);
     }
 }

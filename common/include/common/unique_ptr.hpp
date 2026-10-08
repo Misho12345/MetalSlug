@@ -24,50 +24,42 @@ namespace mse
         ~unique_ptr() { delete ptr_; }
         unique_ptr(T* ptr) : ptr_{ ptr } {}
 
-        template <typename... Args>
-        explicit unique_ptr(Args&&... args) : ptr_{ new T(std::forward<Args>(args)...) } {}
-
         unique_ptr(const unique_ptr&)            = delete;
         unique_ptr& operator=(const unique_ptr&) = delete;
 
-        unique_ptr(unique_ptr&& other) noexcept : ptr_{ std::exchange(other.ptr_, nullptr) } {}
+        unique_ptr(unique_ptr&& other) noexcept : ptr_{ other.release() } {}
 
         unique_ptr& operator=(unique_ptr&& other) noexcept
         {
             if (this != &other)
             {
                 reset();
-                ptr_ = std::exchange(other.ptr_, nullptr);
+                ptr_ = other.release();
             }
 
             return *this;
         }
 
-        [[nodiscard]]
-        T& operator*()
-        {
-            assert(ptr_ && "dereferencing nullptr");
-            return *ptr_;
-        }
+        template <typename U> requires std::convertible_to<U*, T*>
+        unique_ptr(unique_ptr<U>&& other) noexcept : ptr_{ other.release() } {}
 
-        [[nodiscard]]
-        const T& operator*() const
-        {
-            assert(ptr_ && "dereferencing nullptr");
-            return *ptr_;
-        }
 
-        T* operator->()
-        {
-            assert(ptr_ && "dereferencing nullptr");
-            return ptr_;
-        }
+        [[nodiscard]] T* get() { return ptr_; }
+        [[nodiscard]] const T* get() const { return ptr_; }
+
+
+        [[nodiscard]] T& operator*() { assert(ptr_ && "dereferencing nullptr"); return *ptr_; }
+        [[nodiscard]] const T& operator*() const { assert(ptr_ && "dereferencing nullptr"); return *ptr_; }
+        T* operator->() { assert(ptr_ && "dereferencing nullptr"); return ptr_; }
 
         void reset()
         {
             delete ptr_;
             ptr_ = nullptr;
         }
+
+        [[nodiscard]]
+        T* release() { return std::exchange(ptr_, nullptr); }
 
     private:
         T* ptr_{ nullptr };

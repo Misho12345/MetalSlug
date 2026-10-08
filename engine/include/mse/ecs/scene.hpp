@@ -2,6 +2,7 @@
 #include "mse/api.hpp"
 #include "components.hpp"
 #include "component_pool.hpp"
+#include "component_type.hpp"
 
 namespace mse
 {
@@ -96,17 +97,24 @@ namespace mse
         [[nodiscard]]
         ComponentPool<C>& pool()
         {
-            return const_cast<ComponentPool<C>&>(std::as_const(*this).pool<C>());
+            static const size_t idx = component_type_index<C>();
+
+            while (pools_.size() <= idx) pools_.emplace_back();
+
+            if (!pools_[idx].get()) pools_[idx] = new ComponentPool<C>();
+            return (ComponentPool<C>&)*pools_[idx];
         }
 
         template <typename C>
         [[nodiscard]]
         const ComponentPool<C>& pool() const
         {
-            if constexpr (std::same_as<C, Transform>) return transform_pool_;
-            else if constexpr (std::same_as<C, SpriteCollider>) return sprite_collider_pool_;
-            else if constexpr (std::same_as<C, SpriteRenderer>) return sprite_renderer_pool_;
-            else static_assert(always_false<C>, "Component type not supported in Scene");
+            static const size_t idx = component_type_index<C>();
+
+            if (idx < pools_.size() && pools_[idx].get()) return (const ComponentPool<C>&)*pools_[idx];
+
+            static const ComponentPool<C> empty;
+            return empty;
         }
 
 
@@ -116,9 +124,7 @@ namespace mse
         entity_id bg_entity{};
 
     private:
-        ComponentPool<Transform>      transform_pool_;
-        ComponentPool<SpriteCollider> sprite_collider_pool_;
-        ComponentPool<SpriteRenderer> sprite_renderer_pool_;
+        vector<unique_ptr<IComponentPool>> pools_;
 
         vector<uint8_t>  versions_{};
         vector<uint32_t> free_entities_{};

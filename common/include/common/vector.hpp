@@ -50,9 +50,9 @@ namespace mse
 
         ~vector();
 
-        vector(const vector& other);
+        vector(const vector& other) requires std::copy_constructible<T>;
         vector(vector&& other) noexcept;
-        vector& operator=(const vector& other);
+        vector& operator=(const vector& other) requires std::copy_constructible<T>;
         vector& operator=(vector&& other) noexcept;
 
         /// @brief Accesses the element at the specified index
@@ -154,13 +154,24 @@ namespace mse
         */
         void resize(size_t new_size, T fill = {});
 
+
+        /**
+         * @brief Finds the index of the first occurrence for an element for which a condition is true
+         * @param cond Success condition
+         * @return The index of that element, or vector<>::npos if not found
+         */
+        template <typename Func> requires requires (Func f, const T& v) { { f(v) } -> std::same_as<bool>; }
+        [[nodiscard]]
+        size_t find(const Func& cond) const;
+
         /**
          * @brief Finds the index of the first occurrence of a value in the vector
          * @param value The value to search for
          * @return The index of the first occurrence of the value, or vector<>::npos if not found
          */
         [[nodiscard]]
-        size_t find(const T& value) requires std::equality_comparable<T>;
+        size_t find(const T& value) const requires std::equality_comparable<T>;
+
 
         // iterator methods
         T* begin() { return data_; }
@@ -174,7 +185,7 @@ namespace mse
 
     private:
         // helpers for copying, moving and reallocation
-        static void copy_mem(T* dest, const T* src, size_t count);
+        static void copy_mem(T* dest, const T* src, size_t count) requires std::copy_constructible<T>;
         static void move_mem(T* dest, T* src, size_t count);
         static void move_realloc(T* dest, T* src, size_t count);
 

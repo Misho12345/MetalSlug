@@ -33,20 +33,22 @@ namespace mse
     vector<T>::~vector() { reset(); }
 
     template <typename T> requires (!std::same_as<T, void>)
-    vector<T>::vector(const vector& other) : size_{ other.size_ }, capacity_{ other.capacity_ }
+    vector<T>::vector(const vector& other) requires std::copy_constructible<T>
+        : size_{ other.size_ },
+          capacity_{ other.capacity_ }
     {
         data_ = (T*)::operator new(sizeof(T) * other.capacity_);
         copy_mem(data_, other.data_, other.size_);
     }
 
     template <typename T> requires (!std::same_as<T, void>)
-    vector<T>::vector(vector&& other) noexcept :
-        size_{ std::exchange(other.size_, 0) },
-        capacity_{ std::exchange(other.capacity_, 0) },
-        data_{ std::exchange(other.data_, nullptr) } {}
+    vector<T>::vector(vector&& other) noexcept
+        : size_{ std::exchange(other.size_, 0) },
+          capacity_{ std::exchange(other.capacity_, 0) },
+          data_{ std::exchange(other.data_, nullptr) } {}
 
     template <typename T> requires (!std::same_as<T, void>)
-    vector<T>& vector<T>::operator=(const vector& other)
+    vector<T>& vector<T>::operator=(const vector& other) requires std::copy_constructible<T>
     {
         if (this == &other) return *this;
 
@@ -96,7 +98,7 @@ namespace mse
     template <typename... Args> requires std::constructible_from<T, Args...>
     void vector<T>::emplace_front(Args&&... args)
     {
-        insert(std::forward<Args>(args)..., 0);
+        insert(0, std::forward<Args>(args)...);
     }
 
     template <typename T> requires (!std::same_as<T, void>)
@@ -186,19 +188,26 @@ namespace mse
 
 
     template <typename T> requires (!std::same_as<T, void>)
-    size_t vector<T>::find(const T& value) requires std::equality_comparable<T>
+    template <typename Func> requires requires (Func f, const T& v) { { f(v) } -> std::same_as<bool>; }
+    size_t vector<T>::find(const Func& cond) const
     {
         for (size_t i = 0; i < size_; ++i)
         {
-            if (data_[i] == value) return i;
+            if (cond(data_[i])) return i;
         }
 
         return vector<>::npos;
     }
 
+    template <typename T> requires (!std::same_as<T, void>)
+    size_t vector<T>::find(const T& value) const requires std::equality_comparable<T>
+    {
+        return find([&](const T& v){ return v == value; });
+    }
+
 
     template <typename T> requires (!std::same_as<T, void>)
-    void vector<T>::copy_mem(T* dest, const T* src, const size_t count)
+    void vector<T>::copy_mem(T* dest, const T* src, const size_t count) requires std::copy_constructible<T>
     {
         if (!dest || !src || dest == src) return;
 
