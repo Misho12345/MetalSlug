@@ -17,7 +17,7 @@ namespace
     {
         template <typename... Args>
         void set(Args&&... args) { new (data) T(std::forward<Args>(args)...); }
-        void reset() { mse::destroy_at(data); }
+        void reset() { mse::destroy_at((T*)data); }
 
         T& operator*() { return *reinterpret_cast<T*>(data); }
         const T& operator*() const { return *reinterpret_cast<const T*>(data); }

@@ -42,7 +42,7 @@ endfunction()
 
 
 function(snake_to_pascal_case str out)
-    string(REPLACE "_" ";" word_list "${str}")
+    string(REGEX REPLACE "[-_]" ";" word_list "${str}")
 
     set(result "")
     foreach (word IN LISTS word_list)

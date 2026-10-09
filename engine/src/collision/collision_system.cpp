@@ -238,8 +238,8 @@ namespace mse
         // get scaled down overlap size and local positions of where the overlap starts for the 2 sprites
         const uvec2 size = overlap.size() / tr_a.scale;
 
-        uvec2 local_a = (overlap.min - tr_a.position) / ivec2(tr_a.scale) + ivec2(sr_a.size()) / 2;
-        uvec2 local_b = (overlap.min - tr_b.position) / ivec2(tr_b.scale) + ivec2(sr_b.size()) / 2;
+        uvec2 local_a = uvec2(overlap.min - bounds_a.min) / tr_a.scale;
+        uvec2 local_b = uvec2(overlap.min - bounds_b.min) / tr_b.scale;
 
         // The masks (mask_a and mask_b) contain a pointer to a buffer with packed data (see sprite_data_registry.hpp)
         const FrameMask mask_a = reg.mask(sr_a.info(), sr_a.frame(), sr_a.flip_x);
@@ -371,7 +371,7 @@ namespace mse
                     if (max < size_t_bits) break; // last => no trailing bits for 2
 
                     // STEP 2, ...
-                    block2 = mask2->range(local2 + uvec2{ x - diff + size_t_bits, 0 }, max);
+                    block2 = mask2->range(local2 + uvec2{ x - diff + size_t_bits, 0 }, max - rev_diff);
 
                     // STEP 3, ...
                     if ((block1 >> rev_diff) & block2) return true;
