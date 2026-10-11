@@ -56,34 +56,48 @@ namespace
         {
             switch (V)
             {
-                case Body::CrouchPistolAfterShoot: return 0;
-                case Body::CrouchPistolAfterThrow: return 0;
-                case Body::CrouchPistolIdle: return 0;
-                case Body::CrouchPistolKnifeSlash: return 0;
-                case Body::CrouchPistolKnifeStab: return 0;
                 case Body::CrouchPistolShoot: return 0;
-                case Body::CrouchPistolThrow: return 0;
-                case Body::CrouchPistolTurn: return 0;
-                case Body::CrouchPistolWalk: return 0;
+                case Body::CrouchPistolAfterShoot: return 0;
+
+                // case Body::CrouchPistolKnifeSlash: return 0;
+                // case Body::CrouchPistolKnifeStab: return 0;
+
+                // case Body::CrouchPistolThrow: return 0;
+                // case Body::CrouchPistolAfterThrow: return 0;
+
                 case Body::CrouchPistol: return 0;
-                case Body::PistolDrink: return 0;
+                case Body::CrouchPistolIdle: return 0;
+                case Body::CrouchPistolWalk: return 0;
+                case Body::CrouchPistolTurn: return 0;
+
+
                 case Body::PistolIdle: return 0;
+
+                case Body::PistolWalk: return 0;
+                case Body::PistolWalkStop: return 0;
+                case Body::PistolTurn: return 0;
+
                 case Body::PistolInAir: return 0;
-                case Body::PistolJumpShoot: return 0;
-                case Body::PistolKnifeSlash: return 0;
-                case Body::PistolKnifeStab: return 0;
-                case Body::PistolLookDown: return 0;
-                case Body::PistolLookIdle: return 0;
-                case Body::PistolLookUp: return 0;
-                case Body::PistolReload: return 0;
-                case Body::PistolShootDown: return 0;
-                case Body::PistolShootUp: return 0;
+
                 case Body::PistolShoot: return 0;
                 case Body::PistolSideJump: return 0;
-                case Body::PistolThrow: return 0;
-                case Body::PistolTurn: return 0;
-                case Body::PistolWalkStop: return 0;
-                case Body::PistolWalk: return 0;
+                case Body::PistolJumpShoot: return 0;
+
+                // case Body::PistolKnifeSlash: return 0;
+                // case Body::PistolKnifeStab: return 0;
+
+                // only in air
+                case Body::PistolLookDown: return 0;
+                case Body::PistolShootDown: return 0;
+
+                case Body::PistolLookUp: return 0;
+                case Body::PistolLookUpIdle: return 0;
+                case Body::PistolLookUpTurn: return 0;
+                case Body::PistolShootUp: return 0;
+
+                // case Body::PistolReload: return 0;
+                // case Body::PistolDrink: return 0;
+                // case Body::PistolThrow: return 0;
                 default: return 0;
             }
         }
