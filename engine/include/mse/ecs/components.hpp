@@ -12,19 +12,24 @@ namespace mse
     {
         ivec2 position{ 0, 0 };
         uvec2 scale{ 1 };
-        float      rotation{ 0.0f };
+        float rotation{ 0.0f };
     };
 
+    using should_loop = bool_value<struct loop_tag>;
+    using should_restart_if_same = bool_value<struct restart_tag>;
 
-    struct MSE_API SpriteRenderer final
+    /**
+     * @brief Sprite information for rendering
+     * @note If present and not hidden, CollisionSystem will use the sprite's mask for pixel perfect collision check
+     * @see tools/texture_packer, sprite_data_registry.hpp, collision_system.cpp
+     */
+    struct MSE_API Sprite final
     {
         template <anim::sprite_enum E>
-        SpriteRenderer(const Scene& scene, const entity_id id, E animation)
-            : SpriteRenderer(scene, id, anim::info(animation)) {}
+        Sprite(const Scene& scene, const entity_id id, E animation)
+            : Sprite(scene, id, anim::info(animation)) {}
 
         vec2 parallax_factor{ 1.0f, 1.0f };
-
-        float frame_dur{ 0.1f };
         int32_t layer{ 0 };
 
         bool paused{ false };
@@ -34,36 +39,82 @@ namespace mse
         [[nodiscard]] anim::Info info() const { return info_; }
         [[nodiscard]] uint32_t   frame() const { return frame_; }
 
+        /**
+         * @brief Plays animation
+         * @tparam E Animation enum type (deduced)
+         * @param animation Animation, must belong to the same enum the component was initialized with
+         * @param frame_dur Duration of each frame in ticks
+         * @param loop Whether the animation should loop or stop after the last frame is played
+         * @param restart_if_same Whether to set the frame to 0 if the animation is the same
+         */
         template <anim::sprite_enum E>
-        void play(const E animation, const bool restart_if_same = false)
+        void play(const E                      animation,
+                  const uint8_t                frame_dur       = 0,
+                  const should_loop            loop            = should_loop::no,
+                  const should_restart_if_same restart_if_same = should_restart_if_same::no)
         {
-            assert(anim::sprite_id<E> == info_.sprite_id && "SpriteRenderer::play: sprite_id mismatch");
-            play((uint32_t)animation, restart_if_same);
+            assert(anim::sprite_id<E> == info_.sprite_id && "Sprite::play: sprite_id mismatch");
+
+            frame_durs_.clear();
+            frame_dur_ = frame_dur;
+
+            play((uint32_t)animation, loop, restart_if_same);
+        }
+
+        /**
+         * @brief Plays animation
+         * @tparam E Animation enum type (deduced)
+         * @param animation Animation, must belong to the same enum the component was initialized with
+         * @param frame_durs An array with the duration of each frame in ticks, it must be with the same size as the number of frames
+         * @param loop Whether the animation should loop or stop after the last frame is played
+         * @param restart_if_same Whether to set the frame to 0 if the animation is the same
+         */
+        template <anim::sprite_enum E, size_t N>
+        void play(const E                      animation,
+                  const uint8_t (&               frame_durs)[N],
+                  const should_loop            loop            = should_loop::no,
+                  const should_restart_if_same restart_if_same = should_restart_if_same::no)
+        {
+            assert(anim::sprite_id<E> == info_.sprite_id && "Sprite::play: sprite_id mismatch");
+            assert(anim::frame_count(anim::info(animation)) == N);
+
+            frame_durs_ = frame_durs;
+            play((uint32_t)animation, loop, restart_if_same);
         }
 
         void stop();
-        void update(float dt, uint32_t frame_count);
 
         [[nodiscard]] uvec2 size() const;
         [[nodiscard]] aabb bounds(const Transform& tr) const;
         [[nodiscard]] aabb screen_bounds(const Transform& tr, ivec2 cam_pos) const;
 
-    private:
-        SpriteRenderer(const Scene& scene, entity_id id, anim::Info info);
+        [[nodiscard]]
+        bool anim_done() const { return anim_done_; }
 
-        void play(uint32_t anim_id, bool restart_if_same);
+    private:
+        Sprite(const Scene& scene, entity_id id, anim::Info info);
+
+        void play(uint32_t anim_id, bool loop, bool restart_if_same);
 
         anim::Info info_;
-
-        float    time_{ 0.0f };
         uint32_t frame_{ 0 };
+
+        vector<uint8_t> frame_durs_{ nullptr };
+
+        uint8_t frame_dur_{ 10 };
+        uint8_t time_{ 0 };
+
+        bool loop_{ false };
+        bool anim_done_{ false };
+
+        friend class AnimationSystem;
     };
 
 
-    struct MSE_API SpriteCollider final
+    struct MSE_API Collider final
     {
-        explicit SpriteCollider(const Scene& scene, entity_id id);
-        SpriteCollider(const Scene& scene, entity_id id, ivec2 _offset, ivec2 _size);
+        explicit Collider(const Scene& scene, entity_id id);
+        Collider(const Scene& scene, entity_id id, ivec2 _offset, ivec2 _size);
 
         [[nodiscard]]
         aabb bounds(const Transform& tr) const;
@@ -85,6 +136,7 @@ namespace mse
         bool collide_with_tile_map = true;
 
         // set by collision system
-        bool grounded = false;
+        bool grounded{ false };
+        bool enabled{ true };
     };
 }

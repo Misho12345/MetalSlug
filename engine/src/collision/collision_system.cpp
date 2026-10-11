@@ -24,10 +24,10 @@ namespace mse
 
     void CollisionSystem::step(Scene& scene)
     {
-        ComponentPool<SpriteCollider>& sc_pool = scene.pool<SpriteCollider>();
+        ComponentPool<Collider>& col_pool = scene.pool<Collider>();
 
-        const vector<entity_id>& entities = sc_pool.owners();
-        vector<SpriteCollider>& sc_comps = sc_pool.components();
+        const vector<entity_id>& entities = col_pool.owners();
+        vector<Collider>& colliders = col_pool.components();
 
 
         if (entities.empty()) return;
@@ -38,31 +38,32 @@ namespace mse
 
         const ivec2 camera_pos = scene.camera_pos_screen();
 
-        assert(entities.size() == sc_comps.size());
+        assert(entities.size() == colliders.size());
 
         for (size_t i = 0; i < entities.size(); ++i)
         {
             const entity_id entity = entities[i];
-            SpriteCollider& sc = sc_comps[i];
+            Collider& col = colliders[i];
+            if (!col.enabled) continue;
 
-            sc.velocity.y = min(sc.velocity.y + sc.gravity * Target::FRAME_TIME, sc.max_fall_speed);
+            col.velocity.y = min(col.velocity.y + col.gravity * Target::FRAME_TIME, col.max_fall_speed);
 
-            sc.move += sc.velocity * Target::FRAME_TIME;
+            col.move += col.velocity * Target::FRAME_TIME;
 
-            if (sc.collide_with_tile_map) clamp_move_to_tile_map(scene, entity);
+            if (col.collide_with_tile_map) clamp_move_to_tile_map(scene, entity);
 
-            const Transform&      tr = scene.get<Transform>(entity);
-            const SpriteRenderer& sr = scene.get<SpriteRenderer>(entity);
+            const Transform& tr = scene.get<Transform>(entity);
+            const Sprite&    sprite = scene.get<Sprite>(entity);
 
-            if (sc.layer == 0 && (sc.target_layer == 0 || !sc.callback)) continue;
-            if (sr.parallax_factor != vec2{ 1.0f, 1.0f })
+            if (col.layer == 0 && (col.target_layer == 0 || !col.callback)) continue;
+            if (sprite.parallax_factor != vec2{ 1.0f, 1.0f })
             {
                 printf("Collisions with sprites with non-default parallax factor are not possible");
                 continue;
             }
 
-            aabb bounds = sr.screen_bounds(tr, camera_pos);
-            bounds |= bounds + sc.move;
+            aabb bounds = sprite.screen_bounds(tr, camera_pos);
+            bounds |= bounds + col.move;
 
             if (!(bounds & aabb::screen)) continue;
 
@@ -116,21 +117,21 @@ namespace mse
 
         for (size_t i = 0; i < entities.size(); ++i)
         {
-            SpriteCollider& sc = sc_comps[i];
-            Transform&      tr = scene.get<Transform>(entities[i]);
+            Collider&  col = colliders[i];
+            Transform& tr  = scene.get<Transform>(entities[i]);
 
-            const ivec2 whole = sc.move;
+            const ivec2 whole = col.move;
             tr.position += whole;
-            sc.move -= whole;
+            col.move -= whole;
         }
 
         for (const CollisionPair& pair : pairs_)
         {
-            const SpriteCollider& sc_a = scene.get<SpriteCollider>(pair.a);
-            const SpriteCollider& sc_b = scene.get<SpriteCollider>(pair.b);
+            const Collider& col_a = scene.get<Collider>(pair.a);
+            const Collider& col_b = scene.get<Collider>(pair.b);
 
-            if (sc_a.target_layer & sc_b.layer && sc_a.callback) sc_a.callback(pair.b, sc_b.layer);
-            if (sc_b.target_layer & sc_a.layer && sc_b.callback) sc_b.callback(pair.a, sc_a.layer);
+            if (col_a.target_layer & col_b.layer && col_a.callback) col_a.callback(pair.b, col_b.layer);
+            if (col_b.target_layer & col_a.layer && col_b.callback) col_b.callback(pair.a, col_a.layer);
         }
     }
 
@@ -139,23 +140,41 @@ namespace mse
     bool CollisionSystem::collision_check(Scene& scene, const entity_id a, const entity_id b)
     {
         Transform& tr_a = scene.get<Transform>(a);
-        const SpriteCollider& sc_a = scene.get<SpriteCollider>(a);
+        const Collider& col_a = scene.get<Collider>(a);
+        const Sprite* sprite_a = scene.try_get<Sprite>(a);
 
         const Transform& tr_b = scene.get<Transform>(b);
-        const SpriteCollider& sc_b = scene.get<SpriteCollider>(b);
+        const Collider& col_b = scene.get<Collider>(b);
+        const Sprite* sprite_b = scene.try_get<Sprite>(b);
 
-        if (!(sc_a.target_layer & sc_b.layer) &&
-            !(sc_b.target_layer & sc_a.layer))
+        const Auto check = [&,
+            has_a = sprite_a && !sprite_a->hidden,
+            has_b = sprite_b && !sprite_b->hidden]
+        {
+            const aabb bounds_a = col_a.bounds(tr_a);
+            const aabb bounds_b = col_b.bounds(tr_b);
+
+            if (!bounds_a & bounds_b) return false;
+
+            if (has_a && has_b) return pp_check(scene, a, b);
+
+            return has_a
+                       ? pp_check(scene, a, bounds_b)
+                       : pp_check(scene, b, bounds_a);
+        };
+
+        if (!(col_a.target_layer & col_b.layer) &&
+            !(col_b.target_layer & col_a.layer))
             return false;
 
         const float min_size = (float)min(
-            sc_a.size.x, sc_a.size.y,
-            sc_b.size.x, sc_b.size.y);
+            col_a.size.x, col_a.size.y,
+            col_b.size.x, col_b.size.y);
 
         const float min2 = min_size * min_size;
 
         // move is increased by vel * dt in ::step()
-        const vec2 move = sc_a.move - sc_b.move;
+        const vec2 move = col_a.move - col_b.move;
 
         const float move_len2 = glm::length2(move);
         const ivec2 pos_a = tr_a.position;
@@ -169,16 +188,11 @@ namespace mse
             {
                 tr_a.position += ivec2(move);
 
-                collided =
-                    sc_a.bounds(tr_a) & sc_b.bounds(tr_b) &&
-                    pp_check(scene, a, b);
-
+                collided = check();
                 tr_a.position = pos_a;
             }
 
-            return collided ||
-                    (sc_a.bounds(tr_a) & sc_b.bounds(tr_b) &&
-                    pp_check(scene, a, b));
+            return collided || check();
         }
 
         const float move_len = glm::sqrt(move_len2);
@@ -197,8 +211,7 @@ namespace mse
                 should_break = true;
             }
 
-            if (sc_a.bounds(tr_a) & sc_b.bounds(tr_b) &&
-                pp_check(scene, a, b))
+            if (check())
             {
                 tr_a.position = pos_a;
                 return true;
@@ -210,13 +223,51 @@ namespace mse
     }
 
 
-    bool CollisionSystem::pp_check(const Scene& scene, const entity_id a, const entity_id b)
+    bool CollisionSystem::pp_check(
+        const Scene& scene,
+        const entity_id entity, const aabb bounds)
+    {
+        const Transform& tr = scene.get<Transform>(entity);
+        const Sprite& sprite = scene.get<Sprite>(entity);
+
+        const SpriteDataRegistry& reg = App::priv_ctx().sprite_data_registry;
+
+        const aabb spr_bounds = sprite.bounds(tr);
+        const aabb overlap = aabb::overlap(spr_bounds, bounds);
+
+        if (!overlap) return false;
+
+        const uvec2 size = overlap.size() / tr.scale;
+        uvec2 local = uvec2(overlap.min - spr_bounds.min) / tr.scale;
+        const FrameMask mask = reg.mask(sprite.info(), sprite.frame(), sprite.flip_x);
+
+        // check if anything in the overlap is solid
+        for (uint32_t y = 0; y < size.y; ++y, ++local.y)
+        {
+            const uint32_t lbits = (local.x + local.y * sprite.size().x) % 8;
+
+            for (int32_t x = -(int32_t)lbits; x < (int32_t)size.x; x += size_t_bits)
+            {
+                const size_t chunk = mask.range(local + uvec2{ x, 0 }, size.x - x);
+
+                if (x >= 0) { if (chunk) return true; }
+                else if (chunk & ~((1_zu << lbits) - 1_zu)) return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    bool CollisionSystem::pp_check(
+        const Scene& scene,
+        const entity_id a, const entity_id b)
     {
         const Transform& tr_a = scene.get<Transform>(a);
         const Transform& tr_b = scene.get<Transform>(b);
 
-        const SpriteRenderer& sr_a = scene.get<SpriteRenderer>(a);
-        const SpriteRenderer& sr_b = scene.get<SpriteRenderer>(b);
+        const Sprite& sprite_a = scene.get<Sprite>(a);
+        const Sprite& sprite_b = scene.get<Sprite>(b);
 
         const SpriteDataRegistry& reg = App::priv_ctx().sprite_data_registry;
 
@@ -228,8 +279,8 @@ namespace mse
         }
 
         // find intersection (return if none)
-        const aabb bounds_a = sr_a.bounds(tr_a);
-        const aabb bounds_b = sr_b.bounds(tr_b);
+        const aabb bounds_a = sprite_a.bounds(tr_a);
+        const aabb bounds_b = sprite_b.bounds(tr_b);
 
         const aabb overlap = aabb::overlap(bounds_a, bounds_b);
 
@@ -242,8 +293,8 @@ namespace mse
         uvec2 local_b = uvec2(overlap.min - bounds_b.min) / tr_b.scale;
 
         // The masks (mask_a and mask_b) contain a pointer to a buffer with packed data (see sprite_data_registry.hpp)
-        const FrameMask mask_a = reg.mask(sr_a.info(), sr_a.frame(), sr_a.flip_x);
-        const FrameMask mask_b = reg.mask(sr_b.info(), sr_b.frame(), sr_b.flip_x);
+        const FrameMask mask_a = reg.mask(sprite_a.info(), sprite_a.frame(), sprite_a.flip_x);
+        const FrameMask mask_b = reg.mask(sprite_b.info(), sprite_b.frame(), sprite_b.flip_x);
 
         for (uint32_t y = 0; y < size.y; ++y, ++local_a.y, ++local_b.y)
         {
@@ -251,8 +302,8 @@ namespace mse
             // in case the first chunks are not aligned i have to read from the beginning of the byte
 
             // how many bits are to the left from the coords till the start of the byte
-            const uint32_t lbits_a = (local_a.x + local_a.y * sr_a.size().x) % 8;
-            const uint32_t lbits_b = (local_b.x + local_b.y * sr_b.size().x) % 8;
+            const uint32_t lbits_a = (local_a.x + local_a.y * sprite_a.size().x) % 8;
+            const uint32_t lbits_b = (local_b.x + local_b.y * sprite_b.size().x) % 8;
 
             // for example
             // for frame with size 21x16 and coords = (15, 15)
@@ -266,11 +317,11 @@ namespace mse
                 {
                     const uint32_t max = size.x - x;
 
-                    size_t block_a = mask_a.range(local_a + uvec2{ x, 0 }, max);
-                    size_t block_b = mask_b.range(local_b + uvec2{ x, 0 }, max);
+                    size_t chunk_a = mask_a.range(local_a + uvec2{ x, 0 }, max);
+                    size_t chunk_b = mask_b.range(local_b + uvec2{ x, 0 }, max);
                     const size_t mask = x < 0 ? ~((1_zu << lbits_a) - 1_zu) : ~0_zu;
 
-                    if (block_a & block_b & mask) return true;
+                    if (chunk_a & chunk_b & mask) return true;
                 }
             }
             else
@@ -346,8 +397,8 @@ namespace mse
 
 
                 // STEP 0
-                size_t block1;
-                size_t block2 = mask2->range(
+                size_t chunk_1;
+                size_t chunk_2 = mask2->range(
                     local2 - uvec2{ lbits2, 0 },
                     size.x + lbits2);
 
@@ -357,24 +408,24 @@ namespace mse
                     const uint32_t max = size.x - x;
 
                     // STEP 0, 4, ...
-                    block1 = mask1->range(local1 + uvec2{ x, 0 }, max);
+                    chunk_1 = mask1->range(local1 + uvec2{ x, 0 }, max);
 
                     if (x < 0)
                     {
-                        block1 &= ~((1_zu << lbits1) - 1);
-                        block2 &= ~((1_zu << lbits2) - 1);
+                        chunk_1 &= ~((1_zu << lbits1) - 1);
+                        chunk_2 &= ~((1_zu << lbits2) - 1);
                     }
 
                     // STEP 1, 5, ...
-                    if (block1 & (block2 >> diff)) return true;
+                    if (chunk_1 & (chunk_2 >> diff)) return true;
 
                     if (max < size_t_bits) break; // last => no trailing bits for 2
 
                     // STEP 2, ...
-                    block2 = mask2->range(local2 + uvec2{ x - diff + size_t_bits, 0 }, max - rev_diff);
+                    chunk_2 = mask2->range(local2 + uvec2{ x - diff + size_t_bits, 0 }, max - rev_diff);
 
                     // STEP 3, ...
-                    if ((block1 >> rev_diff) & block2) return true;
+                    if ((chunk_1 >> rev_diff) & chunk_2) return true;
                 }
             }
         }
@@ -387,20 +438,20 @@ namespace mse
     void CollisionSystem::clamp_move_to_tile_map(Scene& scene, const entity_id entity)
     {
         const Transform& tr = scene.get<Transform>(entity);
-        SpriteCollider&  sc = scene.get<SpriteCollider>(entity);
+        Collider& col = scene.get<Collider>(entity);
 
         const TileMap&  tm            = App::priv_ctx().tile_map;
         const ivec2     tm_offset     = scene.get<Transform>(scene.bg_entity).position;
-        const uvec2     tm_image_size = scene.get<SpriteRenderer>(scene.bg_entity).size();
+        const uvec2     tm_image_size = scene.get<Sprite>(scene.bg_entity).size();
 
         const TileType* tiles   = tm.data();
         const ivec2     tm_size = tm.size();
 
         // local to tile map space
-        aabb bounds = sc.bounds(tr) - (tm_offset - ivec2(tm_image_size / 2));
+        aabb bounds = col.bounds(tr) - (tm_offset - ivec2(tm_image_size / 2));
 
-        const bool was_grounded = sc.grounded;
-        sc.grounded = false;
+        const bool was_grounded = col.grounded;
+        col.grounded = false;
 
         const Auto to_tile = [](const int px, const int a)
         {
@@ -419,8 +470,8 @@ namespace mse
         // ends the move along the axis after dist px
         const Auto stop = [&](const int a, const int dist)
         {
-            sc.move[a] = (float)dist;
-            sc.velocity[a] = 0.0f;
+            col.move[a] = (float)dist;
+            col.velocity[a] = 0.0f;
         };
 
         // is the tile a wall (a == 0) / ceiling (a == 1) for something entering it in direction step
@@ -451,7 +502,7 @@ namespace mse
         const Auto sweep = [&](const int a)
         {
             const int p    = 1 - a;
-            const int dist = (int)sc.move[a];
+            const int dist = (int)col.move[a];
             const int dir  = dist > 0 ? 1 : 0;
             const int step = dir ? 1 : -1;
 
@@ -487,7 +538,7 @@ namespace mse
             const int center_t = to_tile(center_x, 0);
 
             // if grounded, follow the ground down (slopes) instead of flying off and falling back on it
-            const int reach = (int)sc.move.y + (was_grounded ? glm::abs(dx) + 2 : 0);
+            const int reach = (int)col.move.y + (was_grounded ? glm::abs(dx) + 2 : 0);
 
             const int y_start  = to_tile(bottom - max_step, 1);
             const int y_target = to_tile(bottom + reach, 1);
@@ -556,17 +607,17 @@ namespace mse
             if (surface > bottom + reach) return; // nothing close enough -> in the air
 
             stop(1, surface - bottom);
-            sc.grounded = true;
+            col.grounded = true;
         };
 
         // x axis sweep, then y from the new x
         // (only x is added to the bounds - the y sweep has to start from where the box is)
         sweep(0);
 
-        const int dx = (int)sc.move.x;
+        const int dx = (int)col.move.x;
         bounds += ivec2{ dx, 0 };
 
-        if ((int)sc.move.y < 0) sweep(1);         // going up
-        else if (sc.velocity.y >= 0.0f) land(dx); // falling / standing (not if it just jumped)
+        if ((int)col.move.y < 0) sweep(1);         // going up
+        else if (col.velocity.y >= 0.0f) land(dx); // falling / standing (not if it just jumped)
     }
 }

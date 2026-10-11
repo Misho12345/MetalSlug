@@ -83,7 +83,10 @@ namespace mse::gl
         return *this;
     }
 
-    void Texture2D::create(const glm::uvec3 size, const TextureDesc& desc, const bool force_array)
+    void Texture2D::create(
+        const glm::uvec3 size,
+        const TextureDesc& desc,
+        const should_force_array force_array)
     {
         reset();
         
@@ -114,7 +117,10 @@ namespace mse::gl
         glTextureParameteri(id_, GL_TEXTURE_MAG_FILTER, to_gl(desc.filter));
     }
 
-    bool Texture2D::create(const TextureDesc& desc, const span<const string> paths, const bool force_array)
+    bool Texture2D::create(
+        const TextureDesc& desc,
+        const span<const string> paths,
+        const should_force_array force_array)
     {
         if (paths.empty()) return false;
 

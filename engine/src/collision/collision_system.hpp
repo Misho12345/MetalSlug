@@ -8,8 +8,6 @@ namespace mse
     class Scene;
     struct PrivCtx;
 
-    using fixed_update_t = void(App::*)();
-
     /**
      * @brief Collision system
      * @details This system is responsible for updating the sprite collision components
@@ -51,8 +49,15 @@ namespace mse
 
         static bool collision_check(Scene& scene, entity_id a, entity_id b);
 
-        // performs a pixel perfect check using
-        static bool pp_check(const Scene& scene, entity_id a, entity_id b);
+        // performs a pixel perfect check between a sprite and a bounding box
+        static bool pp_check(
+            const Scene& scene,
+            entity_id entity, aabb bounds);
+
+        // performs a pixel perfect check between 2 sprites
+        static bool pp_check(
+            const Scene& scene,
+            entity_id a, entity_id b);
 
 
         static void clamp_move_to_tile_map(Scene& scene, entity_id entity);

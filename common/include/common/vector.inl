@@ -77,6 +77,22 @@ namespace mse
     }
 
     template <typename T> requires (!std::same_as<T, void>)
+    template <size_t N>
+    vector<T>& vector<T>::operator=(const T (&arr)[N])
+    {
+        clear();
+        reserve(N);
+
+        copy_mem(data_, arr, N);
+
+        size_ = N;
+        capacity_ = N;
+
+        return *this;
+    }
+
+
+    template <typename T> requires (!std::same_as<T, void>)
     void vector<T>::reset()
     {
         clear();
@@ -89,6 +105,8 @@ namespace mse
     template <typename T> requires (!std::same_as<T, void>)
     void vector<T>::clear()
     {
+        if (!size_) return;
+
         for (size_t i = 0; i < size_; ++i) destroy_at(data_ + i);
         size_ = 0;
     }
@@ -188,7 +206,7 @@ namespace mse
 
 
     template <typename T> requires (!std::same_as<T, void>)
-    template <typename Func> requires requires (Func f, const T& v) { { f(v) } -> std::same_as<bool>; }
+    template <std::predicate<const T&> Func>
     size_t vector<T>::find(const Func& cond) const
     {
         for (size_t i = 0; i < size_; ++i)

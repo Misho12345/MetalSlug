@@ -20,74 +20,33 @@ namespace mse
         void      destroy_entity(entity_id entity);
 
         template <typename C, typename... Args>
-        C& set(entity_id entity, Args&&... args)
-        {
-            assert(valid(entity) && "Entity is not valid");
-
-            // inject scene and entity id if the constructor of the component enables it
-            if constexpr (requires{ C(*this, entity, std::forward<Args>(args)...); })
-            {
-                return pool<C>().set(entity, *this, entity, std::forward<Args>(args)...);
-            }
-            else return pool<C>().set(entity, std::forward<Args>(args)...);
-        }
+        C& set(entity_id entity, Args&&... args);
 
         template <typename C>
         [[nodiscard]]
-        C* try_get(entity_id entity)
-        {
-            if (!valid(entity)) return nullptr;
-            return pool<C>().get(entity);
-        }
+        C* try_get(entity_id entity);
 
         template <typename C>
         [[nodiscard]]
-        const C* try_get(entity_id entity) const
-        {
-            if (!valid(entity)) return nullptr;
-            return pool<C>().get(entity);
-        }
+        const C* try_get(entity_id entity) const;
 
         template <typename C>
         [[nodiscard]]
-        C& get(entity_id entity)
-        {
-            assert(valid(entity) && "Entity is not valid");
-            assert(has<C>(entity) && "Entity does not have the requested component");
-            return *pool<C>().get(entity);
-        }
+        C& get(entity_id entity);
 
         template <typename C>
         [[nodiscard]]
-        const C& get(entity_id entity) const
-        {
-            assert(valid(entity) && "Entity is not valid");
-            assert(has<C>(entity) && "Entity does not have the requested component");
-            return *pool<C>().get(entity);
-        }
+        const C& get(entity_id entity) const;
 
         template <typename C>
         [[nodiscard]]
-        bool has(entity_id entity) const
-        {
-            assert(valid(entity) && "Entity is not valid");
-            return pool<C>().has(entity);
-        }
+        bool has(entity_id entity) const;
 
         template <typename C>
-        void remove(entity_id entity)
-        {
-            assert(valid(entity) && "Entity is not valid");
-            pool<C>().remove(entity);
-        }
+        void remove(entity_id entity);
 
         [[nodiscard]]
-        bool valid(const entity_id entity) const
-        {
-            return entity &&
-                    entity.idx() < versions_.size() &&
-                    versions_[entity.idx()] == entity.version();
-        }
+        bool valid(const entity_id entity) const;
 
         [[nodiscard]]
         entity_id camera() const { return camera_; }
@@ -95,27 +54,11 @@ namespace mse
 
         template <typename C>
         [[nodiscard]]
-        ComponentPool<C>& pool()
-        {
-            static const size_t idx = component_type_index<C>();
-
-            while (pools_.size() <= idx) pools_.emplace_back();
-
-            if (!pools_[idx].get()) pools_[idx] = new ComponentPool<C>();
-            return (ComponentPool<C>&)*pools_[idx];
-        }
+        ComponentPool<C>& pool();
 
         template <typename C>
         [[nodiscard]]
-        const ComponentPool<C>& pool() const
-        {
-            static const size_t idx = component_type_index<C>();
-
-            if (idx < pools_.size() && pools_[idx].get()) return (const ComponentPool<C>&)*pools_[idx];
-
-            static const ComponentPool<C> empty;
-            return empty;
-        }
+        const ComponentPool<C>& pool() const;
 
 
         [[nodiscard]] ivec2 camera_pos() const { return get<Transform>(camera_).position; }
@@ -133,3 +76,5 @@ namespace mse
         entity_id camera_;
     };
 }
+
+#include "scene.inl"

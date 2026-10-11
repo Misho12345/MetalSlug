@@ -31,9 +31,9 @@ namespace mse
     {
         const DebugUI& ui = App::priv_ctx().debug_ui;
 
-        const ComponentPool<SpriteCollider>& collider_pool = scene.pool<SpriteCollider>();
+        const ComponentPool<Collider>& collider_pool = scene.pool<Collider>();
 
-        const vector<SpriteCollider>& colliders = collider_pool.components();
+        const vector<Collider>& colliders = collider_pool.components();
         const vector<entity_id>& owners = collider_pool.owners();
 
         assert(colliders.size() == owners.size());
@@ -41,12 +41,12 @@ namespace mse
         for (size_t i = 0; i < owners.size(); ++i)
         {
             const Transform& t = scene.get<Transform>(owners[i]);
-            const SpriteRenderer& sr = scene.get<SpriteRenderer>(owners[i]);
+            const Sprite& s = scene.get<Sprite>(owners[i]);
 
             ui.draw_box(colliders[i].bounds(t), HITBOX_COLOR, 5.0f);
 
-            const aabb bounds = sr.bounds(t);
-            FrameMask mask = App::priv_ctx().sprite_data_registry.mask(sr.info(), sr.frame(), sr.flip_x);
+            const aabb bounds = s.bounds(t);
+            FrameMask mask = App::priv_ctx().sprite_data_registry.mask(s.info(), s.frame(), s.flip_x);
 
             for (int32_t y = bounds.min.y; y < bounds.max.y; )
             {
@@ -71,7 +71,7 @@ namespace mse
     void DebugDraw::draw_tile_map(const Scene& scene) const
     {
         const Transform& bg_tr = scene.get<Transform>(scene.bg_entity);
-        const SpriteRenderer& bg_sr = scene.get<SpriteRenderer>(scene.bg_entity);
+        const Sprite& bg_sprite = scene.get<Sprite>(scene.bg_entity);
 
         const ivec2 origin = bg_tr.position - ivec2(bg_sr.size() / 2);
 

@@ -55,6 +55,9 @@ namespace mse
         vector& operator=(const vector& other) requires std::copy_constructible<T>;
         vector& operator=(vector&& other) noexcept;
 
+        template <size_t N>
+        vector& operator=(const T (&arr)[N]);
+
         /// @brief Accesses the element at the specified index
         /// @note No bounds checking is performed
         [[nodiscard]]
@@ -160,7 +163,7 @@ namespace mse
          * @param cond Success condition
          * @return The index of that element, or vector<>::npos if not found
          */
-        template <typename Func> requires requires (Func f, const T& v) { { f(v) } -> std::same_as<bool>; }
+        template <std::predicate<const T&> Func>
         [[nodiscard]]
         size_t find(const Func& cond) const;
 

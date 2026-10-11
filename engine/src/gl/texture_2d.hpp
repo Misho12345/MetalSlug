@@ -14,6 +14,8 @@ namespace mse::gl
         TextureFilter filter{ TextureFilter::Nearest };
     };
 
+    using should_force_array = bool_value<struct force_array_tag>;
+
     /// @brief Represents a 2D texture or 2d texture array in OpenGL
     class Texture2D final
     {
@@ -33,7 +35,10 @@ namespace mse::gl
          * @param force_array Whether to force the texture to be an array
          * @note Texture 2D array will be created unless the number of paths is 1 and force_array is false
          */
-        void create(glm::uvec3 size, const TextureDesc& desc, bool force_array = false);
+        void create(
+            glm::uvec3         size,
+            const TextureDesc& desc,
+            should_force_array force_array = should_force_array::no);
 
         /**
          * @brief Creates a texture 2d (array) from the given paths
@@ -44,7 +49,10 @@ namespace mse::gl
          * @note Texture 2D array will be created unless the number of paths is 1 and force_array is false
          */
         [[nodiscard]]
-        bool create(const TextureDesc& desc, span<const string> paths, bool force_array = false);
+        bool create(
+            const TextureDesc& desc,
+            span<const string> paths,
+            should_force_array force_array = should_force_array::no);
 
         /**
          * @brief Binds the texture to the given texture unit as a sampler

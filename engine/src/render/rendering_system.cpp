@@ -198,8 +198,8 @@ namespace mse
 
     void RenderingSystem::update_instances_buffer(const Scene& scene)
     {
-        const ComponentPool<SpriteRenderer>& sprite_pool = scene.pool<SpriteRenderer>();
-        const vector<SpriteRenderer>& sprites = sprite_pool.components();
+        const ComponentPool<Sprite>& sprite_pool = scene.pool<Sprite>();
+        const vector<Sprite>& sprites = sprite_pool.components();
         const vector<entity_id>& entities = sprite_pool.owners();
 
         for (vector<InstanceData>& instances_layer : instances_) instances_layer.clear();
@@ -212,7 +212,7 @@ namespace mse
         // collect all the instances
         for (size_t i = 0; i < sprites.size(); ++i)
         {
-            const SpriteRenderer& sprite = sprites[i];
+            const Sprite& sprite = sprites[i];
             const Transform& tr = scene.get<Transform>(entities[i]);
 
             if (sprite.hidden) continue;
@@ -297,7 +297,7 @@ namespace mse
 
     void RenderingSystem::init_instance_data(const Scene& scene)
     {
-        const ComponentPool<SpriteRenderer>& sprite_pool = scene.pool<SpriteRenderer>();
+        const ComponentPool<Sprite>& sprite_pool = scene.pool<Sprite>();
 
         instance_data_.create_persistent<InstanceData>(
             gl::BufferType::Storage,
@@ -331,7 +331,8 @@ namespace mse
                 .format = gl::TextureFormat::RGBA8,
                 .wrap   = gl::TextureWrap::ClampToEdge,
                 .filter = gl::TextureFilter::Nearest // not linear because pixels will be smeared
-            }, atlas_paths, true))
+            }, atlas_paths,
+            gl::should_force_array::yes))
         {
             printf("failed to create texture 2d array for atlases");
             return false;

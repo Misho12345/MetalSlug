@@ -59,6 +59,23 @@ namespace mse
 
     using color = glm::u8vec4;
 
+    template <typename>
+    struct bool_value final
+    {
+        enum value : bool { no, yes };
+
+        constexpr bool_value(const value v) : v_{ v } {}
+        constexpr operator bool() const { return v_; }
+
+        constexpr bool_value& operator=(const value v)
+        {
+            v_ = v;
+            return *this;
+        }
+
+    private:
+        value v_{};
+    };
 
     namespace literals
     {

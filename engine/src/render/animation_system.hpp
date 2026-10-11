@@ -1,7 +1,5 @@
 #pragma once
-#include "mse/pch.hpp"
 #include "mse/ecs/scene.hpp"
-#include "assets/sprite_data_registry.hpp"
 
 namespace mse
 {
@@ -10,7 +8,7 @@ namespace mse
     /**
      * @brief Animation system
      * @details This system is responsible for loading the animation data from texture_packer output and
-     * updating the animation data
+     * updating the animation data in Sprite
      * @note Owned by PrivCtx, not constructable by anything else and not movable or copyable
      */
     class AnimationSystem final
