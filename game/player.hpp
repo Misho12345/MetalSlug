@@ -5,6 +5,7 @@
 enum class BodyState : uint8_t
 {
     Ready, Shooting,
+    Transition, // turning, crouching down, standing up, raising / lowering the gun: no shooting meanwhile
     // Melee, Throwing, Dead,
     Count
 };
@@ -20,6 +21,7 @@ enum class WeaponType : uint8_t
 {
     Pistol,
     // later more
+    Count
 };
 
 
@@ -39,23 +41,17 @@ public:
         {
             Jump = 1 << 0,
             Fire = 1 << 1,
-            // Throw = 1 << 2, Drink = 1 << 3,
+            // Throw = 1 << 2,
+            // Drink = 1 << 3,
         };
 
-        uint8_t bits{};
+        uint8_t down{};
+        uint8_t just_pressed{};
+
         glm::i8vec2 dir{ 0 };
     };
 
-    struct Weapon final
-    {
-        // uint16_t ammo{};
-        // uint8_t grenades{};
-        WeaponType type{};
-    };
-
-    struct AttachedTo { mse::entity_id entity; };
-
 private:
-    mse::entity_id body_;
     mse::entity_id legs_;
+    mse::entity_id body_;
 };

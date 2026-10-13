@@ -73,7 +73,7 @@ namespace mse
         const Transform& bg_tr = scene.get<Transform>(scene.bg_entity);
         const Sprite& bg_sprite = scene.get<Sprite>(scene.bg_entity);
 
-        const ivec2 origin = bg_tr.position - ivec2(bg_sr.size() / 2);
+        const ivec2 origin = bg_tr.position - ivec2(bg_sprite.size() / 2);
 
         const DebugUI& ui = App::priv_ctx().debug_ui;
 

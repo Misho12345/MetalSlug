@@ -11,10 +11,10 @@ namespace mse
      */
     struct SpriteAnimationData final
     {
-        ivec2 offset;
-        uvec2 frame_size;
-        uint32_t   frame_count;
-        uint32_t   atlas_idx;
+        ivec2    offset;
+        uvec2    frame_size;
+        uint32_t frame_count;
+        uint32_t atlas_idx;
     };
 
     /**

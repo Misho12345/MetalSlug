@@ -35,7 +35,7 @@ namespace
         scene.bg_entity = bg = scene.create_entity();
 
         Transform& tr = scene.set<Transform>(bg);
-        Sprite& sprite = scene.set<Sprite>(bg, Bg::Mission1);
+        Sprite& sprite = scene.set<Sprite>(bg, Bg::Mission1, should_loop::no);
 
         sprite.layer = -100;
         tr.position.x += (int32_t)sprite.size().x / 2;

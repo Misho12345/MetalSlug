@@ -6,16 +6,28 @@
 
 namespace mse
 {
+    Sprite::Sprite(
+      const Scene&     scene,
+      const entity_id  id,
+      const anim::Info info,
+      const bool       loop)
+      : info_(info),
+        loop_{ loop }
+    {
+        assert(scene.has<Transform>(id) && "Sprite requires a Transform component");
+    }
+
     void Sprite::play(
         const uint32_t anim_id,
+        const bool     reversed,
         const bool     loop,
         const bool     restart_if_same)
     {
         if (anim_id != info_.anim_id || restart_if_same)
         {
-            time_         = 0.0f;
-            frame_        = 0;
+            time_  = 0;
             info_.anim_id = anim_id;
+            frame_ = reversed ? anim::frame_count(info_) - 1 : 0;
         }
 
         loop_ = loop;
@@ -26,7 +38,7 @@ namespace mse
     void Sprite::stop()
     {
         paused = true;
-        time_  = 0.0f;
+        time_  = 0;
         frame_ = 0;
     }
 
@@ -47,11 +59,6 @@ namespace mse
     aabb Sprite::screen_bounds(const Transform& tr, const ivec2 cam_pos) const
     {
         return bounds(tr) - ivec2(vec2(cam_pos) * parallax_factor);
-    }
-
-    Sprite::Sprite(const Scene& scene, const entity_id id, const anim::Info info) : info_(info)
-    {
-        assert(scene.has<Transform>(id) && "Sprite requires a Transform component");
     }
 
 

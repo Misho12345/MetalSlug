@@ -64,6 +64,8 @@ namespace mse
     {
         enum value : bool { no, yes };
 
+        constexpr bool_value(bool&&) = delete;
+        constexpr bool_value(const bool& v) : v_{ v } {}
         constexpr bool_value(const value v) : v_{ v } {}
         constexpr operator bool() const { return v_; }
 
