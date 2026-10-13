@@ -1,6 +1,5 @@
 #include "mse/game.hpp"
 
-#include "layer.hpp"
 #include "player.hpp"
 
 
@@ -8,6 +7,7 @@ using namespace mse;
 using namespace mse::literals;
 
 using anim::Enemy, anim::Bg;
+using player::Player;
 
 namespace
 {
@@ -27,7 +27,7 @@ namespace
         alignas(T) uint8_t data[sizeof(T)];
     };
 
-    Maybe<Player> player;
+    Maybe<Player> player_m;
     entity_id bg;
 
     void create_bg(Scene& scene)
@@ -35,7 +35,7 @@ namespace
         scene.bg_entity = bg = scene.create_entity();
 
         Transform& tr = scene.set<Transform>(bg);
-        Sprite& sprite = scene.set<Sprite>(bg, Bg::Mission1, should_loop::no);
+        Sprite& sprite = scene.set<Sprite>(bg, Bg::Bg, should_loop::no);
 
         sprite.layer = -100;
         tr.position.x += (int32_t)sprite.size().x / 2;
@@ -50,15 +50,15 @@ void Game::init()
     Scene& scene = ctx().scene;
 
     create_bg(scene);
-    player.set(scene);
+    player_m.set(scene);
 }
 
 void Game::update()
 {
-    player->update(ctx().scene);
+    player_m->update(ctx().scene);
 }
 
 void Game::late_update()
 {
-    player->late_update(ctx().scene);
+    player_m->late_update(ctx().scene);
 }

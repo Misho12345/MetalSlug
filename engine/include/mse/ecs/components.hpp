@@ -123,6 +123,8 @@ namespace mse
 
     struct MSE_API Collider final
     {
+        static constexpr uint32_t TILE_MAP_LAYER = 1u << 31;
+
         explicit Collider(const Scene& scene, entity_id id);
         Collider(const Scene& scene, entity_id id, ivec2 _offset, ivec2 _size);
 
@@ -141,7 +143,7 @@ namespace mse
         uint32_t layer{};
         uint32_t target_layer{};
 
-        void (*callback)(entity_id, uint32_t){ nullptr };
+        void (*callback)(Scene&, entity_id /*self*/, entity_id /*other*/, uint32_t /*layer*/){ nullptr };
 
         bool collide_with_tile_map = true;
 

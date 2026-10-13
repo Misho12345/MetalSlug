@@ -13,7 +13,10 @@ namespace mse
         constexpr color TILE_EMPTY_COLOR{ 0x888888_rgb };
         constexpr color TILE_BLOCK_COLOR{ 0xff0000_rgb };
         constexpr color TILE_PASS_COLOR{ 0x00A2E8_rgb };
+
         constexpr color HITBOX_COLOR{ 0x00ff00_rgb };
+        constexpr color HITBOX_DISABLED_COLOR{ 0x888888_rgb };
+
         constexpr color PIXEL_COLOR{ 0x00c8c8_rgb };
     }
 
@@ -43,7 +46,12 @@ namespace mse
             const Transform& t = scene.get<Transform>(owners[i]);
             const Sprite& s = scene.get<Sprite>(owners[i]);
 
-            ui.draw_box(colliders[i].bounds(t), HITBOX_COLOR, 5.0f);
+            ui.draw_box(
+                colliders[i].bounds(t),
+                colliders[i].enabled ? HITBOX_COLOR : HITBOX_DISABLED_COLOR,
+                5.0f);
+
+            if (s.hidden) continue;
 
             const aabb bounds = s.bounds(t);
             FrameMask mask = App::priv_ctx().sprite_data_registry.mask(s.info(), s.frame(), s.flip_x);

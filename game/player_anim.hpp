@@ -2,7 +2,7 @@
 #include "mse/mse.hpp"
 
 // all player animation data
-namespace player_anim
+namespace player
 {
     using namespace mse;
     using anim::player::Body;

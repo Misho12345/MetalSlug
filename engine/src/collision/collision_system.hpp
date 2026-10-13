@@ -60,7 +60,7 @@ namespace mse
             entity_id a, entity_id b);
 
 
-        static void clamp_move_to_tile_map(Scene& scene, entity_id entity);
+        static bool clamp_move_to_tile_map(Scene& scene, entity_id entity);
 
 
         vector<uint32_t> counter_{};
@@ -69,6 +69,7 @@ namespace mse
         vector<EntityExtent> extents_{};
 
         vector<CollisionPair> pairs_{};
+        vector<entity_id> tile_hits_{};
 
         friend ::mse::PrivCtx;
     };

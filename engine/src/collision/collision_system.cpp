@@ -19,6 +19,7 @@ namespace mse
         buckets_.reserve(128);
         extents_.reserve(128);
         pairs_.reserve(64);
+        tile_hits_.reserve(32);
     }
 
 
@@ -35,6 +36,7 @@ namespace mse
         buckets_.clear();
         extents_.clear();
         pairs_.clear();
+        tile_hits_.clear();
 
         const ivec2 camera_pos = scene.camera_pos_screen();
 
@@ -50,7 +52,11 @@ namespace mse
 
             col.move += col.velocity * Target::FRAME_TIME;
 
-            if (col.collide_with_tile_map) clamp_move_to_tile_map(scene, entity);
+            if (col.collide_with_tile_map &&
+                clamp_move_to_tile_map(scene, entity) &&
+                col.callback && (col.target_layer & Collider::TILE_MAP_LAYER))
+                tile_hits_.emplace_back(entity);
+
 
             const Transform& tr = scene.get<Transform>(entity);
             const Sprite&    sprite = scene.get<Sprite>(entity);
@@ -125,13 +131,19 @@ namespace mse
             col.move -= whole;
         }
 
+        for (const entity_id hit : tile_hits_)
+        {
+            const Collider& col = scene.get<Collider>(hit);
+            col.callback(scene, hit, {}, Collider::TILE_MAP_LAYER);
+        }
+
         for (const CollisionPair& pair : pairs_)
         {
             const Collider& col_a = scene.get<Collider>(pair.a);
             const Collider& col_b = scene.get<Collider>(pair.b);
 
-            if (col_a.target_layer & col_b.layer && col_a.callback) col_a.callback(pair.b, col_b.layer);
-            if (col_b.target_layer & col_a.layer && col_b.callback) col_b.callback(pair.a, col_a.layer);
+            if (col_a.target_layer & col_b.layer && col_a.callback) col_a.callback(scene, pair.a, pair.b, col_b.layer);
+            if (col_b.target_layer & col_a.layer && col_b.callback) col_b.callback(scene, pair.b, pair.a, col_a.layer);
         }
     }
 
@@ -435,7 +447,7 @@ namespace mse
 
 
 
-    void CollisionSystem::clamp_move_to_tile_map(Scene& scene, const entity_id entity)
+    bool CollisionSystem::clamp_move_to_tile_map(Scene& scene, const entity_id entity)
     {
         const Transform& tr = scene.get<Transform>(entity);
         Collider& col = scene.get<Collider>(entity);
@@ -446,6 +458,8 @@ namespace mse
 
         const TileType* tiles   = tm.data();
         const ivec2     tm_size = tm.size();
+
+        bool hit = false;
 
         // local to tile map space
         aabb bounds = col.bounds(tr) - (tm_offset - ivec2(tm_image_size / 2));
@@ -472,6 +486,7 @@ namespace mse
         {
             col.move[a] = (float)dist;
             col.velocity[a] = 0.0f;
+            hit = true;
         };
 
         // is the tile a wall (a == 0) / ceiling (a == 1) for something entering it in direction step
@@ -619,5 +634,7 @@ namespace mse
 
         if ((int)col.move.y < 0) sweep(1);         // going up
         else if (col.velocity.y >= 0.0f) land(dx); // falling / standing (not if it just jumped)
+
+        return hit;
     }
 }
