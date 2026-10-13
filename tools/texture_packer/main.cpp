@@ -1,5 +1,6 @@
 #include "common/common.hpp"
 
+#include <algorithm>
 #include <cstring>
 #include <cassert>
 
@@ -22,6 +23,63 @@ static void validate_args(
     assert(argc >= 3);
     assert(strcmp(argv[argc - 2], "--out") == 0);
     // TODO: (not important) maybe make a proper validation
+}
+
+// where the next box goes: right after the last one, on a shelf as tall as the first (tallest) box placed on it
+struct Cursor
+{
+    uint32_t x, y, shelf_h;
+};
+
+// frames [0, first_row) start at (x, y); the rest wrap onto rows of their own,
+// per_row frames each, starting at (0, y + box.h) and box.h apart.
+struct Placement
+{
+    uint32_t x, y;
+    uint32_t first_row, per_row;
+};
+
+static bool place(const Box& box, Cursor& cursor, Placement& out)
+{
+    const uint32_t frame_w = box.w / box.frame_count;
+    assert(frame_w <= Atlas::SIZE && "a single frame is wider than the atlas");
+
+    const uint32_t per_row = Atlas::SIZE / frame_w;
+
+    // continue on the current shelf if at least one frame still fits on it
+    Cursor c = cursor;
+    if (c.x + frame_w > Atlas::SIZE)
+    {
+        c.x = 0;
+        c.y += c.shelf_h;
+        c.shelf_h = box.h;
+    }
+
+    const uint32_t first_row = std::min(box.frame_count, (Atlas::SIZE - c.x) / frame_w);
+    const uint32_t rest      = box.frame_count - first_row;
+    const uint32_t rows      = (rest + per_row - 1) / per_row;
+
+    // a strip that wraps sits on the bottom of its shelf, so its next row starts
+    // right under its own first one. the shelf can be taller than the strip
+    const uint32_t y      = rows ? c.y + c.shelf_h - box.h : c.y;
+    const uint32_t next_y = y + box.h;
+    const uint32_t bottom = next_y + rows * box.h;
+    if (bottom > Atlas::SIZE) return false;
+
+    out = { c.x, y, first_row, per_row };
+
+    if (rows)
+    {
+        // the last wrapped row is now the current shelf, and it's this box's height
+        const uint32_t last_row_frames = rest - (rows - 1) * per_row;
+        cursor = { last_row_frames * frame_w, next_y + (rows - 1) * box.h, box.h };
+    }
+    else
+    {
+        cursor = { c.x + first_row * frame_w, c.y, c.shelf_h };
+    }
+
+    return true;
 }
 
 int main(const int argc, const char** argv)
@@ -84,42 +142,42 @@ int main(const int argc, const char** argv)
 
     atlases.emplace_back();
 
-    uint32_t x = 0, y = 0, h_off = box_ptrs[0]->h;
+    Cursor cursor{ 0, 0, box_ptrs[0]->h };
 
     json j;
     j["atlases"] = json::array();
     j["atlases"].push_back(json::array());
 
     // TODO: make a more sophisticated algorithm in the future, have the option to rotate horizontally
-    for (Box* box : box_ptrs)
+    for (const Box* box : box_ptrs)
     {
-        if (x + box->w > Atlas::SIZE)
-        {
-            x = 0;
-            y += h_off;
-            h_off = box->h;
-        }
-
-        if (y + box->h > Atlas::SIZE)
+        Placement at;
+        if (!place(*box, cursor, at))
         {
             atlases.emplace_back();
             j["atlases"].push_back(json::array());
-            x = y = 0;
-            h_off = box->h;
+            cursor = { 0, 0, box->h };
+
+            [[maybe_unused]] const bool fits = place(*box, cursor, at);
+            assert(fits && "animation strip doesn't fit in an empty atlas");
         }
 
-        box->x = x;
-        box->y = y;
+        const uint32_t frame_w = box->w / box->frame_count;
 
-        x += box->w;
+        atlases.back().add(box, 0, at.first_row * frame_w, at.x, at.y);
 
-        atlases.back().add(box);
+        uint32_t row_y = at.y + box->h;
+        for (uint32_t f = at.first_row; f < box->frame_count; f += at.per_row, row_y += box->h)
+        {
+            const uint32_t count = std::min(at.per_row, box->frame_count - f);
+            atlases.back().add(box, f * frame_w, count * frame_w, 0, row_y);
+        }
 
         j["atlases"][atlases.size() - 1].push_back({
             { "sprite_id", box->sprite_id },
             { "anim_id", box->anim_id },
-            { "x", box->x },
-            { "y", box->y },
+            { "x", at.x },
+            { "y", at.y },
             { "w", box->w },
             { "h", box->h }
         });

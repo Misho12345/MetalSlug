@@ -154,7 +154,7 @@ namespace mse
             const aabb bounds_a = col_a.bounds(tr_a);
             const aabb bounds_b = col_b.bounds(tr_b);
 
-            if (!bounds_a & bounds_b) return false;
+            if (!(bounds_a & bounds_b)) return false;
 
             if (has_a && has_b) return pp_check(scene, a, b);
 

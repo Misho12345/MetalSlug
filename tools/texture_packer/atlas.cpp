@@ -25,14 +25,11 @@ Box::~Box() { if (data) stbi_image_free(data); }
 Box::Box(Box&& other) noexcept
     : image_path{ std::exchange(other.image_path, nullptr) },
       data{ std::exchange(other.data, nullptr) },
-      x{ other.x },
-      y{ other.y },
       w{ other.w },
       h{ other.h },
       sprite_id{ other.sprite_id },
       anim_id{ other.anim_id },
-      frame_count{ other.frame_count },
-      rotated{ other.rotated } {}
+      frame_count{ other.frame_count } {}
 
 Box& Box::operator=(Box&& other) noexcept
 {
@@ -43,50 +40,53 @@ Box& Box::operator=(Box&& other) noexcept
     image_path = std::exchange(other.image_path, nullptr);
     data       = std::exchange(other.data, nullptr);
 
-    x = other.x;
-    y = other.y;
     w = other.w;
     h = other.h;
 
     sprite_id   = other.sprite_id;
     anim_id     = other.anim_id;
     frame_count = other.frame_count;
-    rotated     = other.rotated;
 
     return *this;
 }
 
 
-void Atlas::add(Box* box) { boxes_.emplace_back(box); }
+void Atlas::add(const Box* box, const uint32_t src_x, const uint32_t w, const uint32_t x, const uint32_t y)
+{
+    blits_.emplace_back(Blit{ box, src_x, w, x, y });
+}
 
 void Atlas::save(const char* atlas_path) const
 {
     mse::vector<uint32_t> data(SIZE * SIZE);
 
     // save to texture atlas
-    for (const Box* box : boxes_)
+    for (const Blit& blit : blits_)
     {
-        const uint32_t* p = box->data;
+        const Box*      box = blit.box;
+        const uint32_t* p   = box->data + blit.src_x;
 
-        if (box->rotated)
+        // if (box->rotated)
+        // {
+        //     // copy pixel by pixel because it's rotated
+        //     for (uint32_t x = 0; x < box->h; ++x)
+        //     {
+        //         for (uint32_t y = 0; y < box->w; ++y, ++p)
+        //         {
+        //             data[(blit.x + x + (blit.y + y) * SIZE)] = *p;
+        //         }
+        //     }
+        // }
+        // else
+        // {
+
+        // copy row by row
+        for (uint32_t y = 0; y < box->h; ++y, p += box->w)
         {
-            // copy pixel by pixel because it's rotated
-            for (uint32_t x = 0; x < box->h; ++x)
-            {
-                for (uint32_t y = 0; y < box->w; ++y, ++p)
-                {
-                    data[(box->x + x + (box->y + y) * SIZE)] = *p;
-                }
-            }
+            memcpy(&data[blit.x + (blit.y + y) * SIZE], p, blit.w * sizeof(uint32_t));
         }
-        else
-        {
-            // copy row by row
-            for (uint32_t y = 0; y < box->h; ++y, p += box->w)
-            {
-                memcpy(&data[box->x + (box->y + y) * SIZE], p, box->w * sizeof(uint32_t));
-            }
-        }
+
+        // }
     }
 
     stbi_write_png(atlas_path, SIZE, SIZE, sizeof(uint32_t), data.data(), SIZE * sizeof(uint32_t));

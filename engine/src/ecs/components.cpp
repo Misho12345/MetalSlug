@@ -30,6 +30,7 @@ namespace mse
             frame_ = reversed ? anim::frame_count(info_) - 1 : 0;
         }
 
+        reversed_ = reversed;
         loop_ = loop;
         paused = false;
         anim_done_ = false;

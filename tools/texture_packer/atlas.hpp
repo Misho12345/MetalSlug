@@ -16,7 +16,6 @@ struct Box final
     const char* image_path;
     uint32_t* data{};
 
-    uint32_t x{}, y{};
     uint32_t w{}, h{};
 
     uint32_t sprite_id, anim_id;
@@ -25,7 +24,16 @@ struct Box final
     // because it's still needed for the mask file generation
     uint32_t frame_count;
 
-    bool rotated{ false };
+    // bool rotated{ false };
+};
+
+// a horizontal run of consecutive frames from a box, copied to one place in the atlas.
+// a strip that wraps onto the next row is split into several of these
+struct Blit
+{
+    const Box* box;
+    uint32_t src_x, w;
+    uint32_t x, y;
 };
 
 class Atlas final
@@ -36,11 +44,11 @@ public:
     Atlas() = default;
     ~Atlas() = default;
 
-    void add(Box* box);
+    void add(const Box* box, uint32_t src_x, uint32_t w, uint32_t x, uint32_t y);
     void save(const char* atlas_path) const;
 
 private:
-    mse::vector<Box*>  boxes_{ nullptr };
+    mse::vector<Blit> blits_{ nullptr };
 };
 
 void save_masks(mse::span<const Box> boxes, const char* mask_path, const char* flipped_mask_path);

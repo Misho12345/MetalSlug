@@ -21,23 +21,24 @@ layout (std430, binding = 2) readonly buffer SpriteAnimationDataBuffer
 
 out vec4 FragColor;
 
+uvec2 frame_pos(SpriteAnimationData a, uint frame, uint atlas_size)
+{
+    uint first_row = (atlas_size - uint(a.offset.x)) / a.frame_size.x;
+    if (frame < first_row) return uvec2(a.offset) + uvec2(frame * a.frame_size.x, 0u);
+
+    uint per_row = atlas_size / a.frame_size.x;
+    uint j = frame - first_row;
+    return uvec2(j % per_row * a.frame_size.x, uint(a.offset.y) + a.frame_size.y * (1u + j / per_row));
+}
+
 void main()
 {
     SpriteAnimationData data = sprite_data[v_AnimationIdx];
 
-    vec2 atlas_size = vec2(textureSize(u_Atlases, 0));
+    uvec2 atlas_size = uvec2(textureSize(u_Atlases, 0).xy);
 
-    vec2 pixel_min = vec2(
-        data.offset.x + (float(v_FrameIdx) * data.frame_size.x),
-        data.offset.y
-    );
-
-    vec2 pixel_max = pixel_min + data.frame_size;
-
-    vec2 uv_min = pixel_min / atlas_size;
-    vec2 uv_max = pixel_max / atlas_size;
-
-    vec2 uv = mix(uv_min, uv_max, v_TexCoord);
+    vec2 pixel = vec2(frame_pos(data, v_FrameIdx, atlas_size.x)) + vec2(data.frame_size) * v_TexCoord;
+    vec2 uv    = pixel / vec2(atlas_size);
 
     FragColor = texture(u_Atlases, vec3(uv, float(data.atlas_idx)));
 }
