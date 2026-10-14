@@ -27,8 +27,8 @@ namespace mse
         void begin_frame() const;
         void render() const;
 
-        void draw_box(aabb box, color color, float thickness = 2.0f) const;
-        void draw_line(ivec2 start, ivec2 end, color color, float thickness = 2.0f) const;
+        void draw_box(aabb box, color_t color, float thickness = 2.0f) const;
+        void draw_line(ivec2 start, ivec2 end, color_t color, float thickness = 2.0f) const;
 
     private:
         DebugUI() = default;

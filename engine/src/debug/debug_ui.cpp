@@ -10,7 +10,7 @@ namespace mse
     namespace
     {
         ImVec2 to_vec2(const vec2 vec) { return ImVec2{ vec.x, vec.y }; }
-        ImU32  to_imu32(const color vec) { return IM_COL32(vec.x, vec.y, vec.z, vec.w); }
+        ImU32  to_imu32(const color_t vec) { return IM_COL32(vec.r, vec.g, vec.b, vec.a); }
     }
 
     DebugUI::~DebugUI()
@@ -45,7 +45,7 @@ namespace mse
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
 
-    void DebugUI::draw_box(const aabb box, const color color, const float thickness) const
+    void DebugUI::draw_box(const aabb box, const color_t color, const float thickness) const
     {
         const aabb cam_local = box - App::ctx().scene.camera_pos_screen();
         if (!(cam_local & aabb::screen)) return;
@@ -60,7 +60,7 @@ namespace mse
             to_imu32(color), 0.0f, {}, thickness);
     }
 
-    void DebugUI::draw_line(ivec2 start, ivec2 end, const color color, const float thickness) const
+    void DebugUI::draw_line(ivec2 start, ivec2 end, const color_t color, const float thickness) const
     {
         const ivec2 cam = App::ctx().scene.camera_pos_screen();
         start -= cam;
