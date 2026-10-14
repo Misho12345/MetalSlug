@@ -100,6 +100,8 @@ namespace mse
         [[nodiscard]]
         bool anim_done() const { return anim_done_; }
 
+        color_t color{};
+
     private:
         Sprite(const Scene& scene, entity_id id, anim::Info info, bool loop);
 

@@ -32,7 +32,9 @@ namespace mse
 
 
         if (entities.empty()) return;
-        for (uint32_t& c : counter_) c = 0;
+
+        memset(counter_.data(), 0, counter_.size() * sizeof(uint32_t));
+
         buckets_.clear();
         extents_.clear();
         pairs_.clear();

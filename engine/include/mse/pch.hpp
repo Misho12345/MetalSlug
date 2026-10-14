@@ -57,7 +57,29 @@ namespace mse
     using uvec2 = glm::u32vec2;
     using glm::bvec2;
 
-    using color = glm::u8vec4;
+    struct color_t final
+    {
+        constexpr color_t() { data_u32 = ~0u; }
+
+        constexpr color_t(const uint8_t r_, const uint8_t g_, const uint8_t b_, const uint8_t a_)
+        {
+            r = r_;
+            g = g_;
+            b = b_;
+            a = a_;
+        }
+
+        constexpr color_t(const glm::u8vec4 data_) { data = data_; }
+
+        constexpr explicit color_t(const uint32_t data_) { data_u32 = data_; }
+
+        union
+        {
+            struct { uint8_t r, g, b, a; };
+            glm::u8vec4 data;
+            uint32_t data_u32;
+        };
+    };
 
     template <typename>
     struct bool_value final
@@ -100,14 +122,9 @@ namespace mse
          * Example:
          * @code color c = 0xff00aa_rgb; @endcode
          */
-        constexpr color operator""_rgb(const unsigned long long val)
+        constexpr color_t operator""_rgb(const unsigned long long val)
         {
-            return {
-                (uint8_t)(val >> 16 & 0xFF),
-                (uint8_t)(val >> 8 & 0xFF),
-                (uint8_t)(val & 0xFF),
-                255
-            };
+            return color_t{ (uint32_t)val << 8 | 0xff };
         }
 
         /**
@@ -118,14 +135,9 @@ namespace mse
          * Example:
          * @code color c = 0xff00aaff_rgba; @endcode
          */
-        constexpr color operator""_rgba(const unsigned long long val)
+        constexpr color_t operator""_rgba(const unsigned long long val)
         {
-            return {
-                (uint8_t)(val >> 24 & 0xFF),
-                (uint8_t)(val >> 16 & 0xFF),
-                (uint8_t)(val >> 8 & 0xFF),
-                (uint8_t)(val & 0xFF)
-            };
+            return color_t{ (uint32_t)val };
         }
     }
 }

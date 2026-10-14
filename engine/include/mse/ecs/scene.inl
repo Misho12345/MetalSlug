@@ -75,7 +75,7 @@ namespace mse
     template <typename C>
     ComponentPool<C>& Scene::pool()
     {
-        static const size_t idx = component_type_index<C>();
+        const size_t idx = component_type_index<C>();
 
         while (pools_.size() <= idx) pools_.emplace_back();
 
@@ -86,7 +86,7 @@ namespace mse
     template <typename C>
     const ComponentPool<C>& Scene::pool() const
     {
-        static const size_t idx = component_type_index<C>();
+        const size_t idx = component_type_index<C>();
 
         if (idx < pools_.size() && pools_[idx].get()) return (const ComponentPool<C>&)*pools_[idx];
 

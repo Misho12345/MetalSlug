@@ -241,7 +241,8 @@ namespace mse
                     tr.rotation,
                     anim::global_anim_id(sprite.info()),
                     sprite.frame(),
-                    sprite.flip_x);
+                    sprite.flip_x,
+                    sprite.color.data_u32);
         }
 
 

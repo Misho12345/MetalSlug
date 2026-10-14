@@ -51,6 +51,8 @@ namespace mse
             uint32_t frame_idx;
 
             uint32_t flip_x;
+
+            uint32_t color;
         };
 
         void update_camera_data(const Scene& scene) const;

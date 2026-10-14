@@ -61,6 +61,8 @@ namespace
             Sprite& sprite = scene.get<Sprite>(self);
             sprite.play(scene.get<POWData>(self).sitting ? anim::Pow::SittingFree : anim::Pow::TreeFree);
             scene.get<Collider>(self).callback = nullptr;
+
+            sprite.color = 0xff0000_rgb;
         };
     }
 
