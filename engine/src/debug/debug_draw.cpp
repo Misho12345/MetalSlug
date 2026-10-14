@@ -10,14 +10,14 @@ namespace mse
 
     namespace
     {
-        constexpr color TILE_EMPTY_COLOR{ 0x888888_rgb };
-        constexpr color TILE_BLOCK_COLOR{ 0xff0000_rgb };
-        constexpr color TILE_PASS_COLOR{ 0x00A2E8_rgb };
+        constexpr color_t TILE_EMPTY_COLOR{ 0x888888_rgb };
+        constexpr color_t TILE_BLOCK_COLOR{ 0xff0000_rgb };
+        constexpr color_t TILE_PASS_COLOR{ 0x00A2E8_rgb };
 
-        constexpr color HITBOX_COLOR{ 0x00ff00_rgb };
-        constexpr color HITBOX_DISABLED_COLOR{ 0x888888_rgb };
+        constexpr color_t HITBOX_COLOR{ 0x00ff00_rgb };
+        constexpr color_t HITBOX_DISABLED_COLOR{ 0x888888_rgb };
 
-        constexpr color PIXEL_COLOR{ 0x00c8c8_rgb };
+        constexpr color_t PIXEL_COLOR{ 0x00c8c8_rgb };
     }
 
     void DebugDraw::toggle() { active_ = !active_; }
