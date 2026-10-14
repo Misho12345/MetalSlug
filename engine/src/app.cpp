@@ -6,9 +6,9 @@
 
 namespace mse
 {
-    App::App() :
-        ctx_{ make_unique<GameCtx>() },
-        priv_ctx_{ make_unique<PrivCtx>() }
+    App::App()
+        : ctx_{ make_unique<GameCtx>() },
+          priv_ctx_{ make_unique<PrivCtx>() }
     {
         assert(!instance_ && "Cannot have multiple App instances");
         instance_ = this;
@@ -61,19 +61,18 @@ namespace mse
             return;
         }
 
-        if (!priv_ctx_->tile_map.load("assets/tile_maps/mission1.csv"))
-        {
-            printf("couldn't load tile map\n");
-            ok_ = false;
-            return;
-        }
-
         printf("finished setup\n");
     }
 
     void App::run()
     {
         if (!ok_) return;
+
+        if (!priv_ctx_->tile_map.data())
+        {
+            printf("tile map not loaded\n");
+            return;
+        }
 
         // here and not in setup() because it has to have the animation frame counts set in App::init()
         if (!priv_ctx_->rendering_system.init_sprite_objects(ctx_->scene))
@@ -143,5 +142,17 @@ namespace mse
     void App::shutdown()
     {
         printf("MSE shutdown\n");
+    }
+
+
+    bool App::load_tile_map(const string_view path)
+    {
+        if (!priv_ctx_->tile_map.load(path))
+        {
+            printf("failed to load %s as the tile map", path.data());
+            return false;
+        }
+
+        return true;
     }
 }

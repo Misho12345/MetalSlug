@@ -7,8 +7,8 @@
 namespace mse
 {
     Sprite::Sprite(
-      const Scene&     scene,
-      const entity_id  id,
+      [[maybe_unused]] const Scene&     scene,
+      [[maybe_unused]] const entity_id  id,
       const anim::Info info,
       const bool       loop)
       : info_(info),
@@ -70,7 +70,11 @@ namespace mse
         size = scene.get<Sprite>(id).size();
     }
 
-    Collider::Collider(const Scene& scene, const entity_id id, const ivec2 _offset, const ivec2 _size)
+    Collider::Collider(
+        [[maybe_unused]] const Scene& scene,
+        [[maybe_unused]] const entity_id id,
+        const ivec2 _offset,
+        const ivec2 _size)
     {
         assert(scene.has<Transform>(id) && "Collider requires a Transform component");
 

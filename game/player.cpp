@@ -233,7 +233,7 @@ namespace player
         // enter doesn't play anything, the animation depends on the legs and the weapon too (see pick_pose)
        using BSM = BodyStateManager;
 
-        static const BodySM body_sm
+        static constexpr BodySM body_sm
         {
             BodySM::Behaviour{ nullptr, BSM::ready, nullptr },      // Ready
             BodySM::Behaviour{ BSM::fire, BSM::shooting, nullptr }, // Shooting
@@ -246,7 +246,7 @@ namespace player
     const LegsSM& Player::legs_sm()
     {
         using LSM = LegsStateManager;
-        static const LegsSM legs_sm
+        static constexpr LegsSM legs_sm
         {
             LegsSM::Behaviour{ LSM::stand_enter, LSM::stand, nullptr },            // Stand
             LegsSM::Behaviour{ LSM::walk_enter, LSM::walk, nullptr },              // Walk
@@ -307,6 +307,7 @@ namespace player
             col.enabled = false;
             col.gravity = 0.0f;
             col.target_layer |= Layer::TileMap /* | Layer::Enemy*/;
+            col.layer |= Layer::PlayerBullet;
 
             col.callback = +[](Scene& scene, const entity_id self, entity_id, const uint32_t layer)
             {
@@ -419,7 +420,7 @@ namespace player
         for (const entity_id bullet : scene.pool<PlayerBullet>().owners())
         {
             Collider& col = scene.get<Collider>(bullet);
-            if (col.enabled && length2(col.velocity) > glm::epsilon<float>()) continue;
+            if (!col.enabled) continue;
 
             Transform& tr = scene.get<Transform>(bullet);
             Sprite& spr = scene.get<Sprite>(bullet);

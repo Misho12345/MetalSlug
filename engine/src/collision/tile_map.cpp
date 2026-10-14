@@ -5,49 +5,29 @@ namespace mse
 {
     bool TileMap::load(const string_view path)
     {
-        const string csv = FileIO::read(path);
-        if (csv.empty()) return false;
+        const Csv csv = FileIO::read<Csv>(path);
+        if (csv.data.empty()) return false;
 
-        uint32_t width = 0, height = 0;
+        size_ = { csv.width, csv.height };
+        data_.resize(csv.data.size());
 
-        for (const char* c = csv.data(); *c; ++c)
+        const int32_t* cd = csv.data.data();
+        TileType* td = data_.data();
+
+        for (uint32_t y = 0; y < csv.height; ++y)
         {
-            if (*c == '\r') continue;
-            if (*c == '\n') ++height;
-            else if (!height && *c == ',') ++width;
-        }
-
-        ++width; // n commas -> n + 1 numbers
-
-        size_ = { width, height };
-        data_.resize(width * height, TileType::Air);
-
-        // -1 = air
-        //  0 = floor
-        // ...
-        size_t i = 0;
-        for (const char* c = csv.data(); *c; ++c)
-        {
-            if (*c == '\n' || *c == '\r' || *c == ',') continue;
-
-            if (*c == '-') // skip -1,
+            for (uint32_t x = 0; x < csv.width; ++x, ++cd, ++td)
             {
-                ++c;
-                ++i;
-                continue;
+                switch (*cd)
+                {
+                    case -1: break;
+                    case 0: *td = TileType::Floor; break;
+                    case 1: *td = TileType::Platform; break;
+                    case 2: *td = TileType::SlopeL; break;
+                    case 3: *td = TileType::SlopeR; break;
+                    default: assert(!"not implemented"); return false;
+                }
             }
-
-            // because I don't plan on having more than 10 non-air tile types, I won't use atoi but just assume it's 1 digit
-            switch (*c - '0')
-            {
-                case 0: data_[i] = TileType::Floor; break;
-                case 1: data_[i] = TileType::Platform; break;
-                case 2: data_[i] = TileType::SlopeL; break;
-                case 3: data_[i] = TileType::SlopeR; break;
-                default: assert(!"not implemented"); break;
-            }
-
-            ++i;
         }
 
         return true;

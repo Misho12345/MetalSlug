@@ -46,7 +46,7 @@ namespace mse
         void remove(entity_id entity);
 
         [[nodiscard]]
-        bool valid(const entity_id entity) const;
+        bool valid(entity_id entity) const;
 
         [[nodiscard]]
         entity_id camera() const { return camera_; }

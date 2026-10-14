@@ -53,6 +53,9 @@ namespace mse
         [[nodiscard]]
         static PrivCtx& priv_ctx() { return *instance_->priv_ctx_; }
 
+
+        bool load_tile_map(string_view path);
+
     protected:
         App();
 

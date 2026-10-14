@@ -18,7 +18,7 @@ find_package(glm CONFIG REQUIRED)
 target_link_libraries(MetalSlugEngine
         PUBLIC
         glm::glm-header-only
-        MSCommon
+        MSECommon
         PRIVATE
         OpenGL::GL
         glad::glad

@@ -32,6 +32,14 @@
       "jobs": 4
     },
     {
+      "name": "RelWithDebInfo",
+      "configurePreset": "default",
+      "description": "Build RelWithDebInfo",
+      "configuration": "RelWithDebInfo",
+      "targets": [ "all" ],
+      "jobs": 4
+    },
+    {
       "name": "Release",
       "configurePreset": "default",
       "description": "Build Release",

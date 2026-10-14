@@ -35,7 +35,7 @@ namespace mse
     private:
         TileMap() = default;
 
-        vector<TileType> data_;
+        vector<TileType> data_{ nullptr };
         uvec2 size_{};
 
         friend ::mse::PrivCtx;

@@ -33,7 +33,7 @@ namespace mse
         };
 
         template <typename... Bs> requires (sizeof...(Bs) == N && (std::same_as<std::remove_cvref_t<Bs>, Behaviour> && ...))
-        StateMachine(Bs&&... bs) : bs_{ std::forward<Bs>(bs)... } {}
+        constexpr StateMachine(Bs&&... bs) : bs_{ std::forward<Bs>(bs)... } {}
 
         void start(Scene& scene, const entity_id entity, E initial) const
         {

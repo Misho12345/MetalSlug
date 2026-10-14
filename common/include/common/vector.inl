@@ -43,8 +43,8 @@ namespace mse
 
     template <typename T> requires (!std::same_as<T, void>)
     vector<T>::vector(vector&& other) noexcept
-        : size_{ std::exchange(other.size_, 0) },
-          capacity_{ std::exchange(other.capacity_, 0) },
+        : size_{ std::exchange(other.size_, 0u) },
+          capacity_{ std::exchange(other.capacity_, 0u) },
           data_{ std::exchange(other.data_, nullptr) } {}
 
     template <typename T> requires (!std::same_as<T, void>)

@@ -151,12 +151,18 @@ namespace mse
 
     bool CollisionSystem::collision_check(Scene& scene, const entity_id a, const entity_id b)
     {
-        Transform& tr_a = scene.get<Transform>(a);
         const Collider& col_a = scene.get<Collider>(a);
+        const Collider& col_b = scene.get<Collider>(b);
+
+        if (!(col_a.target_layer & col_b.layer) &&
+            !(col_b.target_layer & col_a.layer))
+            return false;
+
+
+        Transform& tr_a = scene.get<Transform>(a);
         const Sprite* sprite_a = scene.try_get<Sprite>(a);
 
         const Transform& tr_b = scene.get<Transform>(b);
-        const Collider& col_b = scene.get<Collider>(b);
         const Sprite* sprite_b = scene.try_get<Sprite>(b);
 
         const Auto check = [&,
@@ -175,9 +181,6 @@ namespace mse
                        : pp_check(scene, b, bounds_a);
         };
 
-        if (!(col_a.target_layer & col_b.layer) &&
-            !(col_b.target_layer & col_a.layer))
-            return false;
 
         const float min_size = (float)min(
             col_a.size.x, col_a.size.y,
