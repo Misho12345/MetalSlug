@@ -45,7 +45,6 @@ namespace mse
             ++versions_[entity.idx()];
             free_entities_.emplace_back(entity.idx());
 
-            // a slot is null when its type was only ever looked up through the const pool<C>(), never set
             for (unique_ptr<IComponentPool>& pool : pools_)
                 if (pool.get()) pool->remove(entity);
         }
