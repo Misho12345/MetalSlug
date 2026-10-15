@@ -82,7 +82,7 @@ void main()
 
     v_TexCoord = pixel / vec2(atlas_size);
     v_AtlasIdx = data.atlas_idx;
-    v_Color = unpackUnorm4x8(instance.color).wzyx; // packed as 0xRRGGBBAA
+    v_Color = unpackUnorm4x8(instance.color);
 
     vec2 size = data.frame_size * instance.scale;
     vec2 world_pos = rotate(base_pos - 0.5, instance.rotation) * size + instance.position;

@@ -49,10 +49,9 @@ namespace mse
     using unit = float;
 
 
-
     using mat4 = glm::f32mat4;
 
-    using vec2 = glm::f32vec2;
+    using vec2  = glm::f32vec2;
     using ivec2 = glm::i32vec2;
     using uvec2 = glm::u32vec2;
     using glm::bvec2;
@@ -61,7 +60,7 @@ namespace mse
     {
         constexpr color_t() { data_u32 = ~0u; }
 
-        constexpr color_t(const uint8_t r_, const uint8_t g_, const uint8_t b_, const uint8_t a_)
+        constexpr color_t(const uint8_t r_, const uint8_t g_, const uint8_t b_, const uint8_t a_ = 255)
         {
             r = r_;
             g = g_;
@@ -75,9 +74,13 @@ namespace mse
 
         union
         {
-            struct { uint8_t r, g, b, a; };
+            struct
+            {
+                uint8_t r, g, b, a;
+            };
+
             glm::u8vec4 data;
-            uint32_t data_u32;
+            uint32_t    data_u32;
         };
     };
 
@@ -124,7 +127,11 @@ namespace mse
          */
         constexpr color_t operator""_rgb(const unsigned long long val)
         {
-            return color_t{ (uint32_t)val << 8 | 0xff };
+            return color_t{
+                (uint8_t)(0xff & val >> 16),
+                (uint8_t)(0xff & val >> 8),
+                (uint8_t)(0xff & val),
+            };
         }
 
         /**
@@ -137,7 +144,12 @@ namespace mse
          */
         constexpr color_t operator""_rgba(const unsigned long long val)
         {
-            return color_t{ (uint32_t)val };
+            return color_t{
+                (uint8_t)(0xff & val >> 24),
+                (uint8_t)(0xff & val >> 16),
+                (uint8_t)(0xff & val >> 8),
+                (uint8_t)(0xff & val)
+            };
         }
     }
 }
@@ -163,8 +175,8 @@ namespace mse
 
     inline const uvec2 HALF_RESOLUTION = Target::RESOLUTION / 2;
 
-    inline constexpr ivec2 RESOLUTION_i = Target::RESOLUTION;
-    inline const ivec2 HALF_RESOLUTION_i = HALF_RESOLUTION;
+    inline constexpr ivec2 RESOLUTION_i      = Target::RESOLUTION;
+    inline const ivec2     HALF_RESOLUTION_i = HALF_RESOLUTION;
 
     inline constexpr ivec2 TILE_SIZE_i = Target::TILE_SIZE;
 }
