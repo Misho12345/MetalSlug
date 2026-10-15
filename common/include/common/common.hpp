@@ -10,6 +10,8 @@
 
 #include "unique_ptr.hpp"
 
+#include "optional.hpp"
+
 #include "memory.hpp"
 #include "algorithm.hpp"
 

@@ -19,6 +19,9 @@ namespace mse
         entity_id create_entity();
         void      destroy_entity(entity_id entity);
 
+        void flush_destruction_queue();
+
+
         template <typename C, typename... Args>
         C& set(entity_id entity, Args&&... args);
 
@@ -64,13 +67,17 @@ namespace mse
         [[nodiscard]] ivec2 camera_pos() const { return get<Transform>(camera_).position; }
         [[nodiscard]] ivec2 camera_pos_screen() const { return camera_pos() - HALF_RESOLUTION_i; }
 
+
         entity_id bg_entity{};
+
 
     private:
         vector<unique_ptr<IComponentPool>> pools_;
 
         vector<uint8_t>  versions_{};
         vector<uint32_t> free_entities_{};
+
+        vector<entity_id> pending_destruction_{};
 
         uint32_t  next_{};
         entity_id camera_;

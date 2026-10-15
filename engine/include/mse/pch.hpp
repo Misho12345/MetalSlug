@@ -120,7 +120,7 @@ namespace mse
         /**
          * @brief Constructs a color object from an integer
          * @param val Color value
-         * @return glm::u8vec4 with the color value (alpha = 255)
+         * @return color_t with the color value (alpha = 255)
          *
          * Example:
          * @code color c = 0xff00aa_rgb; @endcode
@@ -137,7 +137,7 @@ namespace mse
         /**
          * @brief Constructs a color object from an integer
          * @param val Color value
-         * @return glm::u8vec4 with the color value
+         * @return color_t with the color value
          *
          * Example:
          * @code color c = 0xff00aaff_rgba; @endcode

@@ -108,6 +108,8 @@ namespace mse
                 priv_ctx_->collision_system.step(ctx_->scene);
                 late_update();
 
+                ctx_->scene.flush_destruction_queue();
+
                 accumulator_ -= Target::FRAME_TIME;
 
                 if (c == 0)

@@ -31,11 +31,25 @@ namespace mse
 
     void Scene::destroy_entity(const entity_id entity)
     {
-        if (!valid(entity)) return;
+        if (valid(entity)) pending_destruction_.emplace_back(entity);
+    }
 
-        ++versions_[entity.idx()];
-        free_entities_.emplace_back(entity.idx());
+    void Scene::flush_destruction_queue()
+    {
+        if (pending_destruction_.empty()) return;
 
-        for (unique_ptr<IComponentPool>& pool : pools_) pool->remove(entity);
+        for (entity_id entity : pending_destruction_)
+        {
+            if (!valid(entity)) continue;
+
+            ++versions_[entity.idx()];
+            free_entities_.emplace_back(entity.idx());
+
+            // a slot is null when its type was only ever looked up through the const pool<C>(), never set
+            for (unique_ptr<IComponentPool>& pool : pools_)
+                if (pool.get()) pool->remove(entity);
+        }
+
+        pending_destruction_.clear();
     }
 }
