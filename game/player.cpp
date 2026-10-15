@@ -231,7 +231,7 @@ namespace player
     const BodySM& Player::body_sm()
     {
         // enter doesn't play anything, the animation depends on the legs and the weapon too (see pick_pose)
-       using BSM = BodyStateManager;
+        using BSM = BodyStateManager;
 
         static constexpr BodySM body_sm
         {

@@ -4,7 +4,7 @@
 
 namespace mse
 {
-    template <typename E = void>
+    template <typename E> requires std::is_enum_v<E>
     struct State
     {
         E current{};
@@ -32,7 +32,7 @@ namespace mse
             void (*exit)(const Ctx&)  = nullptr;
         };
 
-        template <typename... Bs> requires (sizeof...(Bs) == N && (std::same_as<std::remove_cvref_t<Bs>, Behaviour> && ...))
+        template <std::same_as<Behaviour>... Bs> requires (sizeof...(Bs) == N)
         constexpr StateMachine(Bs&&... bs) : bs_{ std::forward<Bs>(bs)... } {}
 
         void start(Scene& scene, const entity_id entity, E initial) const

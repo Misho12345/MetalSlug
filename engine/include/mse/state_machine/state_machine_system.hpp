@@ -6,7 +6,7 @@
 
 namespace mse
 {
-    class MSE_API StateMachineSystem
+    class MSE_API StateMachineSystem final
     {
     public:
         template <typename E>

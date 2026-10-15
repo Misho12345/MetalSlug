@@ -7,12 +7,16 @@ namespace mse
     {
         assert(valid(entity) && "Entity is not valid");
 
-        // inject scene and entity id if the constructor of the component enables it
-        if constexpr (requires { C(*this, entity, std::forward<Args>(args)...); })
+        // inject scene and scene and entity id if the constructor of the component enables it
+        if constexpr (std::constructible_from<C, Scene&, entity_id, Args...>)
         {
             return pool<C>().set(entity, *this, entity, std::forward<Args>(args)...);
         }
-        else return pool<C>().set(entity, std::forward<Args>(args)...);
+        else if constexpr (std::constructible_from<C, Args...>)
+        {
+            return pool<C>().set(entity, std::forward<Args>(args)...);
+        }
+        else static_assert(always_false<C>, "cannot find suitable constructor for C");
     }
 
 
