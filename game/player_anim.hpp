@@ -72,12 +72,12 @@ namespace player
             case Body::PistolShootUp:   return { 2, { -1, -61 } };
             case Body::PistolShootDown: return { 2, {  2, -23 } }; // only in air
 
-            case Body::CrouchPistol:           return { 4, {  0, -25 }, End::Hold, true, {}, 2 };
-            case Body::CrouchPistolIdle:       return { 8, { -4,  -8 }, End::Loop, true };
-            case Body::CrouchPistolWalk:       return { 4, { -4,  -8 }, End::Loop, true };
-            case Body::CrouchPistolTurn:       return { 4, {  0, -10 }, End::Hold, true };
-            case Body::CrouchPistolShoot:      return { 2, { -1, -13 }, End::Next, true, Body::CrouchPistolAfterShoot };
-            case Body::CrouchPistolAfterShoot: return { 4, {  1, -11 }, End::Hold, true };
+            case Body::PistolCrouch:           return { 4, {  0, -25 }, End::Hold, true, {}, 2 };
+            case Body::PistolCrouchIdle:       return { 8, { -4,  -8 }, End::Loop, true };
+            case Body::PistolCrouchWalk:       return { 4, { -4,  -8 }, End::Loop, true };
+            case Body::PistolCrouchTurn:       return { 4, {  0, -10 }, End::Hold, true };
+            case Body::PistolCrouchShoot:      return { 2, { -1, -13 }, End::Next, true, Body::PistolCrouchAfterShoot };
+            case Body::PistolCrouchAfterShoot: return { 4, {  1, -11 }, End::Hold, true };
 
             // TODO: knife, throw, drink, reload
             default: assert(!"not implemented"); return {};
@@ -134,8 +134,8 @@ namespace player
         { Body::PistolInAir }, { Body::PistolSideJump },
         { Body::PistolLookUp }, { Body::PistolLookUpIdle }, { Body::PistolLookUpTurn }, { Body::PistolLookDown },
         { Body::PistolShoot }, { Body::PistolJumpShoot }, { Body::PistolShootUp }, { Body::PistolShootDown },
-        { Body::CrouchPistol }, { Body::CrouchPistolIdle }, { Body::CrouchPistolWalk }, { Body::CrouchPistolTurn }, { Body::CrouchPistolShoot },
-        { Body::PistolLookUp, true }, { Body::CrouchPistol, true },
+        { Body::PistolCrouch }, { Body::PistolCrouchIdle }, { Body::PistolCrouchWalk }, { Body::PistolCrouchTurn }, { Body::PistolCrouchShoot },
+        { Body::PistolLookUp, true }, { Body::PistolCrouch, true },
     };
 
     static_assert(std::size(PISTOL_POSES) == (size_t)Pose::Count);
