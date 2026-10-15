@@ -2,6 +2,7 @@
 #include "mse/game.hpp"
 
 #include "player.hpp"
+#include "pow.hpp"
 
 using namespace mse;
 using namespace mse::literals;
@@ -26,29 +27,6 @@ namespace
         tr.position.y += ((int32_t)sprite.size().y - RESOLUTION_i.y) / 2;
     }
 
-    struct POWData { bool sitting; }; // temp
-
-    void spawn_pow(Scene& scene, const ivec2 pos, const bool sitting)
-    {
-        const entity_id pow = scene.create_entity();
-
-        scene.set<Transform>(pow, pos);
-        scene.set<Sprite>(pow, sitting ? anim::Pow::SittingIdle : anim::Pow::TreeIdle, should_loop::yes);
-        scene.set<POWData>(pow, sitting);
-
-        Collider& col = scene.set<Collider>(pow);
-        col.target_layer |= Layer::PlayerBullet;
-
-        col.callback = +[](Scene& scene, const entity_id self, entity_id, uint32_t)
-        {
-            Sprite& sprite = scene.get<Sprite>(self);
-            sprite.play(scene.get<POWData>(self).sitting ? anim::Pow::SittingFree : anim::Pow::TreeFree);
-            scene.get<Collider>(self).callback = nullptr;
-
-            sprite.color = 0xff0000_rgb;
-        };
-    }
-
     void load_pows(Scene& scene)
     {
         const Csv csv = FileIO::read<Csv>("assets/tile_maps/mission1_spawn.csv");
@@ -65,8 +43,8 @@ namespace
                 switch (*d)
                 {
                     case -1: break;
-                    case 0: spawn_pow(scene, pos, true); break;
-                    case 1: spawn_pow(scene, pos, false); break;
+                    case 0: POW::spawn(scene, pos, POW::Kind::Sitting); break;
+                    case 1: POW::spawn(scene, pos, POW::Kind::Tree); break;
                     // case 2: enemy 1;
                     // case 3: enemy 2;
                     default: assert(!"not implemented"); return;
@@ -79,6 +57,8 @@ namespace
 void Game::init()
 {
     Player::register_machines();
+    POW::register_machine();
+
     load_tile_map("assets/tile_maps/mission1_collision.csv");
 
     Scene& scene = ctx().scene;

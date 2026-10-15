@@ -6,8 +6,10 @@ enum class Layer : uint32_t
     Player = 1 << 0,
     Enemy  = 1 << 1,
 
-    PlayerBullet = 1 << 2,
-    EnemyBullet  = 1 << 3,
+    POW = 1 << 2,
+
+    PlayerBullet = 1 << 3,
+    EnemyBullet  = 1 << 4,
 
     TileMap = mse::Collider::TILE_MAP_LAYER
 };

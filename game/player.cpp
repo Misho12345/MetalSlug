@@ -306,18 +306,13 @@ namespace player
             Collider& col = scene.set<Collider>(bullet);
             col.enabled = false;
             col.gravity = 0.0f;
-            col.target_layer |= Layer::TileMap /* | Layer::Enemy*/;
+            col.target_layer |= Layer::TileMap | Layer::POW;
             col.layer |= Layer::PlayerBullet;
 
-            col.callback = +[](Scene& scene, const entity_id self, entity_id, const uint32_t layer)
+            col.callback = +[](Scene& scene, const entity_id self, entity_id, const uint32_t)
             {
-                if (layer & Layer::TileMap)
-                {
-                    scene.get<Collider>(self).enabled = false;
-                    scene.get<Sprite>(self).hidden = true;
-                }
-
-                // enemies ...
+                scene.get<Collider>(self).enabled = false;
+                scene.get<Sprite>(self).hidden = true;
             };
         }
 
