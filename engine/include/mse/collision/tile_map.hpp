@@ -29,8 +29,11 @@ namespace mse
         [[nodiscard]]
         bool load(string_view path);
 
+        [[nodiscard]] TileType* data() { return data_.data(); }
         [[nodiscard]] const TileType* data() const { return data_.data(); }
-        [[nodiscard]] uvec2 size() const { return size_; }
+
+        [[nodiscard]]
+        uvec2 size() const { return size_; }
 
         TileType& operator[](const uvec2 coords) { return data_[coords.x + coords.y * size_.x]; }
         const TileType& operator[](const uvec2 coords) const { return data_[coords.x + coords.y * size_.x]; }

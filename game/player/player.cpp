@@ -4,6 +4,7 @@
 #include "bullets.hpp"
 #include "animation.hpp"
 #include "layer.hpp"
+#include "upgrade.hpp"
 
 namespace player
 {
@@ -34,16 +35,36 @@ namespace player
         scene.set<Sprite>(body_, Body::PistolIdle, should_loop::yes).layer = 1;
 
         Collider& legs_col = scene.set<Collider>(legs_);
-        legs_col.layer     = (uint32_t)Layer::Player;
-        legs_col.gravity   = JUMP_GRAVITY;
-        legs_col.size      = LEGS_SIZE;
-
-        // sized to the body sprite in place_sprites
         Collider& body_col = scene.set<Collider>(body_);
-        body_col.layer     = (uint32_t)Layer::Player;
 
-        body_col.gravity               = 0.0f;
+        legs_col.layer = body_col.layer |= Layer::Player;
+        legs_col.target_layer = body_col.target_layer |= Layer::WeaponUpgrade;
+
+        legs_col.gravity = JUMP_GRAVITY;
+        legs_col.size    = LEGS_SIZE;
+
+        body_col.gravity = 0.0f;
         body_col.collide_with_tile_map = false;
+
+
+        legs_col.callback = body_col.callback = +[](Scene& scene, const entity_id self, const entity_id other, const uint32_t layer)
+        {
+            if (layer & Layer::WeaponUpgrade)
+            {
+                [&u = scene.get<Upgrade>(other)](WeaponType& out)
+                {
+                    if (u.claimed) return;
+                    u.claimed = true;
+
+                    switch (u.type)
+                    {
+                        case UpgradeType::RifleSpray: out = WeaponType::RifleSpray; return;
+                        case UpgradeType::RifleFireball: out = WeaponType::RifleFireball; return;
+                        default: assert(!"not implemented");
+                    }
+                }(scene.get<BodyData>(self).weapon);
+            }
+        };
 
         scene.set<Intent>(legs_);
         scene.set<LegsData>(legs_, body_);
@@ -70,17 +91,6 @@ namespace player
 
         if (Input::just_pressed(Key::Space)) in.just_pressed |= Intent::Jump;
         if (Input::just_pressed(Key::J)) in.just_pressed |= Intent::Fire;
-
-        // for testing until the pickups exist
-        BodyData& bd = scene.get<BodyData>(body_);
-        const WeaponType prev = bd.weapon;
-
-        if (Input::just_pressed(Key::Num1)) bd.weapon = WeaponType::Pistol;
-        if (Input::just_pressed(Key::Num2)) bd.weapon = WeaponType::RifleSpray;
-        if (Input::just_pressed(Key::Num3)) bd.weapon = WeaponType::RifleFireball;
-
-        // the rest of a spray burst would come out of the new gun at its burst_ticks
-        if (bd.weapon != prev) bd.burst_left = 0;
     }
 
     void Player::late_update(Scene& scene) const

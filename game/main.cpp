@@ -3,6 +3,7 @@
 
 #include "player/player.hpp"
 #include "pow.hpp"
+#include "upgrade.hpp"
 
 using namespace mse;
 using namespace mse::literals;
@@ -27,9 +28,9 @@ namespace
         tr.position.y += ((int32_t)sprite.size().y - RESOLUTION_i.y) / 2;
     }
 
-    void place_rock(Scene& scene, const ivec2 pos, const uvec2 coords)
+    void create_rock(Scene& scene, const ivec2 pos, const uvec2 coords)
     {
-        static constexpr uvec2 ROCK_SIZE{ 7, 6 };
+        static constexpr uvec2 ROCK_SIZE{ 7, 6 }; // in tiles
         static constexpr ivec2 rock_off = ivec2(ROCK_SIZE) * TILE_SIZE_i / 2;
 
         const entity_id rock = scene.create_entity();
@@ -37,14 +38,47 @@ namespace
         scene.set<Sprite>(rock, anim::Other::Rock, should_loop::no).layer = -99;
 
         TileMap& tm = App::ctx().tile_map;
+        TileType* t = &tm[coords];
 
-        const uvec2 end_coords = coords + ROCK_SIZE;
+        for (uint32_t y = 0; y < ROCK_SIZE.y; ++y, t += tm.size().x)
+            memset(t, (int)TileType::Floor, ROCK_SIZE.x);
+    }
 
-        for (uint32_t y = coords.y; y < end_coords.y; ++y)
+
+    void create_upgrade(Scene& scene, const ivec2 pos, UpgradeType type)
+    {
+        static constexpr uvec2 CRATE_SIZE{ 2, 2 }; // in tiles
+        static constexpr ivec2 crate_off = ivec2(CRATE_SIZE) * TILE_SIZE_i / 2;
+
+        const entity_id upgrade = scene.create_entity();
+        scene.set<Transform>(upgrade, pos + crate_off);
+        scene.set<Upgrade>(upgrade, type);
+        scene.set<Sprite>(upgrade, [type]() -> anim::Other
         {
-            for (uint32_t x = coords.x; x < end_coords.x; ++x)
-                tm[{ x, y }] = TileType::Floor;
-        }
+            switch (type)
+            {
+                case UpgradeType::RifleSpray: return anim::Other::RifleSprayPickup;
+                case UpgradeType::RifleFireball: return anim::Other::RifleFireballPickup;
+                default: assert(!"not implemented");
+            }
+
+            return {};
+        }(), should_loop::no);
+
+
+        Collider& col = scene.set<Collider>(upgrade);
+
+        col.gravity = 0.0f;
+        col.collide_with_tile_map = false;
+
+        col.layer |= Layer::WeaponUpgrade;
+        col.target_layer |= Layer::Player;
+
+        col.callback = +[](Scene& scene, const entity_id self, entity_id, uint32_t)
+        {
+            scene.get<Collider>(self).enabled = false;
+            scene.get<Sprite>(self).hidden = true;
+        };
     }
 
     void load_spawables(Scene& scene)
@@ -67,8 +101,13 @@ namespace
                     case 1: POW::spawn(scene, pos, POW::Kind::Tree); break;
                     // case 2: enemy 1;
                     // case 3: enemy 2;
-                    case 4: place_rock(scene, pos, { x, y }); break;
-                    case 5: break;
+                    case 4: create_rock(scene, pos, { x, y }); break;
+                    case 5:
+                        // TODO: replace with crate
+                        create_upgrade(scene, pos, UpgradeType::RifleSpray);
+                        create_upgrade(scene, pos - 20, UpgradeType::RifleFireball);
+                        create_upgrade(scene, pos - 40, UpgradeType::RifleSpray);
+                        break;
                     default: assert(!"not implemented"); return;
                 }
             }
