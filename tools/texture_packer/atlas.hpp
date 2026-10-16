@@ -14,7 +14,7 @@ struct Box final
     Box& operator=(Box&& other) noexcept;
 
     const char* image_path;
-    uint32_t* data{};
+    uint8_t* data{};
 
     uint32_t w{}, h{};
 

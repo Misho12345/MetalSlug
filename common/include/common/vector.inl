@@ -107,7 +107,7 @@ namespace mse
     {
         if (!size_) return;
 
-        for (size_t i = 0; i < size_; ++i) destroy_at(data_ + i);
+        for (size_t i = 0; i < size_; ++i) mse::destroy_at(data_ + i);
         size_ = 0;
     }
 

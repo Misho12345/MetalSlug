@@ -11,6 +11,8 @@ namespace mse::gl
         Storage,
     };
 
+    using is_static = bool_value<struct is_static_tag>;
+
     /**
      * @brief The Buffer class encapsulates an OpenGL buffer
      * @details It provides functionality to create, bind, and manage OpenGL buffers.
@@ -32,13 +34,14 @@ namespace mse::gl
          * @tparam T The type of the data to be stored in the buffer.
          * @param type The type of the buffer.
          * @param data A span containing the data to be stored in the buffer.
+         * @param _static Whether the buffer is mutable
          * @note
          * Do not try and use mapped_data() buffer for reading or writing if the buffer is not persistent.
          */
         template <typename T>
-        void create(const BufferType type, span<const T> data)
+        void create(const BufferType type, span<const T> data, const is_static _static = is_static::yes)
         {
-            create(type, data.data(), data.size() * sizeof(T));
+            create(type, data.data(), data.size() * sizeof(T), _static);
         }
 
         /**
@@ -99,7 +102,7 @@ namespace mse::gl
     private:
         void increase_size_(size_t new_size);
 
-        void create(BufferType type, const void* data, size_t size);
+        void create(BufferType type, const void* data, size_t size, bool _static);
 
         void create_persistent_(
             BufferType type,
@@ -113,6 +116,8 @@ namespace mse::gl
 
         size_t     size_{ 0 };
         GLbitfield flags_{ 0 };
+
+        bool static_{ true };
 
         void* mapped_ptr_{ nullptr };
     };

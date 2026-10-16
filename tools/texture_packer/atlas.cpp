@@ -15,7 +15,7 @@ Box::Box(const char* _image_path, const uint32_t _sprite_id, const uint32_t _ani
       frame_count{ _frame_count }
 {
     int w_, h_, t;
-    data = (uint32_t*)(stbi_load(image_path, &w_, &h_, &t, 4));
+    data = stbi_load(image_path, &w_, &h_, &t, 4);
     w    = (uint32_t)w_;
     h    = (uint32_t)h_;
 }
@@ -63,8 +63,8 @@ void Atlas::save(const char* atlas_path) const
     // save to texture atlas
     for (const Blit& blit : blits_)
     {
-        const Box*      box = blit.box;
-        const uint32_t* p   = box->data + blit.src_x;
+        const Box *box = blit.box;
+        const uint8_t *p = box->data + blit.src_x * sizeof(uint32_t);
 
         // if (box->rotated)
         // {
@@ -81,7 +81,7 @@ void Atlas::save(const char* atlas_path) const
         // {
 
         // copy row by row
-        for (uint32_t y = 0; y < box->h; ++y, p += box->w)
+        for (uint32_t y = 0; y < box->h; ++y, p += box->w * sizeof(uint32_t))
         {
             memcpy(&data[blit.x + (blit.y + y) * SIZE], p, blit.w * sizeof(uint32_t));
         }
@@ -117,8 +117,8 @@ void save_masks(const mse::span<const Box> boxes, const char* mask_path, const c
         // that way when loaded each frame will have a pointer for the it's mask, and not have to find
         // the parts of the mask for the specific frame in the entire animation data block
 
-        const uint32_t* p       = box.data;
-        const uint32_t  frame_w = box.w / box.frame_count;
+        const uint8_t* p = box.data;
+        const uint32_t frame_w = box.w / box.frame_count;
 
         for (uint32_t f = 0; f < box.frame_count; ++f)
         {
@@ -127,19 +127,20 @@ void save_masks(const mse::span<const Box> boxes, const char* mask_path, const c
             {
                 for (uint32_t x = 0; x < frame_w; ++x)
                 {
-                   const uint32_t v = p[off_x + x + y * box.w];
-                   const uint32_t fv = p[off_x + frame_w - x - 1 + y * box.w];
+                    uint32_t v, fv;
+                    memcpy(&v, p + (off_x + x + y * box.w) * sizeof(uint32_t), sizeof(uint32_t));
+                    memcpy(&fv, p + (off_x + frame_w - x - 1 + y * box.w) * sizeof(uint32_t), sizeof(uint32_t));
 
-                   // if more than half solid - mark solid and advance to the next bit
-                   if (((v & 0xff000000) >> 24) > 128) *dp |= 1 << bit; // not (7 - bit) because little endian
-                   if (((fv & 0xff000000) >> 24) > 128) *fdp |= 1 << bit;
+                    // if more than half solid - mark solid and advance to the next bit
+                    if (((v  & 0xff000000) >> 24) > 128)  *dp |= 1 << bit; // not (7 - bit) because little endian
+                    if (((fv & 0xff000000) >> 24) > 128) *fdp |= 1 << bit;
 
-                   if (++bit >= 8)
-                   {
-                       bit = 0;
-                       ++dp;
-                       ++fdp;
-                   }
+                    if (++bit >= 8)
+                    {
+                        bit = 0;
+                        ++dp;
+                        ++fdp;
+                    }
                 }
             }
 

@@ -3,6 +3,7 @@
 
 #include <new>
 #include <utility>
+#include <cstdint>
 
 namespace mse
 {

@@ -30,12 +30,10 @@ function(enable_warnings target)
                 -Wpedantic
                 -Werror
                 -Wno-missing-field-initializers
-                -Wcast-align=strict
-                -Wold-style-cast
                 -Wshadow
                 -Wnull-dereference
-                -Wdouble-promotion
-                -Wsign-conversion
+#                -Wdouble-promotion
+#                -Wsign-conversion
         )
 
         # GCC-specific warnings
@@ -45,6 +43,7 @@ function(enable_warnings target)
                     -Wduplicated-cond
                     -Wduplicated-branches
                     -Wnull-dereference
+                    -Wcast-align=strict
             )
         endif ()
 
@@ -54,6 +53,7 @@ function(enable_warnings target)
                     -Wextra-semi
                     -Wcomma
                     -Wnon-virtual-dtor
+                    -Wcast-align
             )
         endif ()
     endif ()

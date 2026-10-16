@@ -22,17 +22,18 @@ namespace mse::gl
         return *this;
     }
 
-    void Buffer::create(const BufferType type, const void* data, const size_t size)
+    void Buffer::create(const BufferType type, const void* data, const size_t size, const bool _static)
     {
         assert(data && "data pointer is nullptr");
         assert(size > 0 && "buffer size is 0");
 
         reset();
         glCreateBuffers(1, &id_);
-        glNamedBufferData(id_, (GLsizeiptr)size, data, GL_STATIC_DRAW);
+        glNamedBufferData(id_, (GLsizeiptr)size, data, _static ? GL_STATIC_DRAW : GL_STREAM_DRAW);
 
         type_ = type;
         size_ = size;
+        static_ = _static;
     }
 
     void Buffer::create_persistent_(const BufferType type, const size_t size, const GLbitfield flags)
@@ -55,6 +56,8 @@ namespace mse::gl
         assert(data && "data pointer is nullptr");
         assert(size > 0 && "data size is zero");
         assert(size <= size_ && "data size exceeds buffer size");
+
+        assert(!static_ && "buffer is immutable");
 
         if (mapped_ptr_) memcpy(mapped_ptr_, data, size);
         else glNamedBufferSubData(id_, 0, (GLsizeiptr)size, data);
@@ -114,7 +117,7 @@ namespace mse::gl
         }
         else
         {
-            create(type_, nullptr, new_size);
+            create(type_, nullptr, new_size, static_);
             glCopyNamedBufferSubData(old_id, id_, 0, 0, (GLsizeiptr)copy_size);
         }
 

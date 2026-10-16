@@ -293,7 +293,7 @@ namespace mse
             .camera_pos = scene.camera_pos_screen()
         };
 
-        camera_data_.create<CameraData>(gl::BufferType::Uniform, { &data, 1 });
+        camera_data_.create<CameraData>(gl::BufferType::Uniform, { &data, 1 }, gl::is_static::no);
     }
 
     void RenderingSystem::init_instance_data(const Scene& scene)
