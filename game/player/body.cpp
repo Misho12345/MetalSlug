@@ -90,7 +90,7 @@ namespace player
                 vel = glm::rotate(vel, SPRAY_SPREAD[(size_t)bd.burst_shot % std::size(SPRAY_SPREAD)]);
             }
 
-            fire_bullet(c.scene, bd.weapon, c.scene.get<Transform>(c.entity).position + dir * SHOOT_OFFSET, vel);
+            fire_bullet(c.scene, bd.weapon, c.scene.get<Transform>(c.entity).position + dir * SHOOT_OFFSET, vel, ld.facing);
 
             ++bd.burst_shot;
             --bd.burst_left;

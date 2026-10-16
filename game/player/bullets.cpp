@@ -11,16 +11,42 @@ namespace player
         constexpr uint8_t FIREBALL_TICKS        = 2;
         constexpr uint8_t FIREBALL_EXPIRE_TICKS = 2;
 
+
+        enum class BulletDir : uint8_t { Side, Up, Down };
+
         struct PlayerBullet final
         {
             WeaponType type;
+            BulletDir  dir;
         };
+
+
+        struct FireballAnims final
+        {
+            anim::Bullet create, loop, expire;
+        };
+
+        // indexed by BulletDir
+        constexpr FireballAnims FIREBALL[]
+        {
+            { anim::Bullet::RifleFireballCreate,     anim::Bullet::RifleFireball,     anim::Bullet::RifleFireballExpire     },
+            { anim::Bullet::RifleFireballCreateUp,   anim::Bullet::RifleFireballUp,   anim::Bullet::RifleFireballExpireUp   },
+            { anim::Bullet::RifleFireballCreateDown, anim::Bullet::RifleFireballDown, anim::Bullet::RifleFireballExpireDown },
+        };
+
+        BulletDir dir_of(const vec2 velocity)
+        {
+            if (glm::abs(velocity.x) >= glm::abs(velocity.y)) return BulletDir::Side;
+            return velocity.y < 0.0f ? BulletDir::Up : BulletDir::Down;
+        }
+
+
 
         // there's one player, and one bullet pool so it's fine really
         uint32_t next_bullet = 0;
 
 
-        void stop_bullet(Scene& scene, const entity_id bullet, const WeaponType type)
+        void stop_bullet(Scene& scene, const entity_id bullet, const PlayerBullet b)
         {
             Collider& col = scene.get<Collider>(bullet);
             col.enabled   = false;
@@ -28,8 +54,8 @@ namespace player
 
             Sprite& spr = scene.get<Sprite>(bullet);
 
-            if (type != WeaponType::RifleFireball) spr.hidden = true;
-            else spr.play(anim::Bullet::RifleFireballExpire, FIREBALL_EXPIRE_TICKS);
+            if (b.type != WeaponType::RifleFireball) spr.hidden = true;
+            else spr.play(FIREBALL[(size_t)b.dir].expire, FIREBALL_EXPIRE_TICKS);
         }
 
         entity_id take_bullet(Scene& scene)
@@ -72,17 +98,18 @@ namespace player
 
             col.callback = +[](Scene& scene, const entity_id self, entity_id, const uint32_t layer)
             {
-                if (const WeaponType type = scene.get<PlayerBullet>(self).type;
-                    layer & Layer::TileMap || type != WeaponType::RifleFireball)
-                    stop_bullet(scene, self, type);
+                if (const PlayerBullet bul = scene.get<PlayerBullet>(self);
+                    layer & Layer::TileMap || bul.type != WeaponType::RifleFireball)
+                    stop_bullet(scene, self, bul);
             };
         }
     }
 
-    void fire_bullet(Scene& scene, const WeaponType type, const ivec2 from, const vec2 velocity)
+    void fire_bullet(Scene& scene, const WeaponType type, const ivec2 from, const vec2 velocity, const int8_t facing)
     {
         const entity_id bullet = take_bullet(scene);
-        scene.get<PlayerBullet>(bullet).type = type;
+
+        PlayerBullet& b = scene.set<PlayerBullet>(bullet, type, dir_of(velocity));
 
         Transform& tr  = scene.get<Transform>(bullet);
         Sprite&    spr = scene.get<Sprite>(bullet);
@@ -98,11 +125,12 @@ namespace player
                 // TODO: find spray bullet, pistol bullet is fine for now ig
 
             case WeaponType::Pistol:
-                spr.play(anim::Bullet::Pistol);
+                spr.play(b.dir == BulletDir::Side ? anim::Bullet::Pistol : anim::Bullet::Pistol90deg);
                 break;
 
+
             case WeaponType::RifleFireball:
-                spr.play(anim::Bullet::RifleFireballCreate, FIREBALL_CREATE_TICKS);
+                spr.play(FIREBALL[(size_t)b.dir].create, FIREBALL_CREATE_TICKS);
                 break;
 
             default: assert(!"not implemented");
@@ -110,12 +138,7 @@ namespace player
 
         tr.position  = from;
         col.velocity = velocity;
-
-        // Left is a flip and not a half turn, otherwise the fireball would be upside down
-        // TODO: make exported perpendicular (and 45deg for spray) sprites for bullets to have meaningful pp checks
-        spr.flip_x  = velocity.x < 0.0f;
-        tr.rotation = glm::atan(velocity.y, glm::abs(velocity.x));
-        if (spr.flip_x) tr.rotation = -tr.rotation;
+        spr.flip_x = facing < 0;
     }
 
     void update_bullets(Scene& scene)
@@ -125,21 +148,20 @@ namespace player
             Sprite& spr = scene.get<Sprite>(bullet);
             if (spr.hidden) continue;
 
-            // i could make a state machine for bullets, but it probably is overkill
-            // maybe if they have more logic later or something and their state get's more complex
             if (scene.get<PlayerBullet>(bullet).type == WeaponType::RifleFireball)
             {
-                const anim::Bullet playing = spr.anim<anim::Bullet>();
+                const FireballAnims& fa      = FIREBALL[(size_t)scene.get<PlayerBullet>(bullet).dir];
+                const anim::Bullet   playing = spr.anim<anim::Bullet>();
 
-                if (playing == anim::Bullet::RifleFireballExpire)
+                if (playing == fa.expire)
                 {
                     if ((spr.hidden = spr.anim_done())) spr.stop();
                     continue;
                 }
 
-                if (playing == anim::Bullet::RifleFireballCreate && spr.anim_done())
+                if (playing == fa.create && spr.anim_done())
                 {
-                    spr.play(anim::Bullet::RifleFireball, FIREBALL_TICKS, is_reversed::no, should_loop::yes);
+                    spr.play(fa.loop, FIREBALL_TICKS, is_reversed::no, should_loop::yes);
                 }
             }
 
