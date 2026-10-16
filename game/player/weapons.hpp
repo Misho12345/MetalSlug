@@ -18,16 +18,18 @@ namespace player
     {
         uint16_t refire_ticks; // fire cooldown
         uint8_t  burst;        // bullets per press
-        uint8_t  burst_ticks;  // coolldown between the bullets of a burst
+        uint8_t  burst_ticks;  // cooldown between the bullets of a burst
         float    speed;
+
+        uint32_t init_ammo;
     };
 
     // indexed by WeaponType
     constexpr WeaponData WEAPONS[]
     {
-        {  6, 1, 0, 250.0f }, // Pistol
-        {  4, 4, 4, 300.0f }, // RifleSpray, a press mid burst starts a new one
-        { 18, 1, 0, 180.0f }, // RifleFireball, 18 = its whole shoot animation
+        {  6, 1, 0, 250.0f,   0 }, // Pistol
+        {  4, 4, 4, 300.0f, 200 }, // RifleSpray
+        { 36, 1, 0, 180.0f,  20 }, // RifleFireball
     };
 
     static_assert(std::size(WEAPONS) == (size_t)WeaponType::Count);

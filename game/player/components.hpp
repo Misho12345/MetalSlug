@@ -66,6 +66,7 @@ namespace player
         Aim  aim{};
 
         WeaponType weapon{};
+        uint32_t ammo = 0; // 0 for pistol = inf
 
         bool restart{ false };
         bool was_up{ false };

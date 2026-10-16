@@ -42,18 +42,24 @@ namespace player
         legs_col.gravity = JUMP_GRAVITY;
         legs_col.size    = LEGS_SIZE;
 
-        body_col.gravity = 0.0f;
+        body_col.gravity               = 0.0f;
         body_col.collide_with_tile_map = false;
 
 
-        legs_col.callback = body_col.callback = +[](Scene& scene, const entity_id self, const entity_id other, const uint32_t layer)
+        legs_col.callback = body_col.callback = +[](
+            Scene&          scene, const entity_id self,
+            const entity_id other, const uint32_t  layer)
         {
+            BodyData& bd = scene.get<BodyData>(self);
+
             if (layer & Layer::WeaponUpgrade)
             {
                 WeaponUpgrade& u = scene.get<WeaponUpgrade>(other);
                 if (u.claimed) return;
                 u.claimed = true;
-                scene.get<BodyData>(self).weapon = u.type;
+
+                bd.weapon = u.type;
+                bd.ammo = WEAPONS[(size_t)bd.weapon].init_ammo;
             }
 
             // EnemyBullet, etc...
@@ -84,6 +90,8 @@ namespace player
 
         if (Input::just_pressed(Key::Space)) in.just_pressed |= Intent::Jump;
         if (Input::just_pressed(Key::J)) in.just_pressed |= Intent::Fire;
+
+        if (Input::just_pressed(Key::P)) printf("%u\n", scene.get<BodyData>(body_).ammo);
     }
 
     void Player::late_update(Scene& scene) const

@@ -94,6 +94,8 @@ namespace player
 
             ++bd.burst_shot;
             --bd.burst_left;
+
+            if (bd.weapon != WeaponType::Pistol && !--bd.ammo) bd.weapon = WeaponType::Pistol;
         }
 
         void start_burst(const BodySM::Ctx& c)
