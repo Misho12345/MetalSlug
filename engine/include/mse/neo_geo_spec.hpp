@@ -14,7 +14,7 @@ namespace mse
         // pixel aspect ratio
         static constexpr float PAR{ 14.0f / 15.0f };
 
-        static constexpr uvec2 TILE_SIZE{ 16, 16 };
+        static constexpr uvec2 TILE_SIZE{ 8, 8 };
 
 
         // display aspect ratio

@@ -1,4 +1,5 @@
 #pragma once
+#include "collision/tile_map.hpp"
 #include "mse/pch.hpp"
 #include "input/input.hpp"
 #include "ecs/scene.hpp"
@@ -13,7 +14,9 @@ namespace mse
      */
     struct GameCtx
     {
-        Scene scene;
+        Scene   scene;
+        TileMap tile_map;
+
         StateMachineSystem state_machines;
     };
 
@@ -53,15 +56,12 @@ namespace mse
         [[nodiscard]]
         static PrivCtx& priv_ctx() { return *instance_->priv_ctx_; }
 
-
-        bool load_tile_map(string_view path);
-
     protected:
         App();
 
     private:
-        static constexpr uint32_t MAX_STEPS = 10;
-        static constexpr float MAX_DELTA_TIME = Target::FRAME_TIME * 3;
+        static constexpr uint32_t MAX_STEPS      = 10;
+        static constexpr float    MAX_DELTA_TIME = Target::FRAME_TIME * 3;
 
         // the extending class will ensure that there is only one instance
         // maybe not the best design, but good enough

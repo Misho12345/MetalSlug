@@ -27,7 +27,27 @@ namespace
         tr.position.y += ((int32_t)sprite.size().y - RESOLUTION_i.y) / 2;
     }
 
-    void load_pows(Scene& scene)
+    void place_rock(Scene& scene, const ivec2 pos, const uvec2 coords)
+    {
+        static constexpr uvec2 ROCK_SIZE{ 7, 6 };
+        static constexpr ivec2 rock_off = ivec2(ROCK_SIZE) * TILE_SIZE_i / 2;
+
+        const entity_id rock = scene.create_entity();
+        scene.set<Transform>(rock, pos + rock_off); // tile is at top left of the rock
+        scene.set<Sprite>(rock, anim::Other::Rock, should_loop::no).layer = -99;
+
+        TileMap& tm = App::ctx().tile_map;
+
+        const uvec2 end_coords = coords + ROCK_SIZE;
+
+        for (uint32_t y = coords.y; y < end_coords.y; ++y)
+        {
+            for (uint32_t x = coords.x; x < end_coords.x; ++x)
+                tm[{ x, y }] = TileType::Floor;
+        }
+    }
+
+    void load_spawables(Scene& scene)
     {
         const Csv csv = FileIO::read<Csv>("assets/tile_maps/mission1_spawn.csv");
         const int32_t* d = csv.data.data();
@@ -47,6 +67,8 @@ namespace
                     case 1: POW::spawn(scene, pos, POW::Kind::Tree); break;
                     // case 2: enemy 1;
                     // case 3: enemy 2;
+                    case 4: place_rock(scene, pos, { x, y }); break;
+                    case 5: break;
                     default: assert(!"not implemented"); return;
                 }
             }
@@ -59,13 +81,17 @@ void Game::init()
     Player::register_machines();
     POW::register_machine();
 
-    load_tile_map("assets/tile_maps/mission1_collision.csv");
+    if (!ctx().tile_map.load("assets/tile_maps/mission1_collision.csv"))
+    {
+        printf("failed to load collision tile data");
+        return;
+    }
 
     Scene& scene = ctx().scene;
 
     create_bg(scene);
     player_opt = Player{ scene };
-    load_pows(scene);
+    load_spawables(scene);
 }
 
 void Game::update()

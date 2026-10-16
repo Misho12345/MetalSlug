@@ -68,7 +68,7 @@ namespace mse
     {
         if (!ok_) return;
 
-        if (!priv_ctx_->tile_map.data())
+        if (!ctx_->tile_map.data())
         {
             printf("tile map not loaded\n");
             return;
@@ -144,17 +144,5 @@ namespace mse
     void App::shutdown()
     {
         printf("MSE shutdown\n");
-    }
-
-
-    bool App::load_tile_map(const string_view path)
-    {
-        if (!priv_ctx_->tile_map.load(path))
-        {
-            printf("failed to load %s as the tile map", path.data());
-            return false;
-        }
-
-        return true;
     }
 }

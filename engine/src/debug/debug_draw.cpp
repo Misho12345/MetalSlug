@@ -1,7 +1,12 @@
 #include "mse/pch.hpp"
+
 #include "debug_draw.hpp"
-#include "priv_ctx.hpp"
+
 #include "mse/app.hpp"
+#include "mse/collision/tile_map.hpp"
+
+#include "priv_ctx.hpp"
+
 
 #ifndef NDEBUG
 namespace mse
@@ -85,7 +90,7 @@ namespace mse
 
         const DebugUI& ui = App::priv_ctx().debug_ui;
 
-        const TileMap& tm = App::priv_ctx().tile_map;
+        const TileMap& tm = App::ctx().tile_map;
         const TileType* t = tm.data();
         const ivec2 size = tm.size();
 

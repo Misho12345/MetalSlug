@@ -10,7 +10,6 @@
 #include "mse/input/input.hpp"
 
 
-#include "collision/tile_map.hpp"
 #include "collision/collision_system.hpp"
 
 #include "assets/sprite_data_registry.hpp"
@@ -36,7 +35,6 @@ namespace mse
         // but to just use the static interface
         Input input;
 
-        TileMap         tile_map;
         CollisionSystem collision_system;
 
         SpriteDataRegistry sprite_data_registry;

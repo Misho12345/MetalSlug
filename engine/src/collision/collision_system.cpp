@@ -2,6 +2,8 @@
 #include "collision_system.hpp"
 
 #include "mse/ecs/scene.hpp"
+#include "mse/collision/tile_map.hpp"
+
 #include "priv_ctx.hpp"
 
 namespace mse
@@ -457,7 +459,7 @@ namespace mse
         const Transform& tr = scene.get<Transform>(entity);
         Collider& col = scene.get<Collider>(entity);
 
-        const TileMap&  tm            = App::priv_ctx().tile_map;
+        const TileMap&  tm            = App::ctx().tile_map;
         const ivec2     tm_offset     = scene.get<Transform>(scene.bg_entity).position;
         const uvec2     tm_image_size = scene.get<Sprite>(scene.bg_entity).size();
 

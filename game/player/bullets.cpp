@@ -122,7 +122,7 @@ namespace player
         {
             case WeaponType::RifleSpray:
                 [[fallthrough]];
-                // TODO: find spray bullet, pistol bullet is fine for now ig
+                // TODO: find spray bullet (+45 deg), pistol bullet is fine for now ig
 
             case WeaponType::Pistol:
                 spr.play(b.dir == BulletDir::Side ? anim::Bullet::Pistol : anim::Bullet::Pistol90deg);
