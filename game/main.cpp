@@ -7,7 +7,7 @@
 using namespace mse;
 using namespace mse::literals;
 
-using anim::Enemy, anim::Bg;
+using anim::Bg;
 using player::Player;
 
 namespace

@@ -15,10 +15,11 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 
+
 target_link_libraries(MetalSlugEngine
         PUBLIC
-        glm::glm-header-only
         MSECommon
+        glm::glm-header-only
         PRIVATE
         OpenGL::GL
         glad::glad

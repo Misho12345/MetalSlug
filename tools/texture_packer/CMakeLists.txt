@@ -2,6 +2,7 @@
 # it also generates a header file with the sprite enums and their corresponding ids for use in the game code
 
 add_executable(MSTexturePacker)
+link_mimalloc(MSTexturePacker)
 
 file(GLOB_RECURSE TEXTURE_LOADER_SOURCES CONFIGURE_DEPENDS
         ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp
@@ -12,7 +13,7 @@ file(GLOB_RECURSE TEXTURE_LOADER_SOURCES CONFIGURE_DEPENDS
 find_package(nlohmann_json CONFIG REQUIRED)
 
 target_sources(MSTexturePacker PRIVATE ${TEXTURE_LOADER_SOURCES})
-target_link_libraries(MSTexturePacker PUBLIC STB MSECommon nlohmann_json::nlohmann_json)
+target_link_libraries(MSTexturePacker PUBLIC MSECommon STB nlohmann_json::nlohmann_json)
 target_include_directories(MSTexturePacker PRIVATE ${CMAKE_SOURCE_DIR}/engine/include/)
 
 enable_warnings(MSTexturePacker)
