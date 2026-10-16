@@ -17,7 +17,7 @@ using player::Player, player::WeaponUpgrade, player::WeaponType;
 
 namespace
 {
-    optional<Player> player_opt;
+    Player player_;
     entity_id bg;
 
     void create_bg(Scene& scene)
@@ -25,7 +25,7 @@ namespace
         scene.bg_entity = bg = scene.create_entity();
 
         Transform& tr = scene.set<Transform>(bg);
-        Sprite& sprite = scene.set<Sprite>(bg, Bg::Bg, should_loop::no);
+        Sprite& sprite = scene.set<Sprite>(bg, Bg::Bg);
 
         sprite.layer = -100;
         tr.position.x += (int32_t)sprite.size().x / 2;
@@ -39,7 +39,7 @@ namespace
 
         const entity_id rock = scene.create_entity();
         scene.set<Transform>(rock, pos + rock_off); // tile is at top left of the rock
-        scene.set<Sprite>(rock, anim::Other::Rock, should_loop::no).layer = -99;
+        scene.set<Sprite>(rock, anim::Other::Rock).layer = -99;
 
         TileMap& tm = App::ctx().tile_map;
         TileType* t = &tm[coords];
@@ -68,7 +68,7 @@ namespace
             }
 
             return {};
-        }(), should_loop::no);
+        }());
 
 
         Collider& col = scene.set<Collider>(upgrade);
@@ -120,30 +120,96 @@ namespace
     }
 }
 
+
 void MetalSlug::init()
 {
+    Scene& scene = ctx().scene;
+    StateMachineSystem& sms = ctx().state_machines;
+
+    sms.add(sm);
     Player::register_machines();
     POW::register_machine();
 
-    if (!ctx().tile_map.load("assets/tile_maps/mission1_collision.csv"))
+    app_ = scene.create_entity();
+    scene.set<Transform>(app_);
+    sm.start(scene, app_, GameState::Intro);
+}
+
+void MetalSlug::intro_enter(const SM::Ctx& ctx) { ctx.scene.set<Sprite>(ctx.entity, anim::Screen::Intro); }
+GameState MetalSlug::on_intro(const SM::Ctx&) { return Input::down(Key::Space) ? GameState::Gameplay : GameState::Intro; }
+void MetalSlug::intro_exit(const SM::Ctx& ctx) { ctx.scene.get<Sprite>(ctx.entity).hidden = true; }
+
+
+void MetalSlug::gameplay_enter(const SM::Ctx& ctx)
+{
+    if (!App::ctx().tile_map.load("assets/tile_maps/mission1_collision.csv"))
     {
         printf("failed to load collision tile data");
         return;
     }
 
-    Scene& scene = ctx().scene;
-
-    create_bg(scene);
-    player_opt = Player{ scene };
-    load_spawables(scene);
+    create_bg(ctx.scene);
+    player_.create(ctx.scene);
+    load_spawables(ctx.scene);
 }
+
+void MetalSlug::gameplay_exit(const SM::Ctx& ctx)
+{
+    for (Sprite& s : ctx.scene.pool<Sprite>().components()) s.hidden = true;
+    for (Collider& c : ctx.scene.pool<Collider>().components()) c.enabled = false;
+
+    ctx.scene.set<Transform>(ctx.scene.camera()); // reset camera
+}
+
+
+void MetalSlug::game_over_enter(const SM::Ctx& ctx) 
+{
+    Sprite& s = ctx.scene.get<Sprite>(ctx.entity);
+    s.hidden = false;
+    s.play(anim::Screen::GameOver);
+    s.color = 0_rgb;
+}
+
+GameState MetalSlug::on_game_over(const SM::Ctx& ctx)
+{
+    uint32_t c = TRANSITION_DUR - glm::abs(2 * ctx.state.ticks - (int)TRANSITION_DUR);
+    c = c * 255 / TRANSITION_DUR;
+
+    ctx.scene.get<Sprite>(ctx.entity).color.data = { c, c, c, 255 };
+    return ctx.state.ticks >= TRANSITION_DUR
+               ? GameState::Scoreboard
+               : GameState::GameOver;
+}
+
+
+void MetalSlug::scoreboard_enter(const SM::Ctx& ctx)
+{
+    ctx.scene.get<Sprite>(ctx.entity).play(anim::Screen::Scoreboard);
+}
+
+GameState MetalSlug::on_scoreboard(const SM::Ctx& ctx)
+{
+    if (ctx.state.ticks >= TRANSITION_DUR) return GameState::Scoreboard;
+
+    const uint32_t c = ctx.state.ticks * 255u / TRANSITION_DUR;
+    ctx.scene.get<Sprite>(ctx.entity).color.data = { c, c, c, 255 };
+
+    return GameState::Scoreboard;
+}
+
 
 void MetalSlug::update()
 {
-    player_opt->update(ctx().scene);
+    Scene& scene = ctx().scene;
+    if (scene.get<State<GameState>>(app_).current != GameState::Gameplay) return;
+    player_.update(scene);
 }
 
 void MetalSlug::late_update()
 {
-    player_opt->late_update(ctx().scene);
+    Scene& scene = ctx().scene;
+    if (scene.get<State<GameState>>(app_).current != GameState::Gameplay) return;
+    player_.late_update(scene);
+
+    if (Input::just_pressed(Key::Esc)) sm.force(scene, app_, GameState::GameOver);
 }

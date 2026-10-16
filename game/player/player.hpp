@@ -6,7 +6,7 @@ namespace player
     class Player final
     {
     public:
-        explicit Player(mse::Scene& scene);
+        void create(mse::Scene& scene);
 
         static void register_machines();
 

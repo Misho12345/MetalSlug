@@ -31,7 +31,7 @@ namespace mse
             const Scene& scene,
             const entity_id id,
             const E animation,
-            const should_loop loop)
+            const should_loop loop = should_loop::no)
             : Sprite(scene, id, anim::info(animation), loop) {}
 
         vec2    parallax_factor{ 1.0f, 1.0f };

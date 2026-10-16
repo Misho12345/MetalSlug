@@ -77,10 +77,10 @@ namespace player
             return in.dir.x != 0 ? LegsState::Walk : LegsState::Stand;
         }
 
-        LegsState stand(const LegsSM::Ctx& c) { return grounded(c, 0.0f); }
-        LegsState walk(const LegsSM::Ctx& c) { return grounded(c, WALK_SPEED); }
+        LegsState on_stand(const LegsSM::Ctx& c) { return grounded(c, 0.0f); }
+        LegsState on_walk(const LegsSM::Ctx& c) { return grounded(c, WALK_SPEED); }
 
-        LegsState crouch(const LegsSM::Ctx& c)
+        LegsState on_crouch(const LegsSM::Ctx& c)
         {
             const Intent in = c.scene.get<Intent>(c.entity);
 
@@ -89,7 +89,7 @@ namespace player
             return grounded(c, shooting ? 0.0f : CRAWL_SPEED, !shooting);
         }
 
-        LegsState air(const LegsSM::Ctx& c)
+        LegsState on_air(const LegsSM::Ctx& c)
         {
             const Intent in  = c.scene.get<Intent>(c.entity);
             Collider&    col = c.scene.get<Collider>(c.entity);
@@ -117,10 +117,10 @@ namespace player
         using B = LegsSM::Behaviour;
         static constexpr LegsSM sm
         {
-            B{ stand_enter, stand, nullptr },       // Stand
-            B{ walk_enter, walk, nullptr },         // Walk
-            B{ air_enter, air, nullptr },           // Air
-            B{ crouch_enter, crouch, crouch_exit }, // Crouch
+            B{ stand_enter, on_stand, nullptr },       // Stand
+            B{ walk_enter, on_walk, nullptr },         // Walk
+            B{ air_enter, on_air, nullptr },           // Air
+            B{ crouch_enter, on_crouch, crouch_exit }, // Crouch
         };
 
         return sm;

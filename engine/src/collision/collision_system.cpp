@@ -27,6 +27,9 @@ namespace mse
 
     void CollisionSystem::step(Scene& scene)
     {
+        // tile map not loaded yet, assumes the game loop isn't started
+        if (!App::ctx().tile_map.data()) return;
+
         ComponentPool<Collider>& col_pool = scene.pool<Collider>();
 
         const vector<entity_id>& entities = col_pool.owners();

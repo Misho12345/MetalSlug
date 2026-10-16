@@ -41,7 +41,7 @@ struct POW::StateManager final
             sitting(c) ? Pow::SittingIdle : Pow::TreeIdle, IDLE_TICKS, is_reversed::no, should_loop::yes);
     }
 
-    static PowState idle(const PowSM::Ctx& c)
+    static PowState on_idle(const PowSM::Ctx& c)
     {
         return c.scene.get<Data>(c.entity).shot ? PowState::Free : PowState::Idle;
     }
@@ -56,7 +56,7 @@ struct POW::StateManager final
         play_at(c, s ? Pow::SittingFree : Pow::TreeFree, FREE_TICKS, s ? SITTING_FREE_X : TREE_FREE_X);
     }
 
-    static PowState free(const PowSM::Ctx& c)
+    static PowState on_free(const PowSM::Ctx& c)
     {
         return c.scene.get<Sprite>(c.entity).anim_done() ? PowState::FadeOut : PowState::Free;
     }
@@ -72,7 +72,7 @@ struct POW::StateManager final
         const entity_id tree = c.scene.create_entity();
 
         c.scene.set<Transform>(tree);
-        Sprite& sprite = c.scene.set<Sprite>(tree, Pow::TreeDestroy, should_loop::no);
+        Sprite& sprite = c.scene.set<Sprite>(tree, Pow::TreeDestroy);
 
         sprite.layer = layer;
         sprite.play(Pow::TreeDestroy, TREE_TICKS);
@@ -89,7 +89,7 @@ struct POW::StateManager final
         play_at(c, Pow::FadeOut, FADE_TICKS, s ? SITTING_FADE_X : TREE_FADE_X);
     }
 
-    static PowState fade_out(const PowSM::Ctx& c)
+    static PowState on_fade_out(const PowSM::Ctx& c)
     {
         Data& d = c.scene.get<Data>(c.entity);
 
@@ -119,12 +119,13 @@ struct POW::StateManager final
 const POW::PowSM& POW::sm()
 {
     using SM = StateManager;
+    using B = PowSM::Behaviour;
 
     static constexpr PowSM pow_sm
     {
-        PowSM::Behaviour{ SM::idle_enter, SM::idle, nullptr },         // Idle
-        PowSM::Behaviour{ SM::free_enter, SM::free, nullptr },         // Free
-        PowSM::Behaviour{ SM::fade_out_enter, SM::fade_out, nullptr }, // FadeOut
+        B{ SM::idle_enter, SM::on_idle, nullptr },         // Idle
+        B{ SM::free_enter, SM::on_free, nullptr },         // Free
+        B{ SM::fade_out_enter, SM::on_fade_out, nullptr }, // FadeOut
     };
 
     return pow_sm;

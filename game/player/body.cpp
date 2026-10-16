@@ -111,7 +111,7 @@ namespace player
         }
 
 
-        BodyState ready(const BodySM::Ctx& c)
+        BodyState on_ready(const BodySM::Ctx& c)
         {
             note_fire(c);
             if (look_changed(c)) return BodyState::Transition;
@@ -119,7 +119,7 @@ namespace player
             return c.scene.get<BodyData>(c.entity).fire_queued ? BodyState::Shooting : BodyState::Ready;
         }
 
-        BodyState shooting(const BodySM::Ctx& c)
+        BodyState on_shooting(const BodySM::Ctx& c)
         {
             note_fire(c);
 
@@ -150,7 +150,7 @@ namespace player
 
         // Turning and changing level (crouch <-> stand <-> looking up) have their own sprites.
         // No action can be taken (firing) while the sprite is in this state
-        BodyState transition(const BodySM::Ctx& c)
+        BodyState on_transition(const BodySM::Ctx& c)
         {
             note_fire(c);
 
@@ -176,9 +176,9 @@ namespace player
         using B = BodySM::Behaviour;
         static constexpr BodySM sm
         {
-            B{ nullptr, ready, nullptr },        // Ready
-            B{ start_burst, shooting, nullptr }, // Shooting
-            B{ nullptr, transition, nullptr },   // Transition
+            B{ nullptr, on_ready, nullptr },        // Ready
+            B{ start_burst, on_shooting, nullptr }, // Shooting
+            B{ nullptr, on_transition, nullptr },   // Transition
         };
 
         return sm;

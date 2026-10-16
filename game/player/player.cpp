@@ -22,7 +22,7 @@ namespace player
     }
 
 
-    Player::Player(Scene& scene)
+    void Player::create(Scene& scene)
     {
         legs_ = scene.create_entity();
         body_ = scene.create_entity();

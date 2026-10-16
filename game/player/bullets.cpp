@@ -87,7 +87,7 @@ namespace player
             const entity_id bullet = scene.create_entity();
 
             scene.set<Transform>(bullet);
-            scene.set<Sprite>(bullet, anim::Bullet::Pistol, should_loop::no).hidden = true;
+            scene.set<Sprite>(bullet, anim::Bullet::Pistol).hidden = true;
             scene.set<PlayerBullet>(bullet, WeaponType::Pistol);
 
             Collider& col    = scene.set<Collider>(bullet);
