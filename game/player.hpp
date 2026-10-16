@@ -21,7 +21,8 @@ enum class LegsState : uint8_t
 enum class WeaponType : uint8_t
 {
     Pistol,
-    // later more
+    RifleSpray,
+    RifleFireball,
     Count
 };
 
@@ -36,7 +37,6 @@ namespace player
         static constexpr size_t BULLET_POOL_SIZE = 32;
 
         static constexpr int32_t SHOOT_OFFSET = 10;
-        static constexpr float   SHOOT_FORCE  = 250.0f;
 
         // ----- Move -----
 
@@ -48,9 +48,6 @@ namespace player
 
         static constexpr float WALK_SPEED  = 100.0f;
         static constexpr float CRAWL_SPEED = 50.0f;
-
-        static constexpr uint16_t REFIRE_TICKS    = 6;  // on press
-        static constexpr uint16_t AUTO_FIRE_TICKS = 12; // holding the button
 
 
         // ----- Colliders -----
@@ -108,12 +105,17 @@ namespace player
             PoseAnim requested{ Body::_COUNT };
 
             Pose transition{ Pose::Count };
+            Pose last_pose{ Pose::Count };
             Aim  aim{};
 
             WeaponType weapon{};
 
             bool restart{ false };
             bool was_up{ false };
+            bool fire_queued{ false };
+
+            uint8_t burst_left{};
+            uint8_t burst_shot{};
 
             uint32_t next_bullet{};
         };
@@ -132,6 +134,8 @@ namespace player
 
 
         void update_bullets(Scene& scene) const;
+
+        static void stop_bullet(Scene& scene, entity_id bullet, PlayerBullet type);
 
         static void      shoot(Scene& scene, entity_id body, Aim aim, int8_t dir);
         static entity_id take_bullet(Scene& scene, BodyData& data);

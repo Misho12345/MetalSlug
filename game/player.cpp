@@ -10,6 +10,36 @@ using namespace mse::anim::player;
 
 namespace player
 {
+    namespace
+    {
+        struct WeaponData final
+        {
+            uint16_t refire_ticks; // fire cooldown
+            uint8_t  burst;        // bullets per press
+            uint8_t  burst_ticks;  // coolldown between the bullets of a burst
+            float    speed;
+        };
+
+        // indexed by WeaponType
+        constexpr WeaponData WEAPONS[]
+        {
+            {  6, 1, 0, 250.0f }, // Pistol
+            {  4, 4, 4, 300.0f }, // RifleSpray, a press mid burst starts a new one
+            { 18, 1, 0, 180.0f }, // RifleFireball, 18 = its whole shoot animation
+        };
+
+        static_assert(std::size(WEAPONS) == (size_t)WeaponType::Count);
+        static_assert(std::size(POSE_ANIM) == (size_t)WeaponType::Count);
+
+        // per bullet of a burst, so the spray isn't a straight line
+        const float SPRAY_SPREAD[]{ 0.0_deg, 4.0_deg, -3.0_deg, 2.0_deg };
+
+        constexpr uint8_t FIREBALL_CREATE_TICKS = 2;
+        constexpr uint8_t FIREBALL_TICKS        = 2;
+        constexpr uint8_t FIREBALL_EXPIRE_TICKS = 2;
+    }
+
+
     struct Player::BodyStateManager final
     {
         // raising and lowering the gun. Not while crouching, down is held then
@@ -29,6 +59,12 @@ namespace player
             return true;
         }
 
+        static void note_fire(const BodySM::Ctx& c)
+        {
+            if (c.scene.get<Intent>(legs_of(c)).just_pressed & Intent::Fire)
+                c.scene.get<BodyData>(c.entity).fire_queued = true;
+        }
+
         // true while the animation that was asked for hasn't been played yet (late_update does it, after the machines)
         static bool anim_pending(const BodySM::Ctx& c) { return c.scene.get<BodyData>(c.entity).restart; }
 
@@ -43,39 +79,72 @@ namespace player
         {
             const entity_id l  = legs_of(c);
             const Intent    in = c.scene.get<Intent>(l);
-            const LegsState ls = c.scene.get<State<LegsState>>(l).current;
+            const bool      air = c.scene.get<State<LegsState>>(l).current == LegsState::Air;
 
             BodyData& bd = c.scene.get<BodyData>(c.entity);
             LegsData& ld = c.scene.get<LegsData>(l);
 
             // locked here so the bullet and the animation agree if up is released halfway
-            bd.aim     = in.dir.y < 0 ? Aim::Up : in.dir.y > 0 && ls == LegsState::Air ? Aim::Down : Aim::Forward;
+            if (bd.burst_shot == 0)
+                bd.aim = in.dir.y < 0 ? Aim::Up : in.dir.y > 0 && air ? Aim::Down : Aim::Forward;
+
+            // landed mid burst
+            if (bd.aim == Aim::Down && !air) bd.aim = Aim::Forward;
+
             bd.restart = true;
 
             // Player::shoot
             shoot(c.scene, c.entity, bd.aim, ld.facing);
+
+            ++bd.burst_shot;
+            --bd.burst_left;
+        }
+
+        static void start_burst(const BodySM::Ctx& c)
+        {
+            BodyData& bd = c.scene.get<BodyData>(c.entity);
+
+            bd.fire_queued = false;
+            bd.burst_left  = WEAPONS[(size_t)bd.weapon].burst;
+            bd.burst_shot  = 0;
+
+            fire(c);
+            c.state.ticks = 0;
         }
 
 
         static BodyState ready(const BodySM::Ctx& c)
         {
+            note_fire(c);
             if (look_changed(c)) return BodyState::Transition;
 
-            const Intent in = c.scene.get<Intent>(legs_of(c));
-            return (in.down & Intent::Fire) ? BodyState::Shooting : BodyState::Ready;
+            return c.scene.get<BodyData>(c.entity).fire_queued ? BodyState::Shooting : BodyState::Ready;
         }
 
         static BodyState shooting(const BodySM::Ctx& c)
         {
-            if (look_changed(c)) return BodyState::Transition;
+            note_fire(c);
 
-            const Intent in = c.scene.get<Intent>(legs_of(c));
+            BodyData&         bd  = c.scene.get<BodyData>(c.entity);
+            const WeaponData& gun = WEAPONS[(size_t)bd.weapon];
 
-            if (((in.just_pressed & Intent::Fire) && c.state.ticks >= REFIRE_TICKS) ||
-                ((in.down & Intent::Fire) && c.state.ticks >= AUTO_FIRE_TICKS))
+            // a burst isn't cut by raising or lowering the gun, the aim is locked for it anyway
+            if (bd.burst_left == 0 && look_changed(c)) return BodyState::Transition;
+
+            if (bd.fire_queued && c.state.ticks >= gun.refire_ticks)
             {
-                fire(c);
-                c.state.ticks = 0;
+                start_burst(c);
+                return BodyState::Shooting;
+            }
+
+            if (bd.burst_left > 0)
+            {
+                if (c.state.ticks >= gun.burst_ticks)
+                {
+                    fire(c);
+                    c.state.ticks = 0;
+                }
+
                 return BodyState::Shooting;
             }
 
@@ -86,22 +155,21 @@ namespace player
         // Nothing is fired until the sprite is done, that's all this state is for
         static BodyState transition(const BodySM::Ctx& c)
         {
-            const entity_id l  = legs_of(c);
-            const Intent    in = c.scene.get<Intent>(l);
-            const BodyData& bd = c.scene.get<BodyData>(c.entity);
+            note_fire(c);
 
-            const bool fire_held = (in.down & Intent::Fire) != 0;
+            const entity_id l  = legs_of(c);
+            const BodyData& bd = c.scene.get<BodyData>(c.entity);
 
             // the only one that can be interrupted
             if (bd.transition == Pose::WalkStop)
             {
                 if (c.scene.get<State<LegsState>>(l).current != LegsState::Stand) return BodyState::Ready;
-                if (fire_held) return BodyState::Shooting;
+                if (bd.fire_queued) return BodyState::Shooting;
             }
 
             if (anim_pending(c) || !c.scene.get<Sprite>(c.entity).anim_done()) return BodyState::Transition;
 
-            return fire_held ? BodyState::Shooting : BodyState::Ready;
+            return bd.fire_queued ? BodyState::Shooting : BodyState::Ready;
         }
     };
 
@@ -200,7 +268,8 @@ namespace player
             const Intent in = c.scene.get<Intent>(c.entity);
 
             // no crawling or jumping while shooting, only turning and standing up.
-            const bool shooting = body_state(c) == BodyState::Shooting || (in.down & Intent::Fire);
+            // the press counts too, the body only switches to Shooting after the legs have run
+            const bool shooting = body_state(c) == BodyState::Shooting || (in.just_pressed & Intent::Fire);
 
             return grounded(c, shooting ? 0.0f : CRAWL_SPEED, !shooting);
         }
@@ -235,9 +304,9 @@ namespace player
 
         static constexpr BodySM body_sm
         {
-            BodySM::Behaviour{ nullptr, BSM::ready, nullptr },      // Ready
-            BodySM::Behaviour{ BSM::fire, BSM::shooting, nullptr }, // Shooting
-            BodySM::Behaviour{ nullptr, BSM::transition, nullptr }, // Transition
+            BodySM::Behaviour{ nullptr, BSM::ready, nullptr },              // Ready
+            BodySM::Behaviour{ BSM::start_burst, BSM::shooting, nullptr },  // Shooting
+            BodySM::Behaviour{ nullptr, BSM::transition, nullptr },         // Transition
         };
 
         return body_sm;
@@ -309,10 +378,10 @@ namespace player
             col.target_layer |= Layer::TileMap | Layer::POW;
             col.layer |= Layer::PlayerBullet;
 
-            col.callback = +[](Scene& scene, const entity_id self, entity_id, const uint32_t)
+            col.callback = +[](Scene& scene, const entity_id self, entity_id, const uint32_t layer)
             {
-                scene.get<Collider>(self).enabled = false;
-                scene.get<Sprite>(self).hidden = true;
+                const PlayerBullet b = scene.get<PlayerBullet>(self);
+                if (layer & Layer::TileMap || b.type != WeaponType::RifleFireball) stop_bullet(scene, self, b);
             };
         }
 
@@ -335,6 +404,17 @@ namespace player
 
         if (Input::just_pressed(Key::Space)) in.just_pressed |= Intent::Jump;
         if (Input::just_pressed(Key::J)) in.just_pressed |= Intent::Fire;
+
+        // for testing until the pickups exist
+        BodyData&        bd     = scene.get<BodyData>(body_);
+        const WeaponType before = bd.weapon;
+
+        if (Input::just_pressed(Key::Num1)) bd.weapon = WeaponType::Pistol;
+        if (Input::just_pressed(Key::Num2)) bd.weapon = WeaponType::RifleSpray;
+        if (Input::just_pressed(Key::Num3)) bd.weapon = WeaponType::RifleFireball;
+
+        // the rest of a spray burst would come out of the new gun at its burst_ticks
+        if (bd.weapon != before) bd.burst_left = 0;
     }
 
     void Player::late_update(Scene& scene) const
@@ -366,13 +446,17 @@ namespace player
 
         if (wanted != bd.requested || bd.restart)
         {
-            play(body_spr, wanted.anim, wanted.reversed);
+            // a crouch shot has already chained into its after shoot when it ends, that one just stays
+            const bool showing = !bd.restart && !wanted.reversed && (Body)body_spr.info().anim_id == wanted.anim;
+            if (!showing) play(body_spr, wanted.anim, wanted.reversed);
 
             bd.requested = wanted;
             bd.restart   = false;
         }
         else if (const BodyAnim playing = data((Body)body_spr.info().anim_id);
             body_spr.anim_done() && playing.end == End::Next) { play(body_spr, playing.next); }
+
+        bd.last_pose = pose;
 
         const Body     body_anim = (Body)body_spr.info().anim_id;
         const BodyAnim body_data = data(body_anim);
@@ -414,17 +498,45 @@ namespace player
     {
         for (const entity_id bullet : scene.pool<PlayerBullet>().owners())
         {
-            Collider& col = scene.get<Collider>(bullet);
-            if (!col.enabled) continue;
-
-            Transform& tr = scene.get<Transform>(bullet);
             Sprite& spr = scene.get<Sprite>(bullet);
+            if (spr.hidden) continue;
 
+            if (scene.get<PlayerBullet>(bullet).type == WeaponType::RifleFireball)
+            {
+                const anim::Bullet playing = (anim::Bullet)spr.info().anim_id;
+
+                // Free again once it has burnt out
+                if (playing == anim::Bullet::RifleFireballExpire)
+                {
+                    spr.hidden = spr.anim_done();
+                    continue;
+                }
+
+                if (playing == anim::Bullet::RifleFireballCreate && spr.anim_done())
+                    spr.play(anim::Bullet::RifleFireball, FIREBALL_TICKS, is_reversed::no, should_loop::yes);
+            }
+
+            const Transform& tr = scene.get<Transform>(bullet);
             if (spr.screen_bounds(tr, scene.camera_pos_screen()) & aabb::screen) continue;
 
-            col.enabled = false;
-            spr.hidden  = true;
+            scene.get<Collider>(bullet).enabled = false;
+            spr.hidden = true;
         }
+    }
+
+
+    // hit a tile or something it targets
+    void Player::stop_bullet(Scene& scene, const entity_id bullet, const PlayerBullet type)
+    {
+        Collider& col = scene.get<Collider>(bullet);
+        col.enabled   = false;
+        col.velocity  = vec2{ 0.0f };
+
+        Sprite& spr = scene.get<Sprite>(bullet);
+
+        // hidden by update_bullets when it's done
+        if (type.type != WeaponType::RifleFireball) spr.hidden = true;
+        else spr.play(anim::Bullet::RifleFireballExpire, FIREBALL_EXPIRE_TICKS);
     }
 
 
@@ -433,8 +545,10 @@ namespace player
         BodyData&       data   = scene.get<BodyData>(body);
         const entity_id bullet = take_bullet(scene, data);
 
-        if (data.weapon != scene.get<PlayerBullet>(bullet).type)
-            assert(!"TODO: change");
+        const WeaponType  type = data.weapon;
+        const WeaponData& gun  = WEAPONS[(size_t)type];
+
+        scene.get<PlayerBullet>(bullet).type = type;
 
         Transform& tr  = scene.get<Transform>(bullet);
         Sprite&    spr = scene.get<Sprite>(bullet);
@@ -442,6 +556,11 @@ namespace player
 
         spr.hidden  = false;
         col.enabled = true;
+
+        if (type == WeaponType::RifleFireball)
+            spr.play(anim::Bullet::RifleFireballCreate, FIREBALL_CREATE_TICKS,
+                     is_reversed::no, should_loop::no, restart_if_same::yes);
+        else spr.play(anim::Bullet::Pistol); // TODO: find spray bullet, uses the pistol bullet for now
 
 
         const ivec2 aim_dir = [aim, dir]
@@ -457,10 +576,19 @@ namespace player
             return ivec2{};
         }();
 
-        tr.position  = scene.get<Transform>(body).position + aim_dir * SHOOT_OFFSET;
-        tr.rotation = aim != Aim::Forward ? 90.0_deg : 0.0f;
+        vec2 vel = vec2(aim_dir) * gun.speed;
+        if (type == WeaponType::RifleSpray)
+            vel = glm::rotate(vel, SPRAY_SPREAD[(size_t)data.burst_shot % std::size(SPRAY_SPREAD)]);
 
-        col.velocity = vec2(aim_dir) * SHOOT_FORCE;
+        tr.position  = scene.get<Transform>(body).position + aim_dir * SHOOT_OFFSET;
+        col.velocity = vel;
+
+        // the sprites point right and y points down, so a positive angle turns them down.
+        // Left is a flip and not a half turn, otherwise the fireball would be upside down
+        // TODO: make exported perpendicular (and 45deg for spray) sprites for bullets to have meaningful pp checks
+        spr.flip_x  = vel.x < 0.0f;
+        tr.rotation = glm::atan(vel.y, glm::abs(vel.x));
+        if (spr.flip_x) tr.rotation = -tr.rotation;
     }
 
     entity_id Player::take_bullet(Scene& scene, BodyData& data)
@@ -470,7 +598,9 @@ namespace player
         for (uint32_t i = 0; i < BULLET_POOL_SIZE; ++i)
         {
             const uint32_t slot = (data.next_bullet + i) % BULLET_POOL_SIZE;
-            if (!scene.get<Collider>(bullets[slot]).enabled)
+
+            // a fireball that hit something is still burning out with its collider off
+            if (!scene.get<Collider>(bullets[slot]).enabled && scene.get<Sprite>(bullets[slot]).hidden)
             {
                 data.next_bullet = (slot + 1) % BULLET_POOL_SIZE;
                 return bullets[slot];
@@ -517,7 +647,14 @@ namespace player
             return in_air ? Pose::JumpShoot : Pose::Shoot;
         }
 
-        if (crouching) return in.dir.x != 0 ? Pose::CrouchWalk : Pose::CrouchIdle;
+        if (crouching)
+        {
+            if (in.dir.x != 0) return Pose::CrouchWalk;
+
+            // the after shoot pose is the idle one until anything else happens
+            if (bd.last_pose == Pose::CrouchShoot || bd.last_pose == Pose::CrouchAfterShoot) return Pose::CrouchAfterShoot;
+            return Pose::CrouchIdle;
+        }
 
         if (in.dir.y < 0) return Pose::LookUpIdle;
 

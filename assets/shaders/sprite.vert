@@ -85,7 +85,7 @@ void main()
     v_Color = unpackUnorm4x8(instance.color);
 
     vec2 size = data.frame_size * instance.scale;
-    vec2 world_pos = rotate(base_pos - 0.5, instance.rotation) * size + instance.position;
+    vec2 world_pos = rotate((base_pos - 0.5) * size, instance.rotation) + instance.position;
     vec2 view_pos = world_pos - (u_CameraPos * instance.parallax_factor);
 
     gl_Position = u_Projection * vec4(ceil(view_pos), 0.0, 1.0);

@@ -16,7 +16,7 @@ namespace mse
     };
 
     using should_loop = bool_value<struct loop_tag>;
-    using should_restart_if_same = bool_value<struct restart_tag>;
+    using restart_if_same = bool_value<struct restart_tag>;
     using is_reversed = bool_value<struct reversed_tag>;
 
     /**
@@ -51,21 +51,21 @@ namespace mse
          * @param frame_dur Duration of each frame in ticks
          * @param reversed Whether the animation should play backwards
          * @param loop Whether the animation should loop or stop after the last frame is played
-         * @param restart_if_same Whether to set the frame to 0 if the animation is the same
+         * @param restart Whether to set the frame to 0 if the animation is the same
          */
         template <anim::sprite_enum E>
-        void play(const E                      animation,
-                  const uint8_t                frame_dur       = 0,
-                  const is_reversed            reversed        = is_reversed::no,
-                  const should_loop            loop            = should_loop::no,
-                  const should_restart_if_same restart_if_same = should_restart_if_same::no)
+        void play(const E               animation,
+                  const uint8_t         frame_dur = 0,
+                  const is_reversed     reversed  = is_reversed::no,
+                  const should_loop     loop      = should_loop::no,
+                  const restart_if_same restart   = restart_if_same::no)
         {
             assert(anim::sprite_id<E> == info_.sprite_id && "Sprite::play: sprite_id mismatch");
 
             frame_durs_.clear();
             frame_dur_ = frame_dur;
 
-            play((uint32_t)animation, reversed, loop, restart_if_same);
+            play((uint32_t)animation, reversed, loop, restart);
         }
 
         /**
@@ -75,20 +75,20 @@ namespace mse
          * @param frame_durs An array with the duration of each frame in ticks, it must be with the same size as the number of frames
          * @param reversed Whether the animation should play backwards
          * @param loop Whether the animation should loop or stop after the last frame is played
-         * @param restart_if_same Whether to set the frame to 0 if the animation is the same
+         * @param restart Whether to set the frame to 0 if the animation is the same
          */
         template <anim::sprite_enum E, size_t N>
-        void play(const E                      animation,
-                  const uint8_t (&             frame_durs)[N],
-                  const is_reversed            reversed        = is_reversed::no,
-                  const should_loop            loop            = should_loop::no,
-                  const should_restart_if_same restart_if_same = should_restart_if_same::no)
+        void play(const E               animation,
+                  const uint8_t (&      frame_durs)[N],
+                  const is_reversed     reversed = is_reversed::no,
+                  const should_loop     loop     = should_loop::no,
+                  const restart_if_same restart  = restart_if_same::no)
         {
             assert(anim::sprite_id<E> == info_.sprite_id && "Sprite::play: sprite_id mismatch");
             assert(anim::frame_count(anim::info(animation)) == N);
 
             frame_durs_ = frame_durs;
-            play((uint32_t)animation, reversed, loop, restart_if_same);
+            play((uint32_t)animation, reversed, loop, restart);
         }
 
         void stop();
@@ -105,7 +105,7 @@ namespace mse
     private:
         Sprite(const Scene& scene, entity_id id, anim::Info info, bool loop);
 
-        void play(uint32_t anim_id, bool reversed, bool loop, bool restart_if_same);
+        void play(uint32_t anim_id, bool reversed, bool loop, bool restart);
 
         anim::Info info_;
         uint32_t frame_{ 0 };

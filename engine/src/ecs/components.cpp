@@ -21,9 +21,9 @@ namespace mse
         const uint32_t anim_id,
         const bool     reversed,
         const bool     loop,
-        const bool     restart_if_same)
+        const bool     restart)
     {
-        if (anim_id != info_.anim_id || restart_if_same)
+        if (anim_id != info_.anim_id || restart)
         {
             time_  = 0;
             info_.anim_id = anim_id;

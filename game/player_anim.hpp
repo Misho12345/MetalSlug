@@ -13,6 +13,7 @@ namespace player
 
     static_assert(std::size(JUMP_FRAMES) == anim::frame_count(anim::info(Legs::SideJump)));
     static_assert(std::size(JUMP_FRAMES) == anim::frame_count(anim::info(Body::PistolSideJump)));
+    static_assert(std::size(JUMP_FRAMES) == anim::frame_count(anim::info(Body::RifleSideJump)));
 
     enum class End : uint8_t { Hold, Loop, Next };
 
@@ -77,7 +78,39 @@ namespace player
             case Body::PistolCrouchWalk:       return { 4, { -4,  -8 }, End::Loop, true };
             case Body::PistolCrouchTurn:       return { 4, {  0, -10 }, End::Hold, true };
             case Body::PistolCrouchShoot:      return { 2, { -1, -13 }, End::Next, true, Body::PistolCrouchAfterShoot };
-            case Body::PistolCrouchAfterShoot: return { 4, {  1, -11 }, End::Hold, true };
+            case Body::PistolCrouchAfterShoot: return { 8, {  1, -11 }, End::Loop, true };
+
+            // rifle: pixel matched against the pistol ones (same head and arms), the shots against the pose they start from
+
+            case Body::RifleIdle:     return { 8, {  0, -23 }, End::Loop };
+            case Body::RifleWalk:     return { 4, { -2, -24 }, End::Loop };
+            case Body::RifleWalkStop: return { 7, { -1, -21 }, End::Hold, true };
+            case Body::RifleTurn:     return { 4, { -1, -22 }, End::Hold, true };
+
+            case Body::RifleInAir:    return { 4, {  1, -23 } };
+            case Body::RifleSideJump: return { 0, { -1, -23 } }; // JUMP_FRAMES
+
+            case Body::RifleLookUp:     return { 4, { -1, -28 }, End::Hold, false, {}, 2 };
+            case Body::RifleLookUpIdle: return { 8, {  0, -31 }, End::Loop };
+            case Body::RifleLookUpTurn: return { 4, {  0, -31 }, End::Hold, true };
+            case Body::RifleLookDown:   return { 4, { -2, -20 } }; // only in air
+
+            // 4 frames at 1 tick, one loop per bullet of the burst
+            case Body::RifleSprayShoot:     return { 2, { -1, -23 } };
+            case Body::RifleSprayShootUp:   return { 2, { -1, -67 } };
+            case Body::RifleSprayShootDown: return { 2, { -2, -19 } }; // only in air
+
+            case Body::RifleFireballShoot:     return { 3, {  0, -23 } };
+            case Body::RifleFireballShootUp:   return { 3, { -1, -44 } };
+            case Body::RifleFireballShootDown: return { 3, { -2, -19 } }; // only in air
+
+            case Body::RifleCrouch:              return { 4, {  0, -25 }, End::Hold, true, {}, 2 };
+            case Body::RifleCrouchIdle:          return { 8, { -4,  -8 }, End::Loop, true };
+            case Body::RifleCrouchWalk:          return { 4, { -4,  -8 }, End::Loop, true };
+            case Body::RifleCrouchTurn:          return { 4, { -1, -10 }, End::Hold, true };
+            case Body::RifleCrouchSprayShoot:    return { 2, { -3, -12 }, End::Next, true, Body::RifleCrouchAfterShoot };
+            case Body::RifleCrouchFireballShoot: return { 3, { -1, -17 }, End::Next, true, Body::RifleCrouchAfterShoot };
+            case Body::RifleCrouchAfterShoot:    return { 8, {  1, -11 }, End::Loop, true };
 
             // TODO: knife, throw, drink, reload
             default: assert(!"not implemented"); return {};
@@ -100,10 +133,13 @@ namespace player
         if (reversed)
         {
             assert(d.reversed_ticks != 0);
-            sprite.play(a, d.reversed_ticks, is_reversed::yes, should_loop::no, should_restart_if_same::yes);
+            sprite.play(a, d.reversed_ticks, is_reversed::yes, should_loop::no, restart_if_same::yes);
         }
-        else if (a == Body::PistolSideJump) sprite.play(a, JUMP_FRAMES, is_reversed::no, loop, should_restart_if_same::yes);
-        else sprite.play(a, d.ticks, is_reversed::no, loop, should_restart_if_same::yes);
+        else if (a == Body::PistolSideJump || a == Body::RifleSideJump)
+        {
+            sprite.play(a, JUMP_FRAMES, is_reversed::no, loop, restart_if_same::yes);
+        }
+        else sprite.play(a, d.ticks, is_reversed::no, loop, restart_if_same::yes);
     }
 
 
@@ -114,7 +150,7 @@ namespace player
         InAir, SideJump,
         LookUp, LookUpIdle, LookUpTurn, LookDown,
         Shoot, JumpShoot, ShootUp, ShootDown,
-        CrouchDown, CrouchIdle, CrouchWalk, CrouchTurn, CrouchShoot,
+        CrouchDown, CrouchIdle, CrouchWalk, CrouchTurn, CrouchShoot, CrouchAfterShoot,
         LookUpEnd, CrouchUp,
         Count
     };
@@ -123,7 +159,7 @@ namespace player
     {
         Body anim;
         bool reversed{ false };
-
+        
         constexpr bool operator==(const PoseAnim&) const = default;
     };
 
@@ -134,12 +170,35 @@ namespace player
         { Body::PistolInAir }, { Body::PistolSideJump },
         { Body::PistolLookUp }, { Body::PistolLookUpIdle }, { Body::PistolLookUpTurn }, { Body::PistolLookDown },
         { Body::PistolShoot }, { Body::PistolJumpShoot }, { Body::PistolShootUp }, { Body::PistolShootDown },
-        { Body::PistolCrouch }, { Body::PistolCrouchIdle }, { Body::PistolCrouchWalk }, { Body::PistolCrouchTurn }, { Body::PistolCrouchShoot },
+        { Body::PistolCrouch }, { Body::PistolCrouchIdle }, { Body::PistolCrouchWalk }, { Body::PistolCrouchTurn }, { Body::PistolCrouchShoot }, { Body::PistolCrouchAfterShoot },
         { Body::PistolLookUp, true }, { Body::PistolCrouch, true },
     };
 
-    static_assert(std::size(PISTOL_POSES) == (size_t)Pose::Count);
+    // the rifle has no jump shoot, the standing one goes over the air legs
+    constexpr PoseAnim SPRAY_POSES[]
+    {
+        { Body::RifleIdle }, { Body::RifleWalk }, { Body::RifleWalkStop }, { Body::RifleTurn },
+        { Body::RifleInAir }, { Body::RifleSideJump },
+        { Body::RifleLookUp }, { Body::RifleLookUpIdle }, { Body::RifleLookUpTurn }, { Body::RifleLookDown },
+        { Body::RifleSprayShoot }, { Body::RifleSprayShoot }, { Body::RifleSprayShootUp }, { Body::RifleSprayShootDown },
+        { Body::RifleCrouch }, { Body::RifleCrouchIdle }, { Body::RifleCrouchWalk }, { Body::RifleCrouchTurn }, { Body::RifleCrouchSprayShoot }, { Body::RifleCrouchAfterShoot },
+        { Body::RifleLookUp, true }, { Body::RifleCrouch, true },
+    };
 
-    // indexed by WeaponType
-    constexpr const PoseAnim* POSE_ANIM[]{ PISTOL_POSES };
+    constexpr PoseAnim FIREBALL_POSES[]
+    {
+        { Body::RifleIdle }, { Body::RifleWalk }, { Body::RifleWalkStop }, { Body::RifleTurn },
+        { Body::RifleInAir }, { Body::RifleSideJump },
+        { Body::RifleLookUp }, { Body::RifleLookUpIdle }, { Body::RifleLookUpTurn }, { Body::RifleLookDown },
+        { Body::RifleFireballShoot }, { Body::RifleFireballShoot }, { Body::RifleFireballShootUp }, { Body::RifleFireballShootDown },
+        { Body::RifleCrouch }, { Body::RifleCrouchIdle }, { Body::RifleCrouchWalk }, { Body::RifleCrouchTurn }, { Body::RifleCrouchFireballShoot }, { Body::RifleCrouchAfterShoot },
+        { Body::RifleLookUp, true }, { Body::RifleCrouch, true },
+    };
+
+    static_assert(std::size(PISTOL_POSES) == (size_t)Pose::Count);
+    static_assert(std::size(SPRAY_POSES) == (size_t)Pose::Count);
+    static_assert(std::size(FIREBALL_POSES) == (size_t)Pose::Count);
+
+    // indexed by WeaponType, the size is checked in player.cpp
+    constexpr const PoseAnim* POSE_ANIM[]{ PISTOL_POSES, SPRAY_POSES, FIREBALL_POSES };
 }
