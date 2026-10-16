@@ -45,6 +45,20 @@ namespace mse
         [[nodiscard]] uint32_t   frame() const { return frame_; }
 
         /**
+         * @brief Safely gets animation value
+         * @tparam E Animation enum type
+         * @return info().anim_id casted to E
+         * @note E must be the animation type the sprite was originally created with, otherwise it asserts
+         */
+        template <anim::sprite_enum E>
+        [[nodiscard]] E anim() const
+        {
+            assert(anim::sprite_id<E> == info().sprite_id && "Sprite::anim<E>: sprite_id mismatch");
+            return (E)info_.anim_id;
+        }
+
+
+        /**
          * @brief Plays animation
          * @tparam E Animation enum type (deduced)
          * @param animation Animation, must belong to the same enum the component was initialized with

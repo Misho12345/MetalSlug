@@ -17,9 +17,6 @@ namespace player
 
     enum class End : uint8_t { Hold, Loop, Next };
 
-    // origin: top left corner of the sprite when facing right, from the top left corner of the legs' 21x16 box
-    // (the idle legs sprite is exactly that box). Idle comes from lining the two halves up with the full body
-    // sprites, the rest is by eye
 
     struct LegsAnim final
     {
@@ -40,6 +37,7 @@ namespace player
             default: assert(!"not implemented"); return {};
         }
     }
+
 
     struct BodyAnim final
     {
@@ -117,6 +115,7 @@ namespace player
         }
     }
 
+
     inline void play(Sprite& sprite, const Legs a)
     {
         const LegsAnim    d    = data(a);
@@ -163,7 +162,7 @@ namespace player
         constexpr bool operator==(const PoseAnim&) const = default;
     };
 
-    // in the order of Pose, a new weapon is one more of these
+    // in the order of Pose
     constexpr PoseAnim PISTOL_POSES[]
     {
         { Body::PistolIdle }, { Body::PistolWalk }, { Body::PistolWalkStop }, { Body::PistolTurn },
@@ -199,6 +198,6 @@ namespace player
     static_assert(std::size(SPRAY_POSES) == (size_t)Pose::Count);
     static_assert(std::size(FIREBALL_POSES) == (size_t)Pose::Count);
 
-    // indexed by WeaponType, the size is checked in player.cpp
+    // indexed by WeaponType, the size is checked in animation.cpp
     constexpr const PoseAnim* POSE_ANIM[]{ PISTOL_POSES, SPRAY_POSES, FIREBALL_POSES };
 }

@@ -1,7 +1,7 @@
 #include "layer.hpp"
 #include "mse/game.hpp"
 
-#include "player.hpp"
+#include "player/player.hpp"
 #include "pow.hpp"
 
 using namespace mse;

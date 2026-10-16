@@ -7,6 +7,7 @@ file(GLOB_RECURSE GAME_SOURCES CONFIGURE_DEPENDS
 )
 
 target_sources(MetalSlug PRIVATE ${GAME_SOURCES})
+target_include_directories(MetalSlug PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(MetalSlug PRIVATE MetalSlugEngine)
 target_precompile_headers(MetalSlug PRIVATE ${CMAKE_SOURCE_DIR}/engine/include/mse/mse.hpp)
 
