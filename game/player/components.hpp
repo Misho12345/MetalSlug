@@ -75,6 +75,11 @@ namespace player
         uint8_t burst_shot{};
     };
 
+    struct WeaponUpgrade final
+    {
+        WeaponType type{};
+        bool claimed{ false };
+    };
 
     inline entity_id legs_of(const BodySM::Ctx& c) { return c.scene.get<BodyData>(c.entity).legs; }
     inline entity_id body_of(const LegsSM::Ctx& c) { return c.scene.get<LegsData>(c.entity).body; }

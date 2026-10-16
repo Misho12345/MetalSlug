@@ -3,13 +3,14 @@
 
 #include "player/player.hpp"
 #include "pow.hpp"
-#include "upgrade.hpp"
+#include "player/components.hpp"
 
 using namespace mse;
 using namespace mse::literals;
 
 using anim::Bg;
-using player::Player;
+using player::Player, player::WeaponUpgrade, player::WeaponType;
+
 
 namespace
 {
@@ -45,20 +46,21 @@ namespace
     }
 
 
-    void create_upgrade(Scene& scene, const ivec2 pos, UpgradeType type)
+    void create_upgrade(Scene& scene, const ivec2 pos, WeaponType type)
     {
+
         static constexpr uvec2 CRATE_SIZE{ 2, 2 }; // in tiles
         static constexpr ivec2 crate_off = ivec2(CRATE_SIZE) * TILE_SIZE_i / 2;
 
         const entity_id upgrade = scene.create_entity();
+        scene.set<WeaponUpgrade>(upgrade, type);
         scene.set<Transform>(upgrade, pos + crate_off);
-        scene.set<Upgrade>(upgrade, type);
         scene.set<Sprite>(upgrade, [type]() -> anim::Other
         {
             switch (type)
             {
-                case UpgradeType::RifleSpray: return anim::Other::RifleSprayPickup;
-                case UpgradeType::RifleFireball: return anim::Other::RifleFireballPickup;
+                case WeaponType::RifleSpray: return anim::Other::RifleSprayPickup;
+                case WeaponType::RifleFireball: return anim::Other::RifleFireballPickup;
                 default: assert(!"not implemented");
             }
 
@@ -104,9 +106,9 @@ namespace
                     case 4: create_rock(scene, pos, { x, y }); break;
                     case 5:
                         // TODO: replace with crate
-                        create_upgrade(scene, pos, UpgradeType::RifleSpray);
-                        create_upgrade(scene, pos - 20, UpgradeType::RifleFireball);
-                        create_upgrade(scene, pos - 40, UpgradeType::RifleSpray);
+                        create_upgrade(scene, pos, WeaponType::RifleSpray);
+                        create_upgrade(scene, pos - 20, WeaponType::RifleFireball);
+                        create_upgrade(scene, pos - 40, WeaponType::RifleSpray);
                         break;
                     default: assert(!"not implemented"); return;
                 }

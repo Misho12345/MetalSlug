@@ -4,7 +4,6 @@
 #include "bullets.hpp"
 #include "animation.hpp"
 #include "layer.hpp"
-#include "upgrade.hpp"
 
 namespace player
 {
@@ -51,19 +50,13 @@ namespace player
         {
             if (layer & Layer::WeaponUpgrade)
             {
-                [&u = scene.get<Upgrade>(other)](WeaponType& out)
-                {
-                    if (u.claimed) return;
-                    u.claimed = true;
-
-                    switch (u.type)
-                    {
-                        case UpgradeType::RifleSpray: out = WeaponType::RifleSpray; return;
-                        case UpgradeType::RifleFireball: out = WeaponType::RifleFireball; return;
-                        default: assert(!"not implemented");
-                    }
-                }(scene.get<BodyData>(self).weapon);
+                WeaponUpgrade& u = scene.get<WeaponUpgrade>(other);
+                if (u.claimed) return;
+                u.claimed = true;
+                scene.get<BodyData>(self).weapon = u.type;
             }
+
+            // EnemyBullet, etc...
         };
 
         scene.set<Intent>(legs_);
