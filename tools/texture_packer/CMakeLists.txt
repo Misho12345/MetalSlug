@@ -42,27 +42,6 @@ function(get_images dir out)
 endfunction()
 
 
-function(snake_to_pascal_case str out)
-    string(REGEX REPLACE "[-_]" ";" word_list "${str}")
-
-    set(result "")
-    foreach (word IN LISTS word_list)
-        if (word)
-            string(SUBSTRING "${word}" 0 1 first_char)
-            string(TOUPPER "${first_char}" first_char)
-            string(LENGTH "${word}" word_len)
-            if (word_len GREATER 1)
-                string(SUBSTRING "${word}" 1 -1 rest)
-                string(APPEND result "${first_char}${rest}")
-            else ()
-                string(APPEND result "${first_char}")
-            endif ()
-        endif ()
-    endforeach ()
-
-    set(${out} "${result}" PARENT_SCOPE)
-endfunction()
-
 set(args)
 set(anim_header "// Automatically generated enums for sprite animations
 
@@ -145,14 +124,14 @@ foreach (dir IN LISTS leaf_dirs)
     #        ├── jumping.4.png
     #        └── walking.4.png
     # the enum will be:
-    # enum class Enemy { Idle, Walking, Shooting, _COUNT };
+    # enum class Enemy { Idle, Walking, Shooting, COUNT };
     # namespace player
     # {
-    #     enum class Body { Idle, Drinking, Falling, _COUNT };
+    #     enum class Body { Idle, Drinking, Falling, COUNT };
     # }
     # namespace player
     # {
-    #     enum class Legs { Idle, Jumping, Walking, _COUNT };
+    #     enum class Legs { Idle, Jumping, Walking, COUNT };
     # }
 
     cmake_path(GET dir FILENAME leaf_name)
@@ -185,7 +164,7 @@ foreach (dir IN LISTS leaf_dirs)
 
     list(APPEND sprite_anim_offsets ${anim_count})
 
-    set(enum_def "enum class ${enum_name} { ${enum_values}_COUNT };")
+    set(enum_def "enum class ${enum_name} { ${enum_values}COUNT };")
 
     # append the correct enum definition to the header file content
     # depending on whether there is a need for a namespace
@@ -217,7 +196,7 @@ string(APPEND anim_header "
     concept sprite_enum = std::is_enum_v<E> && requires
     {
         { anim::sprite_id<E> } -> std::convertible_to<int>;
-        { E::_COUNT };
+        { E::COUNT };
     } && anim::sprite_id<E> >= 0;
 
     struct Info { int sprite_id; uint32_t anim_id; };

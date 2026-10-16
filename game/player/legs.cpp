@@ -114,12 +114,13 @@ namespace player
 
     const LegsSM& legs_sm()
     {
+        using B = LegsSM::Behaviour;
         static constexpr LegsSM sm
         {
-            LegsSM::Behaviour{ stand_enter, stand, nullptr },       // Stand
-            LegsSM::Behaviour{ walk_enter, walk, nullptr },         // Walk
-            LegsSM::Behaviour{ air_enter, air, nullptr },           // Air
-            LegsSM::Behaviour{ crouch_enter, crouch, crouch_exit }, // Crouch
+            B{ stand_enter, stand, nullptr },       // Stand
+            B{ walk_enter, walk, nullptr },         // Walk
+            B{ air_enter, air, nullptr },           // Air
+            B{ crouch_enter, crouch, crouch_exit }, // Crouch
         };
 
         return sm;

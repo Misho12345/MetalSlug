@@ -16,7 +16,8 @@ set(texture_packer_out_dir "${CMAKE_BINARY_DIR}/texture_packer")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(CompilerWarnings)
 include(LinkMimalloc)
-
+include(MseUtil)
+include(MseExecutable)
 
 add_subdirectory(third_party/stb)
 add_subdirectory(common)

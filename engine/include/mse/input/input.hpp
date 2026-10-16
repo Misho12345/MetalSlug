@@ -5,7 +5,7 @@ namespace mse
 {
     /**
      * @brief Enumeration of keyboard keys
-     * @note don't use Key::_COUNT
+     * @note don't use Key::COUNT
      */
     enum class Key : uint32_t
     {
@@ -68,7 +68,7 @@ namespace mse
         RBracket = GLFW_KEY_RIGHT_BRACKET,
         GraveAccent = GLFW_KEY_GRAVE_ACCENT,
 
-        _COUNT = RSuper + 1
+        COUNT = RSuper + 1
     };
 
     struct PrivCtx;
@@ -98,7 +98,7 @@ namespace mse
     private:
         Input() = default;
 
-        static constexpr size_t key_byte_count = ((size_t)Key::_COUNT + 7) / 8;
+        static constexpr size_t key_byte_count = ((size_t)Key::COUNT + 7) / 8;
 
         uint8_t up_down_[key_byte_count]; // false = down; true = up
         uint8_t pressed_released_[key_byte_count]; // true = pressed if down, released if up, false = nothing

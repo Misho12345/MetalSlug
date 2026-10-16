@@ -151,7 +151,7 @@ namespace player
         Shoot, JumpShoot, ShootUp, ShootDown,
         CrouchDown, CrouchIdle, CrouchWalk, CrouchTurn, CrouchShoot, CrouchAfterShoot,
         LookUpEnd, CrouchUp,
-        Count
+        COUNT
     };
 
     struct PoseAnim final
@@ -194,9 +194,9 @@ namespace player
         { Body::RifleLookUp, true }, { Body::RifleCrouch, true },
     };
 
-    static_assert(std::size(PISTOL_POSES) == (size_t)Pose::Count);
-    static_assert(std::size(SPRAY_POSES) == (size_t)Pose::Count);
-    static_assert(std::size(FIREBALL_POSES) == (size_t)Pose::Count);
+    static_assert(std::size(PISTOL_POSES) == (size_t)Pose::COUNT);
+    static_assert(std::size(SPRAY_POSES) == (size_t)Pose::COUNT);
+    static_assert(std::size(FIREBALL_POSES) == (size_t)Pose::COUNT);
 
     // indexed by WeaponType, the size is checked in animation.cpp
     constexpr const PoseAnim* POSE_ANIM[]{ PISTOL_POSES, SPRAY_POSES, FIREBALL_POSES };

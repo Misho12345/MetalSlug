@@ -7,7 +7,7 @@ enum class PowState : uint8_t
     Idle,
     Free,
     FadeOut,
-    Count
+    COUNT
 };
 
 

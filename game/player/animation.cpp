@@ -10,7 +10,7 @@ namespace player
         // keeps the bottom of the small box where the bottom of the full one is
         constexpr int32_t LEGS_SMALL_OFFSET = (int32_t)(LEGS_SIZE.y / 2) - (int32_t)(LEGS_SMALL_HEIGHT / 2);
 
-        static_assert(std::size(POSE_ANIM) == (size_t)WeaponType::Count);
+        static_assert(std::size(POSE_ANIM) == (size_t)WeaponType::COUNT);
 
 
         Pose pick_pose(

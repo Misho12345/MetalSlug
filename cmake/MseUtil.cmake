@@ -1,0 +1,22 @@
+include_guard(GLOBAL)
+
+function(snake_to_pascal_case str out)
+    string(REGEX REPLACE "[-_]" ";" word_list "${str}")
+
+    set(result "")
+    foreach (word IN LISTS word_list)
+        if (word)
+            string(SUBSTRING "${word}" 0 1 first_char)
+            string(TOUPPER "${first_char}" first_char)
+            string(LENGTH "${word}" word_len)
+            if (word_len GREATER 1)
+                string(SUBSTRING "${word}" 1 -1 rest)
+                string(APPEND result "${first_char}${rest}")
+            else ()
+                string(APPEND result "${first_char}")
+            endif ()
+        endif ()
+    endforeach ()
+
+    set(${out} "${result}" PARENT_SCOPE)
+endfunction()

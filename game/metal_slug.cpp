@@ -1,9 +1,12 @@
+#include "mse/mse.hpp"
+#include "metal_slug.hpp"
+
 #include "layer.hpp"
-#include "mse/game.hpp"
 
 #include "player/player.hpp"
-#include "pow.hpp"
 #include "player/components.hpp"
+
+#include "pow.hpp"
 
 using namespace mse;
 using namespace mse::literals;
@@ -117,7 +120,7 @@ namespace
     }
 }
 
-void Game::init()
+void MetalSlug::init()
 {
     Player::register_machines();
     POW::register_machine();
@@ -135,12 +138,12 @@ void Game::init()
     load_spawables(scene);
 }
 
-void Game::update()
+void MetalSlug::update()
 {
     player_opt->update(ctx().scene);
 }
 
-void Game::late_update()
+void MetalSlug::late_update()
 {
     player_opt->late_update(ctx().scene);
 }

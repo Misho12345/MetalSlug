@@ -12,13 +12,13 @@ namespace player
         Shooting,
         Transition, // turning, crouching down, standing up, raising/lowering the gun
         // Melee, Throwing, Dead,
-        Count
+        COUNT
     };
 
     enum class LegsState : uint8_t
     {
         Stand, Walk, Air, Crouch,
-        Count
+        COUNT
     };
 
     using LegsSM = StateMachine<LegsState>;
@@ -59,10 +59,10 @@ namespace player
     {
         entity_id legs;
 
-        PoseAnim requested{ Body::_COUNT };
+        PoseAnim requested{ Body::COUNT };
 
-        Pose transition{ Pose::Count };
-        Pose last_pose{ Pose::Count };
+        Pose transition{ Pose::COUNT };
+        Pose last_pose{ Pose::COUNT };
         Aim  aim{};
 
         WeaponType weapon{};

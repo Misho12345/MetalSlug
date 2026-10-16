@@ -90,8 +90,6 @@ namespace player
 
         if (Input::just_pressed(Key::Space)) in.just_pressed |= Intent::Jump;
         if (Input::just_pressed(Key::J)) in.just_pressed |= Intent::Fire;
-
-        if (Input::just_pressed(Key::P)) printf("%u\n", scene.get<BodyData>(body_).ammo);
     }
 
     void Player::late_update(Scene& scene) const

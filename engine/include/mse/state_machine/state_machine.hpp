@@ -15,7 +15,7 @@ namespace mse
     template <typename E> requires std::is_enum_v<E>
     class StateMachine
     {
-        static constexpr size_t N = (size_t)E::Count;
+        static constexpr size_t N = (size_t)E::COUNT;
 
     public:
         struct Ctx

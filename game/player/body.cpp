@@ -173,11 +173,12 @@ namespace player
 
     const BodySM& body_sm()
     {
+        using B = BodySM::Behaviour;
         static constexpr BodySM sm
         {
-            BodySM::Behaviour{ nullptr, ready, nullptr },        // Ready
-            BodySM::Behaviour{ start_burst, shooting, nullptr }, // Shooting
-            BodySM::Behaviour{ nullptr, transition, nullptr },   // Transition
+            B{ nullptr, ready, nullptr },        // Ready
+            B{ start_burst, shooting, nullptr }, // Shooting
+            B{ nullptr, transition, nullptr },   // Transition
         };
 
         return sm;
