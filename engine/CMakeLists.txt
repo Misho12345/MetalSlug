@@ -15,6 +15,7 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 
+find_path(MINIAUDIO_INCLUDE_DIRS "miniaudio.h")
 
 target_link_libraries(MetalSlugEngine
         PUBLIC
@@ -37,6 +38,7 @@ target_include_directories(MetalSlugEngine
         ${CMAKE_BINARY_DIR}/include
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${MINIAUDIO_INCLUDE_DIRS}
 )
 
 target_compile_definitions(MetalSlugEngine PRIVATE MSE_EXPORTS)

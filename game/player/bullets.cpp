@@ -137,7 +137,10 @@ namespace player
         }
 
         tr.position  = from;
+
         col.velocity = velocity;
+        col.size = spr.size();
+
         spr.flip_x = facing < 0;
     }
 

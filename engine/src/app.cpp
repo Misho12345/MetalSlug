@@ -61,6 +61,13 @@ namespace mse
             return;
         }
 
+        if (!ctx_->audio.init())
+        {
+            printf("failed to init audio system");
+            ok_ = false;
+            return;
+        }
+
         printf("finished setup\n");
     }
 

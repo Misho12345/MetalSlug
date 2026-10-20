@@ -1,8 +1,10 @@
 #pragma once
-#include "collision/tile_map.hpp"
 #include "mse/pch.hpp"
-#include "input/input.hpp"
+
 #include "ecs/scene.hpp"
+#include "collision/tile_map.hpp"
+#include "mse/audio/audio.hpp"
+
 #include "state_machine/state_machine_system.hpp"
 
 namespace mse
@@ -16,6 +18,7 @@ namespace mse
     {
         Scene   scene;
         TileMap tile_map;
+        Audio   audio;
 
         StateMachineSystem state_machines;
     };
