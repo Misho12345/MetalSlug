@@ -5,8 +5,10 @@
 #include "animation.hpp"
 #include "layer.hpp"
 
-namespace player
+namespace ms
 {
+    using namespace mse;
+
     namespace
     {
         constexpr ivec2 CAMERA_OFFSET{ 0, -22 };

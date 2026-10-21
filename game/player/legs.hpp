@@ -1,7 +1,7 @@
 #pragma once
 #include "components.hpp"
 
-namespace player
+namespace ms
 {
     constexpr float JUMP_HEIGHT    = 56.0f;
     constexpr float JUMP_APEX_TIME = 0.36f; // from takeoff to the highest point

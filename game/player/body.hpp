@@ -1,7 +1,7 @@
 #pragma once
 #include "components.hpp"
 
-namespace player
+namespace ms
 {
     const BodySM& body_sm();
 

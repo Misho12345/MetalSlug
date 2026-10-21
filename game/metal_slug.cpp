@@ -1,215 +1,222 @@
 #include "mse/mse.hpp"
 #include "metal_slug.hpp"
 
+#include "user_ctx.hpp"
+
 #include "layer.hpp"
 
 #include "player/player.hpp"
 #include "player/components.hpp"
 
-#include "pow.hpp"
+#include "pow/pow.hpp"
 
 using namespace mse;
 using namespace mse::literals;
 
 using anim::Bg;
-using player::Player, player::WeaponUpgrade, player::WeaponType;
 
-
-namespace
+namespace ms
 {
-    Player player_;
-    entity_id bg;
-
-    void create_bg(Scene& scene)
+    namespace
     {
-        scene.bg_entity = bg = scene.create_entity();
+        Player player_;
+        entity_id bg;
 
-        Transform& tr = scene.set<Transform>(bg);
-        Sprite& sprite = scene.set<Sprite>(bg, Bg::Bg);
-
-        sprite.layer = -100;
-        tr.position.x += (int32_t)sprite.size().x / 2;
-        tr.position.y += ((int32_t)sprite.size().y - RESOLUTION_i.y) / 2;
-    }
-
-    void create_rock(Scene& scene, const ivec2 pos, const uvec2 coords)
-    {
-        static constexpr uvec2 ROCK_SIZE{ 7, 6 }; // in tiles
-        static constexpr ivec2 rock_off = ivec2(ROCK_SIZE) * TILE_SIZE_i / 2;
-
-        const entity_id rock = scene.create_entity();
-        scene.set<Transform>(rock, pos + rock_off); // tile is at top left of the rock
-        scene.set<Sprite>(rock, anim::Other::Rock).layer = -99;
-
-        TileMap& tm = App::ctx().tile_map;
-        TileType* t = &tm[coords];
-
-        for (uint32_t y = 0; y < ROCK_SIZE.y; ++y, t += tm.size().x)
-            memset(t, (int)TileType::Floor, ROCK_SIZE.x);
-    }
-
-
-    void create_upgrade(Scene& scene, const ivec2 pos, WeaponType type)
-    {
-
-        static constexpr uvec2 CRATE_SIZE{ 2, 2 }; // in tiles
-        static constexpr ivec2 crate_off = ivec2(CRATE_SIZE) * TILE_SIZE_i / 2;
-
-        const entity_id upgrade = scene.create_entity();
-        scene.set<WeaponUpgrade>(upgrade, type);
-        scene.set<Transform>(upgrade, pos + crate_off);
-        scene.set<Sprite>(upgrade, [type]() -> anim::Other
+        void create_bg(Scene& scene)
         {
-            switch (type)
+            scene.bg_entity = bg = scene.create_entity();
+
+            Transform& tr = scene.set<Transform>(bg);
+            Sprite& sprite = scene.set<Sprite>(bg, Bg::Bg);
+
+            sprite.layer = -100;
+            tr.position.x += (int32_t)sprite.size().x / 2;
+            tr.position.y += ((int32_t)sprite.size().y - RESOLUTION_i.y) / 2;
+        }
+
+        void create_rock(Scene& scene, const ivec2 pos, const uvec2 coords)
+        {
+            static constexpr uvec2 ROCK_SIZE{ 7, 6 }; // in tiles
+            static constexpr ivec2 rock_off = ivec2(ROCK_SIZE) * TILE_SIZE_i / 2;
+
+            const entity_id rock = scene.create_entity();
+            scene.set<Transform>(rock, pos + rock_off); // tile is at top left of the rock
+            scene.set<Sprite>(rock, anim::Other::Rock).layer = -99;
+
+            TileMap& tm = App::ctx().tile_map;
+            TileType* t = &tm[coords];
+
+            for (uint32_t y = 0; y < ROCK_SIZE.y; ++y, t += tm.size().x)
+                memset(t, (int)TileType::Floor, ROCK_SIZE.x);
+        }
+
+
+        void create_upgrade(Scene& scene, const ivec2 pos, WeaponType type)
+        {
+
+            static constexpr uvec2 CRATE_SIZE{ 2, 2 }; // in tiles
+            static constexpr ivec2 crate_off = ivec2(CRATE_SIZE) * TILE_SIZE_i / 2;
+
+            const entity_id upgrade = scene.create_entity();
+            scene.set<WeaponUpgrade>(upgrade, type);
+            scene.set<Transform>(upgrade, pos + crate_off);
+            scene.set<Sprite>(upgrade, [type]() -> anim::Other
             {
-                case WeaponType::RifleSpray: return anim::Other::RifleSprayPickup;
-                case WeaponType::RifleFireball: return anim::Other::RifleFireballPickup;
-                default: assert(!"not implemented");
-            }
-
-            return {};
-        }());
-
-
-        Collider& col = scene.set<Collider>(upgrade);
-
-        col.gravity = 0.0f;
-        col.collide_with_tile_map = false;
-
-        col.layer |= Layer::WeaponUpgrade;
-        col.target_layer |= Layer::Player;
-
-        col.callback = +[](Scene& scene, const entity_id self, entity_id, uint32_t)
-        {
-            scene.get<Collider>(self).enabled = false;
-            scene.get<Sprite>(self).hidden = true;
-        };
-    }
-
-    void load_spawables(Scene& scene)
-    {
-        const Csv csv = FileIO::read<Csv>("assets/tile_maps/mission1_spawn.csv");
-        const int32_t* d = csv.data.data();
-
-        const ivec2 off = scene.get<Sprite>(scene.bg_entity).bounds(scene.get<Transform>(scene.bg_entity)).min;
-
-        for (uint32_t y = 0; y < csv.height; ++y)
-        {
-            for (uint32_t x = 0; x < csv.width; ++x, ++d)
-            {
-                const ivec2 pos = ivec2{ x, (int32_t)y - 1 } * TILE_SIZE_i + off;
-
-                switch (*d)
+                switch (type)
                 {
-                    case -1: break;
-                    case 0: POW::spawn(scene, pos, POW::Kind::Sitting); break;
-                    case 1: POW::spawn(scene, pos, POW::Kind::Tree); break;
-                    // case 2: enemy 1;
-                    // case 3: enemy 2;
-                    case 4: create_rock(scene, pos, { x, y }); break;
-                    case 5:
-                        // TODO: replace with crate
-                        create_upgrade(scene, pos, WeaponType::RifleSpray);
-                        create_upgrade(scene, pos - 20, WeaponType::RifleFireball);
-                        create_upgrade(scene, pos - 40, WeaponType::RifleSpray);
-                        break;
-                    default: assert(!"not implemented"); return;
+                    case WeaponType::RifleSpray: return anim::Other::RifleSprayPickup;
+                    case WeaponType::RifleFireball: return anim::Other::RifleFireballPickup;
+                    default: assert(!"not implemented");
+                }
+
+                return {};
+            }());
+
+
+            Collider& col = scene.set<Collider>(upgrade);
+
+            col.gravity = 0.0f;
+            col.collide_with_tile_map = false;
+
+            col.layer |= Layer::WeaponUpgrade;
+            col.target_layer |= Layer::Player;
+
+            col.callback = +[](Scene& scene, const entity_id self, entity_id, uint32_t)
+            {
+                scene.get<Collider>(self).enabled = false;
+                scene.get<Sprite>(self).hidden = true;
+            };
+        }
+
+        void load_spawables(Scene& scene)
+        {
+            const Csv csv = FileIO::read<Csv>("assets/tile_maps/mission1_spawn.csv");
+            const int32_t* d = csv.data.data();
+
+            const ivec2 off = scene.get<Sprite>(scene.bg_entity).bounds(scene.get<Transform>(scene.bg_entity)).min;
+
+            for (uint32_t y = 0; y < csv.height; ++y)
+            {
+                for (uint32_t x = 0; x < csv.width; ++x, ++d)
+                {
+                    const ivec2 pos = ivec2{ x, (int32_t)y - 1 } * TILE_SIZE_i + off;
+
+                    switch (*d)
+                    {
+                        case -1: break;
+                        case 0: POW::spawn(scene, pos, POW::Kind::Sitting); break;
+                        case 1: POW::spawn(scene, pos, POW::Kind::Tree); break;
+                            // case 2: enemy 1;
+                            // case 3: enemy 2;
+                        case 4: create_rock(scene, pos, { x, y }); break;
+                        case 5:
+                            // TODO: replace with crate
+                            create_upgrade(scene, pos, WeaponType::RifleSpray);
+                            create_upgrade(scene, pos - 20, WeaponType::RifleFireball);
+                            create_upgrade(scene, pos - 40, WeaponType::RifleSpray);
+                            break;
+                        default: assert(!"not implemented"); return;
+                    }
                 }
             }
         }
     }
-}
 
-
-void MetalSlug::init()
-{
-    Scene& scene = ctx().scene;
-    StateMachineSystem& sms = ctx().state_machines;
-
-    sms.add(sm);
-    Player::register_machines();
-    POW::register_machine();
-
-    app_ = scene.create_entity();
-    scene.set<Transform>(app_);
-    sm.start(scene, app_, GameState::Intro);
-}
-
-void MetalSlug::intro_enter(const SM::Ctx& ctx) { ctx.scene.set<Sprite>(ctx.entity, anim::Screen::Intro); }
-GameState MetalSlug::on_intro(const SM::Ctx&) { return Input::down(Key::Space) ? GameState::Gameplay : GameState::Intro; }
-void MetalSlug::intro_exit(const SM::Ctx& ctx) { ctx.scene.get<Sprite>(ctx.entity).hidden = true; }
-
-
-void MetalSlug::gameplay_enter(const SM::Ctx& ctx)
-{
-    if (!App::ctx().tile_map.load("assets/tile_maps/mission1_collision.csv"))
+    void MetalSlug::init()
     {
-        printf("failed to load collision tile data");
-        return;
+        Scene& scene = ctx().scene;
+        StateMachineSystem& sms = ctx().state_machines;
+
+        sms.add(sm);
+        Player::register_machines();
+        POW::register_machine();
+        Vfx<>::register_machine();
+
+        app_ = scene.create_entity();
+        scene.set<Transform>(app_);
+        sm.start(scene, app_, GameState::Intro);
     }
 
-    create_bg(ctx.scene);
-    player_.create(ctx.scene);
-    load_spawables(ctx.scene);
-}
-
-void MetalSlug::gameplay_exit(const SM::Ctx& ctx)
-{
-    for (Sprite& s : ctx.scene.pool<Sprite>().components()) s.hidden = true;
-    for (Collider& c : ctx.scene.pool<Collider>().components()) c.enabled = false;
-
-    ctx.scene.set<Transform>(ctx.scene.camera()); // reset camera
-}
+    void MetalSlug::intro_enter(const SM::Ctx& ctx) { ctx.scene.set<Sprite>(ctx.entity, anim::Screen::Intro); }
+    GameState MetalSlug::on_intro(const SM::Ctx&) { return Input::down(Key::Space) ? GameState::Gameplay : GameState::Intro; }
+    void MetalSlug::intro_exit(const SM::Ctx& ctx) { ctx.scene.get<Sprite>(ctx.entity).hidden = true; }
 
 
-void MetalSlug::game_over_enter(const SM::Ctx& ctx) 
-{
-    Sprite& s = ctx.scene.get<Sprite>(ctx.entity);
-    s.hidden = false;
-    s.play(anim::Screen::GameOver);
-    s.color = 0_rgb;
-}
+    void MetalSlug::gameplay_enter(const SM::Ctx& ctx)
+    {
+        if (!App::ctx().tile_map.load("assets/tile_maps/mission1_collision.csv"))
+        {
+            printf("failed to load collision tile data");
+            return;
+        }
 
-GameState MetalSlug::on_game_over(const SM::Ctx& ctx)
-{
-    uint32_t c = TRANSITION_DUR - glm::abs(2 * ctx.state.ticks - (int)TRANSITION_DUR);
-    c = c * 255 / TRANSITION_DUR;
+        create_bg(ctx.scene);
+        player_.create(ctx.scene);
+        load_spawables(ctx.scene);
 
-    ctx.scene.get<Sprite>(ctx.entity).color.data = { c, c, c, 255 };
-    return ctx.state.ticks >= TRANSITION_DUR
-               ? GameState::Scoreboard
-               : GameState::GameOver;
-}
+        user_ctx().vfx.init(ctx.scene);
+    }
 
+    void MetalSlug::gameplay_exit(const SM::Ctx& ctx)
+    {
+        for (Sprite& s : ctx.scene.pool<Sprite>().components()) s.hidden = true;
+        for (Collider& c : ctx.scene.pool<Collider>().components()) c.enabled = false;
 
-void MetalSlug::scoreboard_enter(const SM::Ctx& ctx)
-{
-    ctx.scene.get<Sprite>(ctx.entity).play(anim::Screen::Scoreboard);
-}
-
-GameState MetalSlug::on_scoreboard(const SM::Ctx& ctx)
-{
-    if (ctx.state.ticks >= TRANSITION_DUR) return GameState::Scoreboard;
-
-    const uint32_t c = ctx.state.ticks * 255u / TRANSITION_DUR;
-    ctx.scene.get<Sprite>(ctx.entity).color.data = { c, c, c, 255 };
-
-    return GameState::Scoreboard;
-}
+        ctx.scene.set<Transform>(ctx.scene.camera()); // reset camera
+    }
 
 
-void MetalSlug::update()
-{
-    Scene& scene = ctx().scene;
-    if (scene.get<State<GameState>>(app_).current != GameState::Gameplay) return;
-    player_.update(scene);
-}
+    void MetalSlug::game_over_enter(const SM::Ctx& ctx)
+    {
+        Sprite& s = ctx.scene.get<Sprite>(ctx.entity);
+        s.hidden = false;
+        s.play(anim::Screen::GameOver);
+        s.color = 0_rgb;
+    }
 
-void MetalSlug::late_update()
-{
-    Scene& scene = ctx().scene;
-    if (scene.get<State<GameState>>(app_).current != GameState::Gameplay) return;
-    player_.late_update(scene);
+    GameState MetalSlug::on_game_over(const SM::Ctx& ctx)
+    {
+        uint32_t c = TRANSITION_DUR - glm::abs(2 * ctx.state.ticks - (int)TRANSITION_DUR);
+        c = c * 255 / TRANSITION_DUR;
 
-    if (Input::just_pressed(Key::Esc)) sm.force(scene, app_, GameState::GameOver);
+        ctx.scene.get<Sprite>(ctx.entity).color.data = { c, c, c, 255 };
+        return ctx.state.ticks >= TRANSITION_DUR
+                   ? GameState::Scoreboard
+                   : GameState::GameOver;
+    }
+
+
+    void MetalSlug::scoreboard_enter(const SM::Ctx& ctx)
+    {
+        ctx.scene.get<Sprite>(ctx.entity).play(anim::Screen::Scoreboard);
+    }
+
+    GameState MetalSlug::on_scoreboard(const SM::Ctx& ctx)
+    {
+        if (ctx.state.ticks >= TRANSITION_DUR) return GameState::Scoreboard;
+
+        const uint32_t c = ctx.state.ticks * 255u / TRANSITION_DUR;
+        ctx.scene.get<Sprite>(ctx.entity).color.data = { c, c, c, 255 };
+
+        return GameState::Scoreboard;
+    }
+
+
+    void MetalSlug::update()
+    {
+        Scene& scene = ctx().scene;
+        if (scene.get<State<GameState>>(app_).current != GameState::Gameplay) return;
+        player_.update(scene);
+    }
+
+    void MetalSlug::late_update()
+    {
+        Scene& scene = ctx().scene;
+        if (scene.get<State<GameState>>(app_).current != GameState::Gameplay) return;
+        player_.late_update(scene);
+
+        if (Input::just_pressed(Key::Esc)) sm.force(scene, app_, GameState::GameOver);
+    }
+
+    UserCtx& MetalSlug::user_ctx() { return ((MetalSlug*)instance_)->user_ctx_; }
 }

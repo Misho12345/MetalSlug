@@ -1,7 +1,7 @@
 #pragma once
 #include "components.hpp"
 
-namespace player
+namespace ms
 {
     // picks the pose from both states and the weapon
     void animate_body(Scene& scene, entity_id legs, entity_id body);

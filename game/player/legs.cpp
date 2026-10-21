@@ -1,7 +1,7 @@
 #include "legs.hpp"
 #include "body.hpp"
 
-namespace player
+namespace ms
 {
     namespace
     {

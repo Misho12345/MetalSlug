@@ -6,9 +6,7 @@
 
 namespace mse
 {
-    App::App()
-        : ctx_{ make_unique<GameCtx>() },
-          priv_ctx_{ make_unique<PrivCtx>() }
+    App::App() : priv_ctx_{ make_unique<PrivCtx>() }
     {
         assert(!instance_ && "Cannot have multiple App instances");
         instance_ = this;
@@ -76,7 +74,7 @@ namespace mse
         if (!ok_) return;
 
         // here and not in setup() because it has to have the animation frame counts set in App::init()
-        if (!priv_ctx_->rendering_system.init_sprite_objects(ctx_->scene))
+        if (!priv_ctx_->rendering_system.init_sprite_objects(ctx_.scene))
         {
             printf("failed to init sprite objects\n");
             return;
@@ -104,12 +102,12 @@ namespace mse
             while (accumulator_ >= Target::FRAME_TIME)
             {
                 update();
-                ctx_->state_machines.update(ctx_->scene);
-                priv_ctx_->animation_system.update(ctx_->scene);
-                priv_ctx_->collision_system.step(ctx_->scene);
+                ctx_.state_machines.update(ctx_.scene);
+                priv_ctx_->animation_system.update(ctx_.scene);
+                priv_ctx_->collision_system.step(ctx_.scene);
                 late_update();
 
-                ctx_->scene.flush_destruction_queue();
+                ctx_.scene.flush_destruction_queue();
 
                 accumulator_ -= Target::FRAME_TIME;
 
@@ -130,11 +128,11 @@ namespace mse
                 }
             }
 
-            priv_ctx_->rendering_system.render_sprites(ctx_->scene);
+            priv_ctx_->rendering_system.render_sprites(ctx_.scene);
             priv_ctx_->post_processor.render(priv_ctx_->window);
 
             #ifndef NDEBUG
-            priv_ctx_->debug_draw.draw(ctx_->scene);
+            priv_ctx_->debug_draw.draw(ctx_.scene);
             priv_ctx_->debug_ui.render();
             #endif
 

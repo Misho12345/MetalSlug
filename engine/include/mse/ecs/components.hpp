@@ -31,8 +31,17 @@ namespace mse
             const Scene& scene,
             const entity_id id,
             const E animation,
+            const uint8_t frame_dur,
             const should_loop loop = should_loop::no)
-            : Sprite(scene, id, anim::info(animation), loop) {}
+            : Sprite(scene, id, anim::info(animation), frame_dur, loop) {}
+
+        template <anim::sprite_enum E>
+        Sprite(
+            const Scene& scene,
+            const entity_id id,
+            const E animation,
+            const should_loop loop = should_loop::no)
+            : Sprite(scene, id, anim::info(animation), 0, loop) {}
 
         vec2    parallax_factor{ 1.0f, 1.0f };
         int32_t layer{ 0 };
@@ -117,7 +126,7 @@ namespace mse
         color_t color{};
 
     private:
-        Sprite(const Scene& scene, entity_id id, anim::Info info, bool loop);
+        Sprite(const Scene& scene, entity_id id, anim::Info info, uint8_t frame_dur, bool loop);
 
         void play(uint32_t anim_id, bool reversed, bool loop, bool restart);
 

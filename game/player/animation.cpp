@@ -1,6 +1,6 @@
 #include "animation.hpp"
 
-namespace player
+namespace ms
 {
     namespace
     {

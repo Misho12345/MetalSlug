@@ -6,6 +6,9 @@
 #endif
 
 
+#include "mse/app.hpp"
+
+
 #include "platform/window.hpp"
 #include "mse/input/input.hpp"
 
@@ -25,28 +28,25 @@
 #include "render/post_processor.hpp"
 
 
-namespace mse
+struct mse::PrivCtx
 {
-    struct PrivCtx
-    {
-        Window window;
+    Window window;
 
-        // it's in here and not in GameCtx because I don't really want the user to access the instance,
-        // but to just use the static interface
-        Input input;
+    // it's in here and not in GameCtx because I don't really want the user to access the instance,
+    // but to just use the static interface
+    Input input;
 
-        CollisionSystem collision_system;
+    CollisionSystem collision_system;
 
-        SpriteDataRegistry sprite_data_registry;
+    SpriteDataRegistry sprite_data_registry;
 
-        AnimationSystem animation_system;
-        RenderingSystem rendering_system;
+    AnimationSystem animation_system;
+    RenderingSystem rendering_system;
 
-        #ifndef NDEBUG
-        DebugUI   debug_ui;
-        DebugDraw debug_draw;
-        #endif
+    #ifndef NDEBUG
+    DebugUI   debug_ui;
+    DebugDraw debug_draw;
+    #endif
 
-        PostProcessor post_processor;
-    };
-}
+    PostProcessor post_processor;
+};

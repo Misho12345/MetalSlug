@@ -1,12 +1,12 @@
 #pragma once
 #include "weapons.hpp"
 
-namespace player
+namespace ms
 {
-    void create_bullet_pool(Scene& scene);
+    void create_bullet_pool(mse::Scene& scene);
 
-    void fire_bullet(Scene& scene, WeaponType type, ivec2 from, vec2 velocity, int8_t facing);
+    void fire_bullet(mse::Scene& scene, WeaponType type, mse::ivec2 from, mse::vec2 velocity, int8_t facing);
 
     // fireball animations, and free when leaving the screen
-    void update_bullets(Scene& scene);
+    void update_bullets(mse::Scene& scene);
 }
