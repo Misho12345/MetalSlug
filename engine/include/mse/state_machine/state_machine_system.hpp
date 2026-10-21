@@ -17,7 +17,8 @@ namespace mse
                 const StateMachine<E>& sm = *(const StateMachine<E>*)m;
                 const vector<entity_id>& entities = scene.pool<State<E>>().owners();
 
-                for (const entity_id e : entities) sm.update(scene, e);
+                // reversed in case update() results in switch_to removing the component, which would swap and pop back
+                for (size_t i = entities.size(); i-- > 0;) sm.update(scene, entities[i]);
             });
         }
 

@@ -35,6 +35,8 @@ namespace ms
         template <mse::anim::sprite_enum E>
         mse::entity_id create(mse::Scene& scene, const mse::ivec2 pos, E anim, uint8_t duration, const int32_t layer = 0)
         {
+            assert(duration > 0 && "duration must be at least 1 tick");
+
             using namespace mse;
             entity_id e;
 
@@ -57,7 +59,7 @@ namespace ms
             scene.get<Transform>(e).position = pos;
 
             Sprite& s = scene.get<Sprite>(e);
-            s.play(anim, duration);
+            s.play(anim, duration, is_reversed::no, should_loop::no, restart_if_same::yes);
             s.layer = layer;
             s.hidden = false;
 
