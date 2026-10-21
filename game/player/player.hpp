@@ -1,7 +1,7 @@
 #pragma once
 #include "mse/mse.hpp"
 
-namespace player
+namespace ms
 {
     class Player final
     {

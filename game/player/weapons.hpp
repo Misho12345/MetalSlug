@@ -1,9 +1,8 @@
 #pragma once
 #include "mse/mse.hpp"
 
-namespace player
+namespace ms
 {
-    using namespace mse;
     using namespace mse::literals;
 
     enum class WeaponType : uint8_t
@@ -25,7 +24,7 @@ namespace player
     };
 
     // indexed by WeaponType
-    constexpr WeaponData WEAPONS[]
+    inline constexpr WeaponData WEAPONS[]
     {
         {  6, 1, 0, 250.0f,   0 }, // Pistol
         {  4, 4, 4, 300.0f, 200 }, // RifleSpray
@@ -35,5 +34,5 @@ namespace player
     static_assert(std::size(WEAPONS) == (size_t)WeaponType::COUNT);
 
     // per bullet of a burst, so the spray isn't a straight line
-    inline const float SPRAY_SPREAD[]{ 0.0_deg, 4.0_deg, -3.0_deg, 2.0_deg };
+    inline constexpr float SPRAY_SPREAD[]{ 0.0_deg, 4.0_deg, -3.0_deg, 2.0_deg };
 }

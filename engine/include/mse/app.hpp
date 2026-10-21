@@ -26,7 +26,6 @@ namespace mse
      */
     struct PrivCtx;
 
-
     /**
      * @brief Base class for the main application of the engine
      */
@@ -45,7 +44,7 @@ namespace mse
 
         /// @brief Access to public engine systems
         [[nodiscard]]
-        static GameCtx& ctx() { return *instance_->ctx_; }
+        static GameCtx& ctx() { return instance_->ctx_; }
 
         /**
         * @brief Access to internal engine systems
@@ -58,20 +57,16 @@ namespace mse
 
     protected:
         App();
+        static inline App* instance_;
 
     private:
         static constexpr uint32_t MAX_STEPS      = 10;
         static constexpr float    MAX_DELTA_TIME = Target::FRAME_TIME * 3;
 
-        // the extending class will ensure that there is only one instance
-        // maybe not the best design, but good enough
-        static inline App* instance_;
+        unique_ptr<PrivCtx> priv_ctx_;
+        GameCtx ctx_;
 
         double accumulator_{ 0.0 };
-
         bool ok_{ true };
-
-        unique_ptr<GameCtx> ctx_;
-        unique_ptr<PrivCtx> priv_ctx_;
     };
 }

@@ -4,7 +4,7 @@
 #include "weapons.hpp"
 
 // components and types that everything uses
-namespace player
+namespace ms
 {
     enum class BodyState : uint8_t
     {

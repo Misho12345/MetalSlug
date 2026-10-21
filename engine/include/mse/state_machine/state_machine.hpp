@@ -75,6 +75,13 @@ namespace mse
                 from.exit)
                 from.exit(c);
 
+            // good enough termination condition ig
+            if (next == E::COUNT)
+            {
+                c.scene.template remove<State<E>>(c.entity);
+                return;
+            }
+
             c.state.previous = c.state.current;
             c.state.current  = next;
             c.state.ticks    = 0;

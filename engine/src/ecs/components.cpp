@@ -7,12 +7,14 @@
 namespace mse
 {
     Sprite::Sprite(
-      [[maybe_unused]] const Scene&     scene,
-      [[maybe_unused]] const entity_id  id,
-      const anim::Info info,
-      const bool       loop)
-      : info_(info),
-        loop_{ loop }
+        [[maybe_unused]] const Scene&    scene,
+        [[maybe_unused]] const entity_id id,
+        const anim::Info info,
+        const uint8_t    frame_dur,
+        const bool       loop)
+        : info_(info),
+          frame_dur_{ frame_dur },
+          loop_{ loop }
     {
         assert(scene.has<Transform>(id) && "Sprite requires a Transform component");
     }

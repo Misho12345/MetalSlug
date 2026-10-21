@@ -1,7 +1,7 @@
 #include "body.hpp"
 #include "bullets.hpp"
 
-namespace player
+namespace ms
 {
     namespace
     {

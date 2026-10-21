@@ -1,8 +1,9 @@
 #include "bullets.hpp"
 #include "layer.hpp"
 
-namespace player
+namespace ms
 {
+    using namespace mse;
     namespace
     {
         constexpr uint32_t POOL_SIZE = 32;
