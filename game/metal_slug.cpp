@@ -130,7 +130,7 @@ namespace ms
         sms.add(sm);
         Player::register_machines();
         POW::register_machine();
-        Vfx<>::register_machine();
+        Vfx::register_machine();
 
         app_ = scene.create_entity();
         scene.set<Transform>(app_);

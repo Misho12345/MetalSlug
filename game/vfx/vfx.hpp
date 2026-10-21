@@ -7,9 +7,9 @@ namespace ms
 
     // for fire and forget type sprites that play one animation and die
     // like most vfx are
-    template <size_t N = 64>
     class Vfx final
     {
+        static constexpr size_t POOL_SIZE{ 64 };
         using SM = mse::StateMachine<VfxStage>;
 
     public:
@@ -19,7 +19,7 @@ namespace ms
         {
             using namespace mse;
 
-            for (size_t i = 0; i < N; ++i)
+            for (size_t i = 0; i < POOL_SIZE; ++i)
             {
                 vfx_[i] = scene.create_entity();
                 scene.set<Transform>(vfx_[i]);
@@ -40,20 +40,20 @@ namespace ms
             using namespace mse;
             entity_id e;
 
-            for (uint32_t i = 0; i < N; ++i)
+            for (uint32_t i = 0; i < POOL_SIZE; ++i)
             {
-                const uint32_t slot = (next_ + i) % N;
+                const uint32_t slot = (next_ + i) % POOL_SIZE;
 
                 if (scene.get<Sprite>(vfx_[slot]).hidden)
                 {
-                    next_ = (slot + 1) % N;
+                    next_ = (slot + 1) % POOL_SIZE;
                     e = vfx_[slot];
                     goto start;
                 }
             }
 
             e = vfx_[next_];
-            next_ = (next_ + 1) % N;
+            next_ = (next_ + 1) % POOL_SIZE;
 
             start:
             scene.get<Transform>(e).position = pos;
@@ -83,7 +83,7 @@ namespace ms
             }
         };
 
-        mse::entity_id vfx_[N];
+        mse::entity_id vfx_[POOL_SIZE];
         uint32_t next_ = 0;
     };
 }

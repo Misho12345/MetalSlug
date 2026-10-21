@@ -6,6 +6,6 @@ namespace ms
 {
     struct UserCtx
     {
-        Vfx<> vfx;
+        Vfx vfx;
     };
 }
