@@ -20,6 +20,8 @@ include(MseUtil)
 include(MseExecutable)
 
 add_subdirectory(third_party/stb)
+add_subdirectory(third_party/miniaudio)
+
 add_subdirectory(common)
 add_subdirectory(tools/texture_packer)
 add_subdirectory(engine)
