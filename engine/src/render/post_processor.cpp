@@ -18,11 +18,20 @@ namespace mse
             return false;
         }
 
-        color_tex.create({ Target::RESOLUTION, 1 }, {
-            .format = gl::TextureFormat::RGB8,
-            .wrap = gl::TextureWrap::ClampToEdge,
-            .filter = gl::TextureFilter::Nearest
-        });
+        color_tex.create(
+            { Target::RESOLUTION, 1 }, {
+                .format = gl::TextureFormat::RGB8,
+                .wrap   = gl::TextureWrap::ClampToEdge,
+                .filter = gl::TextureFilter::Nearest
+            });
+
+        enabled_loc      = shader.uniform_location("u_Enabled");
+        warp_loc         = shader.uniform_location("u_Warp");
+        hard_scan_loc    = shader.uniform_location("u_HardScan");
+        hard_pix_loc     = shader.uniform_location("u_HardPix");
+        mask_dark_loc    = shader.uniform_location("u_MaskDark");
+        mask_light_loc   = shader.uniform_location("u_MaskLight");
+        bright_boost_loc = shader.uniform_location("u_BrightBoost");
 
         glGenFramebuffers(1, &fbo);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -52,10 +61,19 @@ namespace mse
         glClear(GL_COLOR_BUFFER_BIT);
 
         const ivec2 offset = window.output_offset();
-        const ivec2 size = window.output_size();
+        const ivec2 size   = window.output_size();
         glViewport(offset.x, offset.y, size.x, size.y);
 
+
         shader.use();
+        gl::Shader::set_uniform(enabled_loc, (int32_t)crt_enabled);
+        gl::Shader::set_uniform(warp_loc,             crt.warp);
+        gl::Shader::set_uniform(hard_scan_loc,        crt.hard_scan);
+        gl::Shader::set_uniform(hard_pix_loc,         crt.hard_pix);
+        gl::Shader::set_uniform(mask_dark_loc,        crt.mask_dark);
+        gl::Shader::set_uniform(mask_light_loc,       crt.mask_light);
+        gl::Shader::set_uniform(bright_boost_loc,     crt.bright_boost);
+
         vao.bind();
         color_tex.bind(0);
         glDrawArrays(GL_TRIANGLES, 0, 6);

@@ -62,26 +62,13 @@ namespace mse
         {
             if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) return;
 
-
-            if (severity == GL_DEBUG_SEVERITY_HIGH)
-            {
-                fprintf(
-                    stderr,
-                    "\033[31mOpenGL [%s:%s:%s] %s\033[0m",
-                    source_name(source),
-                    type_name(type),
-                    severity_name(severity),
-                    message);
-            }
-            else
-            {
-                printf(
-                    "\033[33mOpenGL [%s:%s:%s] %s\033[0m",
-                    source_name(source),
-                    type_name(type),
-                    severity_name(severity),
-                    message);
-            }
+            fprintf(
+                GL_DEBUG_SEVERITY_HIGH ? stderr : stdout,
+                "\033[31mOpenGL [%s:%s:%s] %s\033[0m\n",
+                source_name(source),
+                type_name(type),
+                severity_name(severity),
+                message);
         }
         #endif
 

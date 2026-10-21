@@ -19,11 +19,11 @@ namespace ms
         {
             using namespace mse;
 
-            for (size_t i = 0; i < POOL_SIZE; ++i)
+            for (entity_id& e : vfx_)
             {
-                vfx_[i] = scene.create_entity();
-                scene.set<Transform>(vfx_[i]);
-                scene.set<Sprite>(vfx_[i], anim::Vfx{}).hidden = true;
+                e = scene.create_entity();
+                scene.set<Transform>(e);
+                scene.set<Sprite>(e, anim::Vfx{}).hidden = true;
             }
         }
 

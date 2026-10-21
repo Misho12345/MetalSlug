@@ -12,6 +12,16 @@ namespace mse
 {
     struct PrivCtx;
 
+    struct CrtSettings final
+    {
+        vec2  warp{ 0.031f, 0.041f };
+        float hard_scan{ -8.0f };
+        float hard_pix{ -8.0f };
+        float mask_dark{ 0.5f };
+        float mask_light{ 1.5f };
+        float bright_boost{ 1.0f };
+    };
+
     /**
      * @brief Handles post processing and frame buffer management
      * @note Owned by PrivCtx, not constructable by anything else and not movable or copyable
@@ -31,6 +41,8 @@ namespace mse
         void bind() const;
         void render(const Window& window) const;
 
+        bool crt_enabled = true;
+
     private:
         PostProcessor() = default;
 
@@ -39,6 +51,16 @@ namespace mse
         gl::Texture2D color_tex;
 
         GLuint fbo = 0;
+
+        GLint enabled_loc      = -1;
+        GLint warp_loc         = -1;
+        GLint hard_scan_loc    = -1;
+        GLint hard_pix_loc     = -1;
+        GLint mask_dark_loc    = -1;
+        GLint mask_light_loc   = -1;
+        GLint bright_boost_loc = -1;
+
+        CrtSettings crt;
 
         friend ::mse::PrivCtx;
     };

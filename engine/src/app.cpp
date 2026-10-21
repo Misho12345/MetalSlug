@@ -114,8 +114,11 @@ namespace mse
                 if (c == 0)
                 {
                     #ifndef NDEBUG
-                    if (Input::down(Key::Ctrl) && Input::just_pressed(Key::B))
-                        priv_ctx_->debug_draw.toggle();
+                    if (Input::down(Key::Ctrl))
+                    {
+                        if (Input::just_pressed(Key::B)) priv_ctx_->debug_draw.toggle();
+                        if (Input::just_pressed(Key::C)) priv_ctx_->post_processor.crt_enabled ^= 1;
+                    }
                     #endif
 
                     priv_ctx_->input.clear();
