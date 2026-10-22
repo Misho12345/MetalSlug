@@ -98,7 +98,7 @@ namespace mse
         printf("WARN: requesting access to a non-existing pool "
                "(called through has/get/try_get of never used type before), "
                "empty pool is returned so the code will work, "
-               "but relying on that is not recommended.");
+               "but relying on that is not recommended.\n");
         #endif
 
         static const ComponentPool<C> empty;

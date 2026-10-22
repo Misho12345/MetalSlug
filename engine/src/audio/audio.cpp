@@ -27,6 +27,7 @@ namespace mse
     sfx_id Audio::load_sfx(const char* path, const uint32_t voice_count)
     {
         assert(voice_count >= 1 && voice_count <= MAX_VOICES);
+        if (!initialised_) return NO_SFX;
 
         unique_ptr<SfxPool> pool = make_unique<SfxPool>();
         if (ma_sound_init_from_file(
@@ -52,6 +53,8 @@ namespace mse
 
     void Audio::play(const sfx_id id, const float volume)
     {
+        if (!initialised_) return;
+
         if (id == NO_SFX) return;
         SfxPool& pool = *pools_[id];
 

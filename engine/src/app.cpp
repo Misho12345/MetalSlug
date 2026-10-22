@@ -61,8 +61,7 @@ namespace mse
 
         if (!ctx_.audio.init())
         {
-            printf("failed to init audio system");
-            ok_ = false;
+            printf("failed to init audio system: all audio calls will be no-op\n");
             return;
         }
 

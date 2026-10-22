@@ -64,6 +64,12 @@ set(sprites_dir "${CMAKE_SOURCE_DIR}/assets/sprites")
 # Gather all directories that contain sprite images (leaf directories)
 file(GLOB_RECURSE all_items CONFIGURE_DEPENDS LIST_DIRECTORIES true "${sprites_dir}/*")
 
+foreach (item IN LISTS all_items)
+    if (IS_DIRECTORY "${item}" AND item MATCHES "\\.nomask/")
+        message(FATAL_ERROR ".nomask is only allowed on sprite folders, not on their parents: ${item}")
+    endif ()
+endforeach ()
+
 set(leaf_dirs)
 foreach (item IN LISTS all_items)
     if (IS_DIRECTORY "${item}")
@@ -85,6 +91,8 @@ set(sprites_names)  # list of sprite enum names
 set(sprite_anim_offsets) # list that maps sprite_id to anim id offset
 set(frame_offsets) # list that maps anim_id to frame id offset
 
+set(sprite_has_mask) # list with true/false for all (indexed by sprite_id) whether they have a collision mask generated
+
 # Process each leaf directory to gather images and generate enum names
 foreach (dir IN LISTS leaf_dirs)
     get_images("${dir}" images)
@@ -94,11 +102,28 @@ foreach (dir IN LISTS leaf_dirs)
 
     list(APPEND sprites_paths ${images})
     list(LENGTH images num_images)
-    list(APPEND args ${idx} ${num_images})
+
+    # screen.nomask -> leaf_name "screen", leaf_ext ".nomask"
+    cmake_path(GET dir FILENAME leaf_full)
+    cmake_path(GET dir STEM LAST_ONLY leaf_name)
+    cmake_path(GET dir EXTENSION LAST_ONLY leaf_ext)
+
+    if (leaf_ext STREQUAL ".nomask")
+        set(has_mask 0)
+        set(has_mask_cpp false)
+    elseif (leaf_ext STREQUAL "")
+        set(has_mask 1)
+        set(has_mask_cpp true)
+    else ()
+        message(FATAL_ERROR "unknown sprite folder suffix '${leaf_ext}' in ${leaf_full}")
+    endif ()
+
+    list(APPEND args ${idx} ${has_mask} ${num_images})
+    list(APPEND sprite_has_mask ${has_mask_cpp})
 
     foreach (img IN LISTS images)
         list(APPEND args ${img})
-        cmake_path(GET img STEM LAST_ONLY curr_frame_count)      # idle.4.png -> idle.4
+        cmake_path(GET img STEM LAST_ONLY curr_frame_count)           # idle.4.png -> idle.4
         cmake_path(GET curr_frame_count EXTENSION curr_frame_count)   # idle.4 -> .4
         string(REPLACE "." "" curr_frame_count "${curr_frame_count}") # .4 -> 4
         list(APPEND args ${curr_frame_count})
@@ -134,7 +159,6 @@ foreach (dir IN LISTS leaf_dirs)
     #     enum class Legs { Idle, Jumping, Walking, COUNT };
     # }
 
-    cmake_path(GET dir FILENAME leaf_name)
     snake_to_pascal_case("${leaf_name}" enum_name)
 
     cmake_path(GET dir PARENT_PATH parent_dir)
@@ -188,6 +212,7 @@ list(APPEND args "--out" ${texture_packer_out_dir})
 
 string(JOIN ", " sprite_anim_offsets ${sprite_anim_offsets})
 string(JOIN ", " frame_offsets ${frame_offsets})
+string(JOIN ", " sprite_has_mask ${sprite_has_mask})
 
 string(APPEND anim_header "
     // sprite_enum concept ensures that the type is an enum and
@@ -211,6 +236,15 @@ string(APPEND anim_header "
     inline constexpr uint32_t sprite_anim_offsets[] = { 0, ${sprite_anim_offsets} };
     inline constexpr uint32_t frame_offsets[] = { 0, ${frame_offsets} };
 
+    // false for sprites from a .nomask folder: the packer wrote no collision mask for them
+    inline constexpr bool sprite_has_mask[] = { ${sprite_has_mask} };
+
+    constexpr bool has_mask(const int sprite_id)
+    {
+        assert(sprite_id != -1 && (uint32_t)sprite_id < total_sprite_count);
+        return sprite_has_mask[sprite_id];
+    }
+
     constexpr uint32_t sprite_anim_count(const int sprite_id)
     {
         assert(sprite_id != -1 && sprite_id < total_sprite_count);
@@ -231,7 +265,7 @@ string(APPEND anim_header "
 
     constexpr uint32_t frame_count(const uint32_t anim_id)
     {
-        assert(anim_id < total_frame_count);
+        assert(anim_id < total_anim_count);
         return frame_offsets[anim_id + 1] - frame_offsets[anim_id];
     }
 

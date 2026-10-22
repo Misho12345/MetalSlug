@@ -12,8 +12,8 @@
 using nlohmann::json;
 
 // args format:
-// <sprite_idx_0> <anim_count_0> <animation_0_0> <frame_count_0_0>, ... <animation_0_N> <frame_count_0_N>,
-// <sprite_idx_1> <anim_count_1> <animation_1_0> <frame_count_1_0>, ... <animation_1_N> <frame_count_1_N>,
+// <sprite_idx_0> <has_mask_0> <anim_count_0> <animation_0_0> <frame_count_0_0>, ... <animation_0_N> <frame_count_0_N>,
+// <sprite_idx_1> <has_mask_1> <anim_count_1> <animation_1_0> <frame_count_1_0>, ... <animation_1_N> <frame_count_1_N>,
 // ...
 // --out <out_dir>
 static void validate_args(
@@ -88,10 +88,10 @@ int main(const int argc, const char** argv)
 
     // get the number of actual image files to be packed into atlases
     size_t files_count = (size_t)(argc - 3);
-    for (int i = 2; i < argc - 2; )
+    for (int i = 3; i < argc - 2; )
     {
-        files_count -= 2;
-        i += std::stoi(argv[i]) * 2 + 2;
+        files_count -= 3;
+        i += std::stoi(argv[i]) * 2 + 3;
     }
 
     // each animation path has it's own frame count so the parameters are x2 the file count
@@ -115,22 +115,26 @@ int main(const int argc, const char** argv)
     for (size_t i = 1; i < (size_t)(argc - 3); )
     {
         uint32_t sprite_id = (uint32_t)std::stoi(argv[i]);
-        const uint32_t num_anim = (uint32_t)std::stoi(argv[i + 1]);
+        const bool has_mask = *argv[i + 1] != '0';
+        const uint32_t num_anim = (uint32_t)std::stoi(argv[i + 2]);
 
         uint32_t j = 0;
 
         for (; j < num_anim; ++j)
         {
+            const uint32_t off = i + j * 2u;
+
             boxes.emplace_back(
-                argv[i + j * 2u + 2u],
+                argv[off + 3u],
                 sprite_id,
                 j,
-                (uint32_t)std::stoi(argv[i + j * 2u + 3u]));
+                (uint32_t)std::stoi(argv[off + 4u]),
+                has_mask);
 
             box_ptrs.emplace_back(&boxes.back());
         }
 
-        i += j * 2 + 2;
+        i += j * 2 + 3;
     }
 
     qsort(box_ptrs.data(), files_count, sizeof(Box*), [](const void* a, const void* b)

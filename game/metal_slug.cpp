@@ -146,7 +146,7 @@ namespace ms
     {
         if (!App::ctx().tile_map.load("assets/tile_maps/mission1_collision.csv"))
         {
-            printf("failed to load collision tile data");
+            printf("failed to load collision tile data\n");
             return;
         }
 
@@ -159,10 +159,14 @@ namespace ms
 
     void MetalSlug::gameplay_exit(const SM::Ctx& ctx)
     {
-        for (Sprite& s : ctx.scene.pool<Sprite>().components()) s.hidden = true;
-        for (Collider& c : ctx.scene.pool<Collider>().components()) c.enabled = false;
+        Scene& scene = ctx.scene;
+        for (const entity_id owner : scene.pool<Transform>().owners())
+        {
+            if (owner != scene.camera() && owner != ctx.entity)
+                scene.destroy_entity(owner);
+        }
 
-        ctx.scene.set<Transform>(ctx.scene.camera()); // reset camera
+        scene.set<Transform>(scene.camera()); // reset camera
     }
 
 
@@ -214,6 +218,11 @@ namespace ms
         Scene& scene = ctx().scene;
         if (scene.get<State<GameState>>(app_).current != GameState::Gameplay) return;
         player_.late_update(scene);
+
+        if (Input::down(Key::LCtrl) && Input::just_pressed(Key::R))
+        {
+            sm.force(scene, app_, GameState::Gameplay, reset_state_if_same::yes);
+        }
 
         if (Input::just_pressed(Key::Esc)) sm.force(scene, app_, GameState::GameOver);
     }

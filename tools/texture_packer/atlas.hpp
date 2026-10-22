@@ -4,7 +4,7 @@
 
 struct Box final
 {
-    Box(const char* _image_path, uint32_t _sprite_id, uint32_t _anim_id, uint32_t _frame_count);
+    Box(const char* _image_path, uint32_t _sprite_id, uint32_t _anim_id, uint32_t _frame_count, bool _has_mask);
     ~Box();
 
     Box(const Box&)            = delete;
@@ -23,6 +23,8 @@ struct Box final
     // frame count is still passed and stored, even though the program doesn't save it in meta.json
     // because it's still needed for the mask file generation
     uint32_t frame_count;
+
+    bool has_mask;
 
     // bool rotated{ false };
 };

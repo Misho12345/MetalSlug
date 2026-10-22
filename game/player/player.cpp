@@ -52,7 +52,9 @@ namespace ms
             Scene&          scene, const entity_id self,
             const entity_id other, const uint32_t  layer)
         {
-            BodyData& bd = scene.get<BodyData>(self);
+            BodyData& bd = scene.get<BodyData>(scene.has<BodyData>(self)
+                                                   ? self
+                                                   : scene.get<LegsData>(self).body);
 
             if (layer & Layer::WeaponUpgrade)
             {

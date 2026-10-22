@@ -141,7 +141,7 @@ namespace mse::gl
 
             if (w_ != w || h_ != h)
             {
-                printf("cannot have texture 2d array of textures of different sizes!");
+                printf("cannot have texture 2d array of textures of different sizes!\n");
                 return false;
             }
 

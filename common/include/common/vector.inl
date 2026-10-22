@@ -56,9 +56,7 @@ namespace mse
         reserve(other.capacity());
 
         copy_mem(data_, other.data_, other.size_);
-
         size_ = other.size_;
-        capacity_ = other.capacity_;
 
         return *this;
     }
@@ -84,9 +82,7 @@ namespace mse
         reserve(N);
 
         copy_mem(data_, arr, N);
-
         size_ = N;
-        capacity_ = N;
 
         return *this;
     }

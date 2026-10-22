@@ -63,7 +63,7 @@ namespace mse
             if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) return;
 
             fprintf(
-                GL_DEBUG_SEVERITY_HIGH ? stderr : stdout,
+                severity == GL_DEBUG_SEVERITY_HIGH ? stderr : stdout,
                 "\033[31mOpenGL [%s:%s:%s] %s\033[0m\n",
                 source_name(source),
                 type_name(type),
@@ -113,7 +113,7 @@ namespace mse
 
         if (!sprite_vao_)
         {
-            printf("failed to create sprite_vao_");
+            printf("failed to create sprite_vao_\n");
             return false;
         }
 
@@ -322,7 +322,7 @@ namespace mse
             }, atlas_paths,
             gl::should_force_array::yes))
         {
-            printf("failed to create texture 2d array for atlases");
+            printf("failed to create texture 2d array for atlases\n");
             return false;
         }
 

@@ -71,7 +71,7 @@ namespace mse
             if (col.layer == 0 && (col.target_layer == 0 || !col.callback)) continue;
             if (sprite.parallax_factor != vec2{ 1.0f, 1.0f })
             {
-                printf("Collisions with sprites with non-default parallax factor are not possible");
+                printf("Collisions with sprites with non-default parallax factor are not possible\n");
                 continue;
             }
 
@@ -296,7 +296,7 @@ namespace mse
         // metal slug doesn't need this and I'm too lazy to implement it
         if (tr_a.scale != tr_b.scale)
         {
-            printf("Pixel perfect checks between differently sized objects is forbidden");
+            printf("Pixel perfect checks between differently sized objects is forbidden\n");
             return false;
         }
 

@@ -8,11 +8,17 @@
 #include <stb_image_write.h>
 
 
-Box::Box(const char* _image_path, const uint32_t _sprite_id, const uint32_t _anim_id, const uint32_t _frame_count)
+Box::Box(
+    const char*    _image_path,
+    const uint32_t _sprite_id,
+    const uint32_t _anim_id,
+    const uint32_t _frame_count,
+    const bool     _has_mask)
     : image_path{ _image_path },
       sprite_id{ _sprite_id },
       anim_id{ _anim_id },
-      frame_count{ _frame_count }
+      frame_count{ _frame_count },
+      has_mask{ _has_mask }
 {
     int w_, h_, t;
     data = stbi_load(image_path, &w_, &h_, &t, 4);
@@ -98,6 +104,8 @@ void save_masks(const mse::span<const Box> boxes, const char* mask_path, const c
 
     for (const Box& box : boxes)
     {
+        if (!box.has_mask) continue;
+
         assert(box.w % box.frame_count == 0 && "Image isn't evenly divisible by the frame count");
         // round up to the count of bytes
         total_size += (box.w / box.frame_count * box.h + 7) / 8 * box.frame_count;
@@ -113,6 +121,8 @@ void save_masks(const mse::span<const Box> boxes, const char* mask_path, const c
 
     for (const Box& box : boxes)
     {
+        if (!box.has_mask) continue;
+
         // for each box go through each frame and put the data of the frames sequentially
         // that way when loaded each frame will have a pointer for the it's mask, and not have to find
         // the parts of the mask for the specific frame in the entire animation data block

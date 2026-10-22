@@ -15,10 +15,6 @@ function(add_mse_executable target)
     target_link_libraries(${target} PRIVATE MetalSlugEngine)
     target_precompile_headers(${target} PRIVATE ${CMAKE_SOURCE_DIR}/engine/include/mse/mse.hpp)
 
-    if (MSVC)
-        target_link_options(${target} PRIVATE /INCLUDE:mi_version)
-    endif ()
-
     enable_warnings(${target})
 
 

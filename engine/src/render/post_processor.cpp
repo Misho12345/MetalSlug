@@ -14,7 +14,7 @@ namespace mse
 
         if (!shader.create(vertex_path, fragment_path))
         {
-            printf("failed to create post processing shader");
+            printf("failed to create post processing shader\n");
             return false;
         }
 

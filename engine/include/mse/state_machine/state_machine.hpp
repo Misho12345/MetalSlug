@@ -4,6 +4,8 @@
 
 namespace mse
 {
+    using reset_state_if_same = bool_value<struct reset_state_tag>;
+
     template <typename E> requires std::is_enum_v<E>
     struct State
     {
@@ -61,11 +63,11 @@ namespace mse
             }
         }
 
-        void force(Scene& scene, const entity_id entity, E next) const
+        void force(Scene& scene, const entity_id entity, E next, reset_state_if_same reset = reset_state_if_same::no) const
         {
             State<E>& s = scene.get<State<E>>(entity);
             Ctx c{ scene, entity, s };
-            if (next != s.current) switch_to(c, next);
+            if (reset || next != s.current) switch_to(c, next);
         }
 
     private:

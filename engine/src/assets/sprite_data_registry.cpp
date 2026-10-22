@@ -11,7 +11,8 @@ namespace mse
     }
 
 
-    size_t FrameMask::range(const ivec2 coords, const uint32_t max_size) const {
+    size_t FrameMask::range(const ivec2 coords, const uint32_t max_size) const
+    {
         assert(coords.y >= 0 && (uint32_t)coords.y < size.y);
 
         // does not leak to the next row
@@ -137,26 +138,40 @@ namespace mse
 
         if (masks_buf_.empty())
         {
-            printf("empty or nonexistent mask file");
+            printf("empty or nonexistent mask file\n");
             return false;
         }
 
         if (flipped_masks_buf_.empty())
         {
-            printf("empty or nonexistent flipped mask file");
+            printf("empty or nonexistent flipped mask file\n");
             return false;
         }
 
-        size_t offset = 0;
+        size_t offset    = 0;
+        int    sprite_id = 0;
+
         for (uint32_t anim_id = 0; anim_id < anim::total_anim_count; ++anim_id)
         {
+            if (anim_id >= anim::sprite_anim_offsets[sprite_id + 1]) ++sprite_id;
+
+            const bool has = anim::has_mask(sprite_id);
             const SpriteAnimationData& data = anim_data_[anim_id];
 
             for (uint32_t frame = 0; frame < data.frame_count; ++frame)
             {
-                mask_offsets_.emplace_back(offset);
-                offset += (data.frame_size.x * data.frame_size.y + 7) / 8;
+                mask_offsets_.emplace_back(has ? offset : -1_zu);
+                if (has) offset += (data.frame_size.x * data.frame_size.y + 7) / 8;
             }
+        }
+
+        if (offset != masks_buf_.size() || offset != flipped_masks_buf_.size())
+        {
+            printf("mask file size mismatch: expected %zu bytes, got %zu / %zu\n",
+                   offset,
+                   masks_buf_.size(),
+                   flipped_masks_buf_.size());
+            return false;
         }
 
         // give enough padding to be able to give a range from FrameMask without going out of bounds
@@ -169,6 +184,7 @@ namespace mse
 
     FrameMask SpriteDataRegistry::mask(const anim::Info info, const uint32_t frame, const bool flipped) const
     {
+        assert(anim::has_mask(info.sprite_id) && "The sprite is marked as .nomask; change it to generate collision masks");
         const SpriteAnimationData& data = anim_data(info);
 
         return {
