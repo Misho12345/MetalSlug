@@ -5,6 +5,8 @@
 #include "collision/tile_map.hpp"
 #include "mse/audio/audio.hpp"
 
+#include "mse/random/random.hpp"
+
 #include "state_machine/state_machine_system.hpp"
 
 namespace mse
@@ -19,6 +21,8 @@ namespace mse
         Scene   scene;
         TileMap tile_map;
         Audio   audio;
+
+        Random rng;
 
         StateMachineSystem state_machines;
     };
