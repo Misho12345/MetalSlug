@@ -247,7 +247,7 @@ string(APPEND anim_header "
 
     constexpr uint32_t sprite_anim_count(const int sprite_id)
     {
-        assert(sprite_id != -1 && sprite_id < total_sprite_count);
+        assert(sprite_id != -1 && (uint32_t)sprite_id < total_sprite_count);
         return sprite_anim_offsets[sprite_id + 1] - sprite_anim_offsets[sprite_id];
     }
 
