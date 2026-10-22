@@ -15,7 +15,7 @@ function(add_mse_executable target)
     target_link_libraries(${target} PRIVATE MetalSlugEngine)
     target_precompile_headers(${target} PRIVATE ${CMAKE_SOURCE_DIR}/engine/include/mse/mse.hpp)
 
-    enable_warnings(${target})
+    mse_apply_flags(${target})
 
 
     snake_to_pascal_case(${target} pascal_name)

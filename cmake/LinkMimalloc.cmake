@@ -1,11 +1,11 @@
 include_guard(GLOBAL)
 
-if (MS_USE_MIMALLOC)
+if (MSE_USE_MIMALLOC)
     find_package(mimalloc CONFIG REQUIRED)
 endif ()
 
 function(link_mimalloc target)
-    if (NOT MS_USE_MIMALLOC)
+    if (NOT MSE_USE_MIMALLOC)
         return()
     endif ()
 

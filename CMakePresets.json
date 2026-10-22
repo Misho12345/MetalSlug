@@ -17,9 +17,7 @@
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/build/bin"
       },
-      "warnings": {
-        "dev": false
-      }
+      "warnings": { "dev": false }
     }
   ],
   "buildPresets": [

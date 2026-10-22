@@ -35,20 +35,8 @@ namespace ms
         scene.set<Sprite>(legs_, Legs::Idle, should_loop::yes);
         scene.set<Sprite>(body_, Body::PistolIdle, should_loop::yes).layer = 1;
 
-        Collider& legs_col = scene.set<Collider>(legs_);
-        Collider& body_col = scene.set<Collider>(body_);
 
-        legs_col.layer = body_col.layer |= Layer::Player;
-        legs_col.target_layer = body_col.target_layer |= Layer::WeaponUpgrade;
-
-        legs_col.gravity = JUMP_GRAVITY;
-        legs_col.size    = LEGS_SIZE;
-
-        body_col.gravity               = 0.0f;
-        body_col.collide_with_tile_map = false;
-
-
-        legs_col.callback = body_col.callback = +[](
+        const Auto callback = [](
             Scene&          scene, const entity_id self,
             const entity_id other, const uint32_t  layer)
         {
@@ -68,6 +56,28 @@ namespace ms
 
             // EnemyBullet, etc...
         };
+
+        Collider& legs_col = scene.set<Collider>(legs_);
+
+        legs_col.layer |= Layer::Player;
+        legs_col.target_layer |= Layer::WeaponUpgrade;
+
+        legs_col.gravity = JUMP_GRAVITY;
+        legs_col.size    = LEGS_SIZE;
+
+        legs_col.callback = callback;
+
+
+        Collider& body_col = scene.set<Collider>(body_);
+
+        body_col.layer |= Layer::Player;
+        body_col.target_layer |= Layer::WeaponUpgrade;
+
+        body_col.gravity               = 0.0f;
+        body_col.collide_with_tile_map = false;
+
+        body_col.callback = callback;
+
 
         scene.set<Intent>(legs_);
         scene.set<LegsData>(legs_, body_);

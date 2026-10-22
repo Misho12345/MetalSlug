@@ -83,7 +83,7 @@ namespace mse
 
     void DebugDraw::draw_tile_map(const Scene& scene) const
     {
-        if (!scene.bg_entity) return;
+        if (!scene.valid(scene.bg_entity)) return;
 
         const Transform& bg_tr = scene.get<Transform>(scene.bg_entity);
         const Sprite& bg_sprite = scene.get<Sprite>(scene.bg_entity);

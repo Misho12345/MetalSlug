@@ -14,4 +14,4 @@ target_sources(MSECommon PRIVATE ${COMMON_SOURCES})
 target_include_directories(MSECommon PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_definitions(MSECommon PRIVATE MS_COMMON_EXPORTS)
 
-enable_warnings(MSECommon)
+mse_apply_flags(MSECommon)
