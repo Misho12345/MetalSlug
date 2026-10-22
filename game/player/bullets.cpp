@@ -24,15 +24,15 @@ namespace ms
 
         struct FireballAnims final
         {
-            anim::Bullet create, loop, expire;
+            anim::Projectile create, loop, expire;
         };
 
         // indexed by BulletDir
         constexpr FireballAnims FIREBALL[]
         {
-            { anim::Bullet::RifleFireballCreate,     anim::Bullet::RifleFireball,     anim::Bullet::RifleFireballExpire     },
-            { anim::Bullet::RifleFireballCreateUp,   anim::Bullet::RifleFireballUp,   anim::Bullet::RifleFireballExpireUp   },
-            { anim::Bullet::RifleFireballCreateDown, anim::Bullet::RifleFireballDown, anim::Bullet::RifleFireballExpireDown },
+            { anim::Projectile::RifleFireballCreate,     anim::Projectile::RifleFireball,     anim::Projectile::RifleFireballExpire     },
+            { anim::Projectile::RifleFireballCreateUp,   anim::Projectile::RifleFireballUp,   anim::Projectile::RifleFireballExpireUp   },
+            { anim::Projectile::RifleFireballCreateDown, anim::Projectile::RifleFireballDown, anim::Projectile::RifleFireballExpireDown },
         };
 
         BulletDir dir_of(const vec2 velocity)
@@ -88,7 +88,7 @@ namespace ms
             const entity_id bullet = scene.create_entity();
 
             scene.set<Transform>(bullet);
-            scene.set<Sprite>(bullet, anim::Bullet::Pistol).hidden = true;
+            scene.set<Sprite>(bullet, anim::Projectile::Pistol).hidden = true;
             scene.set<PlayerBullet>(bullet, WeaponType::Pistol);
 
             Collider& col    = scene.set<Collider>(bullet);
@@ -126,7 +126,7 @@ namespace ms
                 // TODO: find spray bullet (+45 deg), pistol bullet is fine for now ig
 
             case WeaponType::Pistol:
-                spr.play(b.dir == BulletDir::Side ? anim::Bullet::Pistol : anim::Bullet::Pistol90deg);
+                spr.play(b.dir == BulletDir::Side ? anim::Projectile::Pistol : anim::Projectile::Pistol90deg);
                 break;
 
 
@@ -155,7 +155,7 @@ namespace ms
             if (scene.get<PlayerBullet>(bullet).type == WeaponType::RifleFireball)
             {
                 const FireballAnims& fa      = FIREBALL[(size_t)scene.get<PlayerBullet>(bullet).dir];
-                const anim::Bullet   playing = spr.anim<anim::Bullet>();
+                const anim::Projectile   playing = spr.anim<anim::Projectile>();
 
                 if (playing == fa.expire)
                 {
