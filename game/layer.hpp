@@ -12,8 +12,10 @@ namespace ms
 
         WeaponUpgrade = 1 << 3,
 
-        PlayerBullet = 1 << 4,
-        EnemyBullet  = 1 << 5,
+        PlayerProjectile = 1 << 4,
+        EnemyProjectile  = 1 << 5,
+
+        EnemyKnife = 1 << 6,
 
         TileMap = mse::Collider::TILE_MAP_LAYER
     };

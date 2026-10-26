@@ -1,5 +1,6 @@
 #include "bullets.hpp"
 #include "layer.hpp"
+#include "projectile.hpp"
 
 namespace ms
 {
@@ -90,12 +91,13 @@ namespace ms
             scene.set<Transform>(bullet);
             scene.set<Sprite>(bullet, anim::Projectile::Pistol).hidden = true;
             scene.set<PlayerBullet>(bullet, WeaponType::Pistol);
+            scene.set<Projectile>(bullet, ProjectileType::Bullet);
 
             Collider& col    = scene.set<Collider>(bullet);
             col.enabled      = false;
             col.gravity      = 0.0f;
-            col.target_layer |= Layer::TileMap | Layer::POW;
-            col.layer        |= Layer::PlayerBullet;
+            col.target_layer |= Layer::TileMap | Layer::POW | Layer::Enemy;
+            col.layer        |= Layer::PlayerProjectile;
 
             col.callback = +[](Scene& scene, const entity_id self, entity_id, const uint32_t layer)
             {
@@ -111,6 +113,7 @@ namespace ms
         const entity_id bullet = take_bullet(scene);
 
         PlayerBullet& b = scene.set<PlayerBullet>(bullet, type, dir_of(velocity));
+        scene.get<Projectile>(bullet).type = type == WeaponType::RifleFireball ? ProjectileType::Fireball : ProjectileType::Bullet;
 
         Transform& tr  = scene.get<Transform>(bullet);
         Sprite&    spr = scene.get<Sprite>(bullet);

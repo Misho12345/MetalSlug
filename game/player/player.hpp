@@ -13,6 +13,13 @@ namespace ms
         void update(mse::Scene& scene) const;
         void late_update(mse::Scene& scene) const;
 
+        mse::entity_id legs() const { return legs_; }
+
+        bool   alive(const mse::Scene& scene) const;
+        bool   shooting(const mse::Scene& scene) const;
+        int8_t facing(const mse::Scene& scene) const;
+        bool   out_of_lives(const mse::Scene& scene) const;
+
     private:
         mse::entity_id legs_;
         mse::entity_id body_;

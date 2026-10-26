@@ -62,6 +62,7 @@ namespace ms
             s.play(anim, duration, is_reversed::no, should_loop::no, restart_if_same::yes);
             s.layer = layer;
             s.hidden = false;
+            s.flip_x = false;
 
             sm.start(scene, e, VfxStage::Alive);
 

@@ -2,28 +2,15 @@
 #include "pow.hpp"
 #include "layer.hpp"
 #include "metal_slug.hpp"
+#include "spawn.hpp"
 
 using namespace mse;
 using anim::Pow;
 
 
-namespace
-{
-    // moves so the bottom middle of the sprite to be at that tile
-    ivec2 align(Scene& scene, const entity_id e, const ivec2 to)
-    {
-        Transform& tr = scene.get<Transform>(e);
-        const aabb b  = scene.get<Sprite>(e).bounds(tr);
-
-        const ivec2 shift = to - ivec2{ tr.position.x, b.max.y };
-        tr.position += shift;
-        return shift;
-    }
-}
-
 namespace ms
 {
-    struct POW::StateManager final
+    struct POWManager::StateManager final
     {
         static bool sitting(const PowSM::Ctx& c) { return c.scene.get<Data>(c.entity).kind == Kind::Sitting; }
 
@@ -97,10 +84,10 @@ namespace ms
     };
 
 
-    const POW::PowSM& POW::sm()
+    const POWManager::PowSM& POWManager::sm()
     {
         using SM = StateManager;
-        using B = PowSM::Behaviour;
+        using B  = PowSM::Behaviour;
 
         static constexpr PowSM pow_sm
         {
@@ -112,25 +99,21 @@ namespace ms
         return pow_sm;
     }
 
-    void POW::register_machine() { App::ctx().state_machines.add(sm()); }
+    void POWManager::register_machine() const { App::ctx().state_machines.add(sm()); }
 
 
-    entity_id POW::spawn(Scene& scene, const ivec2 pos, const Kind kind)
+    entity_id POWManager::spawn(Scene& scene, const ivec2 pos, const Kind kind) const
     {
-        const entity_id pow = scene.create_entity();
-
-        scene.set<Transform>(pow);
-        scene.set<Sprite>(pow, kind == Kind::Sitting ? Pow::SittingIdle : Pow::TreeIdle, should_loop::yes);
+        const entity_id pow = spawn_standing(scene, pos, kind == Kind::Sitting ? Pow::SittingIdle : Pow::TreeIdle);
         scene.set<Data>(pow, kind, pos);
-        align(scene, pow, pos);
 
-        Collider& col = scene.set<Collider>(pow);
-        col.layer |= Layer::POW;
-        col.target_layer |= Layer::PlayerBullet;
+        Collider& col    = scene.set<Collider>(pow);
+        col.layer        |= Layer::POW;
+        col.target_layer |= Layer::PlayerProjectile;
 
         col.callback = +[](Scene& scene, const entity_id self, entity_id, uint32_t)
         {
-            scene.get<Data>(self).shot = true;
+            scene.get<Data>(self).shot        = true;
             scene.get<Collider>(self).enabled = false;
         };
 

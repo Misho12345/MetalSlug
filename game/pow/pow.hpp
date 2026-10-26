@@ -12,16 +12,14 @@ namespace ms
     };
 
 
-    class POW final
+    class POWManager final
     {
     public:
-        POW() = delete;
-
         enum class Kind : uint8_t { Sitting, Tree };
 
-        static void register_machine();
+        void register_machine() const;
 
-        static mse::entity_id spawn(mse::Scene& scene, mse::ivec2 pos, Kind kind);
+        mse::entity_id spawn(mse::Scene& scene, mse::ivec2 pos, Kind kind) const;
 
     private:
         using PowSM = mse::StateMachine<PowState>;

@@ -49,17 +49,17 @@ namespace mse
         for (size_t i = 0; i < owners.size(); ++i)
         {
             const Transform& t = scene.get<Transform>(owners[i]);
-            const Sprite& s = scene.get<Sprite>(owners[i]);
+            const Sprite*    s = scene.try_get<Sprite>(owners[i]);
 
             ui.draw_box(
                 colliders[i].bounds(t),
                 colliders[i].enabled ? HITBOX_COLOR : HITBOX_DISABLED_COLOR,
                 5.0f);
 
-            if (s.hidden) continue;
+            if (!s || s->hidden) continue;
 
-            const aabb bounds = s.bounds(t);
-            FrameMask mask = App::priv_ctx().sprite_data_registry.mask(s.info(), s.frame(), s.flip_x);
+            const aabb bounds = s->bounds(t);
+            FrameMask  mask   = App::priv_ctx().sprite_data_registry.mask(s->info(), s->frame(), s->flip_x);
 
             for (int32_t y = bounds.min.y; y < bounds.max.y; )
             {

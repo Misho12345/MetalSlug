@@ -110,6 +110,9 @@ namespace ms
             case Body::RifleCrouchFireballShoot: return { 3, { -1, -17 }, End::Next, true, Body::RifleCrouchAfterShoot };
             case Body::RifleCrouchAfterShoot:    return { 8, {  1, -11 }, End::Loop, true };
 
+            case Body::DeathByStabbing: return { 4, { -3, -24 }, End::Hold, true };
+            case Body::DeathByGrenade:  return { 4, { -1, -20 }, End::Hold, true };
+
             // TODO: knife, throw, drink, reload
             default: assert(!"not implemented"); return {};
         }
@@ -151,6 +154,7 @@ namespace ms
         Shoot, JumpShoot, ShootUp, ShootDown,
         CrouchDown, CrouchIdle, CrouchWalk, CrouchTurn, CrouchShoot, CrouchAfterShoot,
         LookUpEnd, CrouchUp,
+        DeathByStabbing, DeathByGrenade,
         COUNT
     };
 
@@ -171,6 +175,7 @@ namespace ms
         { Body::PistolShoot }, { Body::PistolJumpShoot }, { Body::PistolShootUp }, { Body::PistolShootDown },
         { Body::PistolCrouch }, { Body::PistolCrouchIdle }, { Body::PistolCrouchWalk }, { Body::PistolCrouchTurn }, { Body::PistolCrouchShoot }, { Body::PistolCrouchAfterShoot },
         { Body::PistolLookUp, true }, { Body::PistolCrouch, true },
+        { Body::DeathByStabbing }, { Body::DeathByGrenade },
     };
 
     // the rifle has no jump shoot, the standing one goes over the air legs
@@ -182,6 +187,7 @@ namespace ms
         { Body::RifleSprayShoot }, { Body::RifleSprayShoot }, { Body::RifleSprayShootUp }, { Body::RifleSprayShootDown },
         { Body::RifleCrouch }, { Body::RifleCrouchIdle }, { Body::RifleCrouchWalk }, { Body::RifleCrouchTurn }, { Body::RifleCrouchSprayShoot }, { Body::RifleCrouchAfterShoot },
         { Body::RifleLookUp, true }, { Body::RifleCrouch, true },
+        { Body::DeathByStabbing }, { Body::DeathByGrenade },
     };
 
     constexpr PoseAnim FIREBALL_POSES[]
@@ -192,6 +198,7 @@ namespace ms
         { Body::RifleFireballShoot }, { Body::RifleFireballShoot }, { Body::RifleFireballShootUp }, { Body::RifleFireballShootDown },
         { Body::RifleCrouch }, { Body::RifleCrouchIdle }, { Body::RifleCrouchWalk }, { Body::RifleCrouchTurn }, { Body::RifleCrouchFireballShoot }, { Body::RifleCrouchAfterShoot },
         { Body::RifleLookUp, true }, { Body::RifleCrouch, true },
+        { Body::DeathByStabbing }, { Body::DeathByGrenade },
     };
 
     static_assert(std::size(PISTOL_POSES) == (size_t)Pose::COUNT);

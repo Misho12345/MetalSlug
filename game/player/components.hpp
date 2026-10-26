@@ -11,7 +11,8 @@ namespace ms
         Ready,
         Shooting,
         Transition, // turning, crouching down, standing up, raising/lowering the gun
-        // Melee, Throwing, Dead,
+        Dead,
+        // Melee, Throwing,
         COUNT
     };
 
@@ -29,6 +30,10 @@ namespace ms
     // the legs' collider, every sprite origin is relative to it
     // could've made it extracted at runtime, but it's completely unnecessary
     constexpr uvec2 LEGS_SIZE{ 21, 16 };
+
+    constexpr uint8_t  START_LIVES        = 3;
+    constexpr uint16_t DEAD_TICKS         = 150; // the death animation and lying there for a bit
+    constexpr uint16_t INVULNERABLE_TICKS = 90; // after respawning
 
 
     // on the legs, rewritten by Player::update every tick
@@ -64,6 +69,11 @@ namespace ms
         Pose transition{ Pose::COUNT };
         Pose last_pose{ Pose::COUNT };
         Aim  aim{};
+
+        Pose death{ Pose::COUNT }; // what killed him, COUNT while alive, set by the colliders' callback
+
+        uint8_t  lives = START_LIVES;
+        uint16_t invulnerable{}; // ticks left
 
         WeaponType weapon{};
         uint32_t ammo = 0; // 0 for pistol = inf

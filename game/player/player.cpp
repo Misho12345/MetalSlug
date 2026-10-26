@@ -12,6 +12,8 @@ namespace ms
     namespace
     {
         constexpr ivec2 CAMERA_OFFSET{ 0, -22 };
+
+        constexpr uint16_t BLINK_TICKS = 2;
     }
 
 
@@ -54,13 +56,15 @@ namespace ms
                 bd.ammo = WEAPONS[(size_t)bd.weapon].init_ammo;
             }
 
-            // EnemyBullet, etc...
+            if ((layer & (Layer::EnemyKnife | Layer::EnemyProjectile)) &&
+                bd.death == Pose::COUNT && bd.invulnerable == 0)
+                bd.death = layer & Layer::EnemyKnife ? Pose::DeathByStabbing : Pose::DeathByGrenade;
         };
 
         Collider& legs_col = scene.set<Collider>(legs_);
 
         legs_col.layer |= Layer::Player;
-        legs_col.target_layer |= Layer::WeaponUpgrade;
+        legs_col.target_layer |= Layer::WeaponUpgrade | Layer::EnemyKnife | Layer::EnemyProjectile;
 
         legs_col.gravity = JUMP_GRAVITY;
         legs_col.size    = LEGS_SIZE;
@@ -71,7 +75,7 @@ namespace ms
         Collider& body_col = scene.set<Collider>(body_);
 
         body_col.layer |= Layer::Player;
-        body_col.target_layer |= Layer::WeaponUpgrade;
+        body_col.target_layer |= Layer::WeaponUpgrade | Layer::EnemyKnife | Layer::EnemyProjectile;
 
         body_col.gravity               = 0.0f;
         body_col.collide_with_tile_map = false;
@@ -93,6 +97,7 @@ namespace ms
     void Player::update(Scene& scene) const
     {
         Intent& in = scene.set<Intent>(legs_); // resets the intent
+        if (!alive(scene)) return;
 
         if (Input::down(Key::A)) --in.dir.x;
         if (Input::down(Key::D)) ++in.dir.x;
@@ -111,6 +116,12 @@ namespace ms
         animate_body(scene, legs_, body_);
         const ivec2 center = place_sprites(scene, legs_, body_);
 
+        BodyData& bd = scene.get<BodyData>(body_);
+        if (bd.invulnerable > 0) --bd.invulnerable;
+
+        const bool blink = (bd.invulnerable / BLINK_TICKS) % 2 != 0;
+        scene.get<Sprite>(legs_).color.a = scene.get<Sprite>(body_).color.a = (uint8_t)(blink ? 0 : 255);
+
         ivec2 off = center + CAMERA_OFFSET;
 
         // clamp camera to bg sprite
@@ -126,5 +137,17 @@ namespace ms
         scene.get<Transform>(scene.camera()).position = off;
 
         update_bullets(scene);
+    }
+
+
+    bool Player::alive(const Scene& scene) const { return scene.get<State<BodyState>>(body_).current != BodyState::Dead; }
+    bool Player::shooting(const Scene& scene) const { return scene.get<State<BodyState>>(body_).current == BodyState::Shooting; }
+
+    int8_t Player::facing(const Scene& scene) const { return scene.get<LegsData>(legs_).facing; }
+
+    bool Player::out_of_lives(const Scene& scene) const
+    {
+        return scene.get<BodyData>(body_).lives == 0 &&
+               scene.get<State<BodyState>>(body_).ticks >= DEAD_TICKS;
     }
 }

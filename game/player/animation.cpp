@@ -20,6 +20,7 @@ namespace ms
             const bool              side_jump,
             const BodyData&         bd)
         {
+            if (body == BodyState::Dead) return bd.death;
             if (body == BodyState::Transition) return bd.transition;
 
             const bool crouching = legs.current == LegsState::Crouch;

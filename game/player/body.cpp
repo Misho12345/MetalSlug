@@ -33,6 +33,8 @@ namespace ms
             }
         }
 
+        bool killed(const BodySM::Ctx& c) { return c.scene.get<BodyData>(c.entity).death != Pose::COUNT; }
+
         // true while the animation that was asked for hasn't been played yet (late_update does it, after the machines)
         bool anim_pending(const BodySM::Ctx& c) { return c.scene.get<BodyData>(c.entity).restart; }
 
@@ -113,6 +115,7 @@ namespace ms
 
         BodyState on_ready(const BodySM::Ctx& c)
         {
+            if (killed(c)) return BodyState::Dead;
             note_fire(c);
             if (look_changed(c)) return BodyState::Transition;
 
@@ -121,6 +124,7 @@ namespace ms
 
         BodyState on_shooting(const BodySM::Ctx& c)
         {
+            if (killed(c)) return BodyState::Dead;
             note_fire(c);
 
             BodyData&         bd  = c.scene.get<BodyData>(c.entity);
@@ -152,6 +156,7 @@ namespace ms
         // No action can be taken (firing) while the sprite is in this state
         BodyState on_transition(const BodySM::Ctx& c)
         {
+            if (killed(c)) return BodyState::Dead;
             note_fire(c);
 
             const entity_id l  = legs_of(c);
@@ -168,6 +173,38 @@ namespace ms
 
             return bd.fire_queued ? BodyState::Shooting : BodyState::Ready;
         }
+
+
+        void dead_enter(const BodySM::Ctx& c)
+        {
+            BodyData& bd = c.scene.get<BodyData>(c.entity);
+            bd.restart   = true;
+
+            --bd.lives;
+            printf("lives left: %u\n", (uint32_t)bd.lives);
+        }
+
+        // after the last life he stays down, the game over comes from MetalSlug::late_update
+        BodyState on_dead(const BodySM::Ctx& c)
+        {
+            return c.state.ticks >= DEAD_TICKS && c.scene.get<BodyData>(c.entity).lives > 0
+                       ? BodyState::Ready
+                       : BodyState::Dead;
+        }
+
+        // respawning in place
+        void dead_exit(const BodySM::Ctx& c)
+        {
+            BodyData& bd = c.scene.get<BodyData>(c.entity);
+
+            bd.death        = Pose::COUNT;
+            bd.invulnerable = INVULNERABLE_TICKS;
+            bd.weapon       = WeaponType::Pistol;
+            bd.ammo         = 0;
+            bd.fire_queued  = false;
+            bd.burst_left   = 0;
+            bd.restart      = true;
+        }
     }
 
 
@@ -179,6 +216,7 @@ namespace ms
             B{ nullptr, on_ready, nullptr },        // Ready
             B{ start_burst, on_shooting, nullptr }, // Shooting
             B{ nullptr, on_transition, nullptr },   // Transition
+            B{ dead_enter, on_dead, dead_exit },    // Dead
         };
 
         return sm;
@@ -186,6 +224,8 @@ namespace ms
 
     void begin_transition(Scene& scene, const entity_id body, const Pose pose)
     {
+        if (scene.get<State<BodyState>>(body).current == BodyState::Dead) return;
+
         BodyData& bd  = scene.get<BodyData>(body);
         bd.transition = pose;
         bd.restart    = true;

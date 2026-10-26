@@ -66,16 +66,20 @@ namespace mse
 
 
             const Transform& tr = scene.get<Transform>(entity);
-            const Sprite&    sprite = scene.get<Sprite>(entity);
+            const Sprite*    sprite = scene.try_get<Sprite>(entity);
 
             if (col.layer == 0 && (col.target_layer == 0 || !col.callback)) continue;
-            if (sprite.parallax_factor != vec2{ 1.0f, 1.0f })
+            if (sprite && sprite->parallax_factor != vec2{ 1.0f, 1.0f })
             {
                 printf("Collisions with sprites with non-default parallax factor are not possible\n");
                 continue;
             }
 
-            aabb bounds = sprite.screen_bounds(tr, camera_pos);
+            // what the narrow phase tests: the mask when there's a visible sprite, the box otherwise
+            aabb bounds = sprite && !sprite->hidden
+                              ? sprite->screen_bounds(tr, camera_pos)
+                              : col.bounds(tr) - camera_pos;
+
             bounds |= bounds + col.move;
 
             if (!(bounds & aabb::screen)) continue;
@@ -182,6 +186,7 @@ namespace mse
             if (!(bounds_a & bounds_b)) return false;
 
             if (has_a && has_b) return pp_check(scene, a, b);
+            if (!has_a && !has_b) return true;
 
             return has_a
                        ? pp_check(scene, a, bounds_b)

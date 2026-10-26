@@ -5,10 +5,8 @@
 
 #include "layer.hpp"
 
-#include "player/player.hpp"
 #include "player/components.hpp"
-
-#include "pow/pow.hpp"
+#include "enemy/grenade.hpp"
 
 using namespace mse;
 using namespace mse::literals;
@@ -19,7 +17,6 @@ namespace ms
 {
     namespace
     {
-        Player player_;
         entity_id bg;
 
         void create_bg(Scene& scene)
@@ -90,6 +87,8 @@ namespace ms
 
         void load_spawables(Scene& scene)
         {
+            const UserCtx& u = MetalSlug::user_ctx();
+
             const Csv csv = FileIO::read<Csv>("assets/tile_maps/mission1_spawn.csv");
             const int32_t* d = csv.data.data();
 
@@ -104,9 +103,9 @@ namespace ms
                     switch (*d)
                     {
                         case -1: break;
-                        case 0: POW::spawn(scene, pos, POW::Kind::Sitting); break;
-                        case 1: POW::spawn(scene, pos, POW::Kind::Tree); break;
-                            // case 2: enemy 1;
+                        case 0: u.pows.spawn(scene, pos, POWManager::Kind::Sitting); break;
+                        case 1: u.pows.spawn(scene, pos, POWManager::Kind::Tree); break;
+                        case 2: u.rebels.spawn(scene, pos); break;
                             // case 3: enemy 2;
                         case 4: create_rock(scene, pos, { x, y }); break;
                         case 5:
@@ -129,7 +128,9 @@ namespace ms
 
         sms.add(sm);
         Player::register_machines();
-        POW::register_machine();
+        user_ctx_.pows.register_machine();
+        user_ctx_.rebels.register_machine();
+        register_grenade_machine();
         Vfx::register_machine();
 
         app_ = scene.create_entity();
@@ -151,7 +152,7 @@ namespace ms
         }
 
         create_bg(ctx.scene);
-        player_.create(ctx.scene);
+        user_ctx().player.create(ctx.scene);
         load_spawables(ctx.scene);
 
         user_ctx().vfx.init(ctx.scene);
@@ -210,21 +211,25 @@ namespace ms
     {
         Scene& scene = ctx().scene;
         if (scene.get<State<GameState>>(app_).current != GameState::Gameplay) return;
-        player_.update(scene);
+        user_ctx_.player.update(scene);
     }
 
     void MetalSlug::late_update()
     {
         Scene& scene = ctx().scene;
-        if (scene.get<State<GameState>>(app_).current != GameState::Gameplay) return;
-        player_.late_update(scene);
+
+        if (scene.get<State<GameState>>(app_).current == GameState::Gameplay)
+        {
+            user_ctx_.player.late_update(scene);
+
+            if (Input::just_pressed(Key::Esc) || user_ctx_.player.out_of_lives(scene))
+                sm.force(scene, app_, GameState::GameOver);
+        }
 
         if (Input::down(Key::LCtrl) && Input::just_pressed(Key::R))
         {
             sm.force(scene, app_, GameState::Gameplay, reset_state_if_same::yes);
         }
-
-        if (Input::just_pressed(Key::Esc)) sm.force(scene, app_, GameState::GameOver);
     }
 
     UserCtx& MetalSlug::user_ctx() { return ((MetalSlug*)instance_)->user_ctx_; }
