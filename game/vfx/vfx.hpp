@@ -69,7 +69,7 @@ namespace ms
             return e;
         }
 
-        static void register_machine() { mse::App::ctx().state_machines.add(sm); }
+        void register_machine() const { mse::App::ctx().state_machines.add(sm); }
 
     private:
         static constexpr SM sm

@@ -127,11 +127,11 @@ namespace ms
         StateMachineSystem& sms = ctx().state_machines;
 
         sms.add(sm);
-        Player::register_machines();
+        user_ctx_.player.register_machines();
         user_ctx_.pows.register_machine();
         user_ctx_.rebels.register_machine();
         register_grenade_machine();
-        Vfx::register_machine();
+        user_ctx_.vfx.register_machine();
 
         app_ = scene.create_entity();
         scene.set<Transform>(app_);

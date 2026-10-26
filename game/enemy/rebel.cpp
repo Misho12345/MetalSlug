@@ -257,9 +257,7 @@ namespace ms
 
         RebelState air(const RebelSM::Ctx& c, const RebelAnim a, const RebelState next)
         {
-            Data& d      = rebel(c);
-            d.transition = a;
-            d.resume     = next;
+            transition(c, a, next);
             return RebelState::Air;
         }
 

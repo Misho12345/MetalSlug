@@ -8,7 +8,7 @@ namespace ms
     public:
         void create(mse::Scene& scene);
 
-        static void register_machines();
+        void register_machines() const;
 
         void update(mse::Scene& scene) const;
         void late_update(mse::Scene& scene) const;

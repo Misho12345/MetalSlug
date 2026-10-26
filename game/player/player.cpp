@@ -17,7 +17,7 @@ namespace ms
     }
 
 
-    void Player::register_machines()
+    void Player::register_machines() const
     {
         // legs must be first, the body reads their state
         StateMachineSystem& sms = App::ctx().state_machines;
