@@ -27,12 +27,16 @@ namespace ms
     inline constexpr WeaponData WEAPONS[]
     {
         {  6, 1, 0, 250.0f,   0 }, // Pistol
-        {  4, 4, 4, 300.0f, 200 }, // RifleSpray
+        {  4, 6, 4, 300.0f, 200 }, // RifleSpray
         { 36, 1, 0, 180.0f,  20 }, // RifleFireball
     };
 
     static_assert(std::size(WEAPONS) == (size_t)WeaponType::COUNT);
 
     // per bullet of a burst, so the spray isn't a straight line
-    inline constexpr float SPRAY_SPREAD[]{ 0.0_deg, 4.0_deg, -3.0_deg, 2.0_deg };
+    inline constexpr float SPRAY_SPREAD[]{ 0.0_deg, 4.0_deg, -3.0_deg, 2.0_deg, -2.0_deg, 3.0_deg };
+
+    // forward <-> up/down: one bullet the old way, 4 in between, one the new way
+    inline constexpr int32_t SPRAY_SWEEP_STEPS = 5;
+    inline constexpr float   SPRAY_SWEEP_ANGLE = 90.0_deg / SPRAY_SWEEP_STEPS;
 }

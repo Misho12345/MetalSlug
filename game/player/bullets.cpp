@@ -14,7 +14,7 @@ namespace ms
         constexpr uint8_t FIREBALL_EXPIRE_TICKS = 2;
 
 
-        enum class BulletDir : uint8_t { Side, Up, Down };
+        enum class BulletDir : uint8_t { Side, Up, Down, DiagUp, DiagDown };
 
         struct PlayerBullet final
         {
@@ -29,6 +29,14 @@ namespace ms
         };
 
         // indexed by BulletDir
+        constexpr anim::Projectile PISTOL[]
+        {
+            anim::Projectile::Pistol,
+            anim::Projectile::Pistol90deg, anim::Projectile::Pistol90deg,
+            anim::Projectile::Pistol45deg, anim::Projectile::Pistol45deg,
+        };
+
+        // indexed by BulletDir
         constexpr FireballAnims FIREBALL[]
         {
             { anim::Projectile::RifleFireballCreate,     anim::Projectile::RifleFireball,     anim::Projectile::RifleFireballExpire     },
@@ -36,10 +44,17 @@ namespace ms
             { anim::Projectile::RifleFireballCreateDown, anim::Projectile::RifleFireballDown, anim::Projectile::RifleFireballExpireDown },
         };
 
+        // nearest of the three sprites, the in between bullets of a spray turn land on either side
         BulletDir dir_of(const vec2 velocity)
         {
-            if (glm::abs(velocity.x) >= glm::abs(velocity.y)) return BulletDir::Side;
-            return velocity.y < 0.0f ? BulletDir::Up : BulletDir::Down;
+            constexpr float TAN_22_5 = 0.4142f;
+
+            const vec2 a  = glm::abs(velocity);
+            const bool up = velocity.y < 0.0f;
+
+            if (a.y <= a.x * TAN_22_5) return BulletDir::Side;
+            if (a.x <= a.y * TAN_22_5) return up ? BulletDir::Up : BulletDir::Down;
+            return up ? BulletDir::DiagUp : BulletDir::DiagDown;
         }
 
 
@@ -126,14 +141,15 @@ namespace ms
         {
             case WeaponType::RifleSpray:
                 [[fallthrough]];
-                // TODO: find spray bullet (+45 deg), pistol bullet is fine for now ig
+                // TODO: find spray bullet, pistol bullet is fine for now ig
 
             case WeaponType::Pistol:
-                spr.play(b.dir == BulletDir::Side ? anim::Projectile::Pistol : anim::Projectile::Pistol90deg);
+                spr.play(PISTOL[(size_t)b.dir]);
                 break;
 
 
             case WeaponType::RifleFireball:
+                assert(b.dir <= BulletDir::Down);
                 spr.play(FIREBALL[(size_t)b.dir].create, FIREBALL_CREATE_TICKS);
                 break;
 
@@ -145,7 +161,8 @@ namespace ms
         col.velocity = velocity;
         col.size = spr.size();
 
-        spr.flip_x = facing < 0;
+        // the 45 sprite points up-right, mirrored it's down-right
+        spr.flip_x = (facing < 0) != (b.dir == BulletDir::DiagDown);
     }
 
     void update_bullets(Scene& scene)

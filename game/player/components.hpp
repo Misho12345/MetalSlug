@@ -25,7 +25,7 @@ namespace ms
     using LegsSM = StateMachine<LegsState>;
     using BodySM = StateMachine<BodyState>;
 
-    enum class Aim : uint8_t { Forward, Up, Down };
+    enum class Aim : uint8_t { Forward, Up, Down, DiagUp, DiagDown };
 
     // the legs' collider, every sprite origin is relative to it
     // could've made it extracted at runtime, but it's completely unnecessary
@@ -84,6 +84,8 @@ namespace ms
 
         uint8_t burst_left{};
         uint8_t burst_shot{};
+
+        int8_t tilt{}; // spray only, in SPRAY_SWEEP_ANGLE steps, negative is up
     };
 
     struct WeaponUpgrade final

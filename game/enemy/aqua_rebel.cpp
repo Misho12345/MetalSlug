@@ -38,7 +38,7 @@ namespace ms
 
         struct AquaData final
         {
-            int32_t  water{}; // y of the surface
+            int32_t  water{};  // y of the surface
             ivec2    target{}; // the player's chest when it jumped
             uint16_t cooldown{};
             bool     thrown{ false };
@@ -48,14 +48,16 @@ namespace ms
         {
             switch (a)
             {
-                case AquaAnim::Idle:            return { 8, { -1,  -6 }, true };
-                case AquaAnim::JumpingOut:      return { 3, {  6, -27 } };
-                case AquaAnim::ThrowingMissile: return { 4, {  6, -25 } };
-                case AquaAnim::Submerging:      return { 5, {  1,  -9 } };
-                case AquaAnim::Death:           return { 4, {  8, -18 } };
+                case AquaAnim::Idle: return { 8, { -1, -6 }, true };
+                case AquaAnim::JumpingOut: return { 3, { 6, -27 } };
+                case AquaAnim::ThrowingMissile: return { 4, { 6, -25 } };
+                case AquaAnim::Submerging: return { 5, { 1, -9 } };
+                case AquaAnim::Death: return { 4, { 8, -18 } };
 
-                default: assert(!"not implemented"); return {};
+                default: assert(!"not implemented");
             }
+
+            return {};
         }
 
 
@@ -178,7 +180,7 @@ namespace ms
         }
 
         // in the real game it technically disappears once it's jumped, but with this few enemy types
-        // that would get boring, so it goes back to idle until the player actually kills it
+        // thats boring, so it goes back to idle until the player actually kills it
         AquaRebelState on_submerge(const AquaSM::Ctx& c)
         {
             return c.scene.get<Sprite>(c.entity).anim_done() ? AquaRebelState::Idle : AquaRebelState::Submerge;

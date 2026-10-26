@@ -98,6 +98,9 @@ namespace ms
             case Body::RifleSprayShootUp:   return { 2, { -1, -67 } };
             case Body::RifleSprayShootDown: return { 2, { -2, -19 } }; // only in air
 
+            case Body::RifleSprayShootDiagUp:   return { 2, { -1, -60 } }; // head matched against RifleSprayShoot
+            case Body::RifleSprayShootDiagDown: return { 2, { -2, -20 } }; // first frame is RifleLookDown's
+
             case Body::RifleFireballShoot:     return { 3, {  0, -23 } };
             case Body::RifleFireballShootUp:   return { 3, { -1, -44 } };
             case Body::RifleFireballShootDown: return { 3, { -2, -19 } }; // only in air
@@ -152,6 +155,7 @@ namespace ms
         InAir, SideJump,
         LookUp, LookUpIdle, LookUpTurn, LookDown,
         Shoot, JumpShoot, ShootUp, ShootDown,
+        ShootDiagUp, ShootDiagDown, // spray only, the other two just reuse up/down
         CrouchDown, CrouchIdle, CrouchWalk, CrouchTurn, CrouchShoot, CrouchAfterShoot,
         LookUpEnd, CrouchUp,
         DeathByStabbing, DeathByGrenade,
@@ -173,6 +177,7 @@ namespace ms
         { Body::PistolInAir }, { Body::PistolSideJump },
         { Body::PistolLookUp }, { Body::PistolLookUpIdle }, { Body::PistolLookUpTurn }, { Body::PistolLookDown },
         { Body::PistolShoot }, { Body::PistolJumpShoot }, { Body::PistolShootUp }, { Body::PistolShootDown },
+        { Body::PistolShootUp }, { Body::PistolShootDown },
         { Body::PistolCrouch }, { Body::PistolCrouchIdle }, { Body::PistolCrouchWalk }, { Body::PistolCrouchTurn }, { Body::PistolCrouchShoot }, { Body::PistolCrouchAfterShoot },
         { Body::PistolLookUp, true }, { Body::PistolCrouch, true },
         { Body::DeathByStabbing }, { Body::DeathByGrenade },
@@ -185,6 +190,7 @@ namespace ms
         { Body::RifleInAir }, { Body::RifleSideJump },
         { Body::RifleLookUp }, { Body::RifleLookUpIdle }, { Body::RifleLookUpTurn }, { Body::RifleLookDown },
         { Body::RifleSprayShoot }, { Body::RifleSprayShoot }, { Body::RifleSprayShootUp }, { Body::RifleSprayShootDown },
+        { Body::RifleSprayShootDiagUp }, { Body::RifleSprayShootDiagDown },
         { Body::RifleCrouch }, { Body::RifleCrouchIdle }, { Body::RifleCrouchWalk }, { Body::RifleCrouchTurn }, { Body::RifleCrouchSprayShoot }, { Body::RifleCrouchAfterShoot },
         { Body::RifleLookUp, true }, { Body::RifleCrouch, true },
         { Body::DeathByStabbing }, { Body::DeathByGrenade },
@@ -196,6 +202,7 @@ namespace ms
         { Body::RifleInAir }, { Body::RifleSideJump },
         { Body::RifleLookUp }, { Body::RifleLookUpIdle }, { Body::RifleLookUpTurn }, { Body::RifleLookDown },
         { Body::RifleFireballShoot }, { Body::RifleFireballShoot }, { Body::RifleFireballShootUp }, { Body::RifleFireballShootDown },
+        { Body::RifleFireballShootUp }, { Body::RifleFireballShootDown },
         { Body::RifleCrouch }, { Body::RifleCrouchIdle }, { Body::RifleCrouchWalk }, { Body::RifleCrouchTurn }, { Body::RifleCrouchFireballShoot }, { Body::RifleCrouchAfterShoot },
         { Body::RifleLookUp, true }, { Body::RifleCrouch, true },
         { Body::DeathByStabbing }, { Body::DeathByGrenade },

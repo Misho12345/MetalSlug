@@ -10,7 +10,6 @@ namespace ms
     {
         for (uint8_t k = 0; k < (uint8_t)EnemyKind::COUNT; ++k) type((EnemyKind)k).register_machine();
 
-        // not by the managers, two kinds throwing grenades would add the machine twice and tick them double
         register_grenade_machine();
         register_missile_machine();
     }
@@ -22,15 +21,14 @@ namespace ms
 
     const EnemyManager& Enemies::type(const EnemyKind kind) const
     {
-        // no default, so clang/gcc flag a kind without a case at compile time instead of it reaching the assert
         switch (kind)
         {
             case EnemyKind::Rebel: return rebel_;
             case EnemyKind::AquaRebel: return aqua_rebel_;
-            case EnemyKind::COUNT: break;
+            default: assert(!"not implemented");
         }
 
-        assert(!"not implemented");
+        // just something for the compiler to not complain
         return rebel_;
     }
 }

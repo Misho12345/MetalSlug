@@ -31,6 +31,8 @@ namespace ms
                 if (crouching) return Pose::CrouchShoot;
                 if (bd.aim == Aim::Up) return Pose::ShootUp;
                 if (bd.aim == Aim::Down) return Pose::ShootDown;
+                if (bd.aim == Aim::DiagUp) return Pose::ShootDiagUp;
+                if (bd.aim == Aim::DiagDown) return Pose::ShootDiagDown;
                 return in_air ? Pose::JumpShoot : Pose::Shoot;
             }
 
