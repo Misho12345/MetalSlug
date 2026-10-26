@@ -6,7 +6,6 @@
 #include "layer.hpp"
 
 #include "player/components.hpp"
-#include "enemy/grenade.hpp"
 
 using namespace mse;
 using namespace mse::literals;
@@ -105,8 +104,8 @@ namespace ms
                         case -1: break;
                         case 0: u.pows.spawn(scene, pos, POWManager::Kind::Sitting); break;
                         case 1: u.pows.spawn(scene, pos, POWManager::Kind::Tree); break;
-                        case 2: u.rebels.spawn(scene, pos); break;
-                            // case 3: enemy 2;
+                        case 2: u.enemies.spawn(scene, pos, EnemyKind::Rebel); break;
+                        case 3: u.enemies.spawn(scene, pos, EnemyKind::AquaRebel); break;
                         case 4: create_rock(scene, pos, { x, y }); break;
                         case 5:
                             // TODO: replace with crate
@@ -129,8 +128,7 @@ namespace ms
         sms.add(sm);
         user_ctx_.player.register_machines();
         user_ctx_.pows.register_machine();
-        user_ctx_.rebels.register_machine();
-        register_grenade_machine();
+        user_ctx_.enemies.register_machines();
         user_ctx_.vfx.register_machine();
 
         app_ = scene.create_entity();

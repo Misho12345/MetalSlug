@@ -1,8 +1,7 @@
 #include "grenade.hpp"
+#include "explosive.hpp"
 #include "layer.hpp"
 #include "projectile.hpp"
-#include "spawn.hpp"
-#include "metal_slug.hpp"
 
 namespace ms
 {
@@ -24,18 +23,11 @@ namespace ms
         constexpr float   FLIGHT_TIME_PX = 1.0f / 400.0f;
         constexpr int32_t AIM_ERROR      = 16;
 
-        constexpr uint8_t SPIN_TICKS      = 3;
-        constexpr uint8_t EXPLOSION_TICKS = 2;
-        constexpr int32_t EXPLOSION_LAYER = 2;
+        constexpr uint8_t SPIN_TICKS = 3;
 
         // the asset has red and blue frames between the normal ones, a tint is close enough
         constexpr color_t RED  = 0xff5050_rgb;
         constexpr color_t BLUE = 0x509fbf_rgb;
-
-        struct Grenade final
-        {
-            bool exploded{ false };
-        };
 
 
         GrenadeState on_flying(const GrenadeSM::Ctx& c)
@@ -49,37 +41,20 @@ namespace ms
                 default: s.color = {}; break;
             }
 
-            return c.scene.get<Grenade>(c.entity).exploded ? GrenadeState::COUNT : GrenadeState::Flying;
+            return c.scene.get<Explosive>(c.entity).exploded ? GrenadeState::COUNT : GrenadeState::Flying;
         }
 
-        void explode(const GrenadeSM::Ctx& c)
+        // where it landed
+        void blow_up(const GrenadeSM::Ctx& c)
         {
             const Transform& tr = c.scene.get<Transform>(c.entity);
-            const ivec2      at{ tr.position.x, c.scene.get<Collider>(c.entity).bounds(tr).max.y };
-
-            const entity_id boom = MetalSlug::user_ctx().vfx.create(
-                c.scene, {}, anim::Vfx::SmallExplosion, EXPLOSION_TICKS, EXPLOSION_LAYER);
-
-            align(c.scene, boom, at);
-            c.scene.destroy_entity(c.entity);
+            explode(c.scene, c.entity, { tr.position.x, c.scene.get<Collider>(c.entity).bounds(tr).max.y });
         }
 
         constexpr GrenadeSM grenade_sm
         {
-            GrenadeSM::Behaviour{ nullptr, on_flying, explode }, // Flying
+            GrenadeSM::Behaviour{ nullptr, on_flying, blow_up }, // Flying
         };
-
-
-        void on_hit(Scene& scene, const entity_id self, entity_id, uint32_t)
-        {
-            // the dispatch doesn't check enabled, hitting the tile map and the player in one tick would explode it twice
-            Collider& col = scene.get<Collider>(self);
-            if (!col.enabled) return;
-
-            col.enabled = false;
-            scene.get<Sprite>(self).hidden = true;
-            scene.get<Grenade>(self).exploded = true;
-        }
     }
 
 
@@ -92,7 +67,7 @@ namespace ms
         scene.set<Transform>(g, from);
         scene.set<Sprite>(g, anim::Projectile::RebelGrenade, SPIN_TICKS, should_loop::yes).layer = 1;
         scene.set<Projectile>(g, ProjectileType::Grenade);
-        scene.set<Grenade>(g);
+        scene.set<Explosive>(g);
 
         const vec2  d{ (float)(target.x - from.x + App::ctx().rng.range(-AIM_ERROR, AIM_ERROR)), (float)(target.y - from.y) };
         const float t = FLIGHT_TIME + glm::abs(d.x) * FLIGHT_TIME_PX;
@@ -105,10 +80,11 @@ namespace ms
 
         col.layer        |= Layer::EnemyProjectile;
         col.target_layer |= Layer::Player | Layer::TileMap;
-        col.callback      = on_hit;
+        col.callback      = on_explosive_hit;
 
         grenade_sm.start(scene, g, GrenadeState::Flying);
     }
 
-    uint32_t live_grenades(Scene& scene) { return (uint32_t)scene.pool<Grenade>().owners().size(); }
+    // the machine ends with the grenade, missiles have one of their own
+    uint32_t live_grenades(Scene& scene) { return (uint32_t)scene.pool<State<GrenadeState>>().owners().size(); }
 }

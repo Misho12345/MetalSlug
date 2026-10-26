@@ -1,5 +1,5 @@
 #pragma once
-#include "mse/mse.hpp"
+#include "enemy.hpp"
 
 namespace ms
 {
@@ -28,11 +28,11 @@ namespace ms
         COUNT
     };
 
-    class RebelManager final
+    class RebelManager final : public EnemyManager
     {
     public:
-        void register_machine() const;
+        void register_machine() const override;
 
-        mse::entity_id spawn(mse::Scene& scene, mse::ivec2 pos) const;
+        mse::entity_id spawn(mse::Scene& scene, mse::ivec2 pos) const override;
     };
 }

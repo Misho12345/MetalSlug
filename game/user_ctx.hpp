@@ -3,7 +3,7 @@
 #include "vfx/vfx.hpp"
 #include "player/player.hpp"
 #include "pow/pow.hpp"
-#include "enemy/rebel.hpp"
+#include "enemy/enemies.hpp"
 
 namespace ms
 {
@@ -12,7 +12,7 @@ namespace ms
         Vfx    vfx;
         Player player;
 
-        POWManager   pows;
-        RebelManager rebels;
+        POWManager pows;
+        Enemies    enemies;
     };
 }

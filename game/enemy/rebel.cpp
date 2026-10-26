@@ -2,7 +2,6 @@
 #include "rebel_anim.hpp"
 #include "grenade.hpp"
 #include "layer.hpp"
-#include "projectile.hpp"
 #include "spawn.hpp"
 #include "metal_slug.hpp"
 
@@ -70,10 +69,8 @@ namespace ms
         constexpr int32_t WANDER_MIN = 60; // ticks
         constexpr int32_t WANDER_MAX = 150;
 
-        constexpr uint16_t BURN_TICKS   = 48;
-        constexpr uint16_t CORPSE_TICKS = 24;
-        constexpr uint16_t BLINK_TICKS  = 2;
-        constexpr uint8_t  BLOOD_TICKS  = 3;
+        constexpr uint16_t BURN_TICKS  = 48;
+        constexpr uint8_t  BLOOD_TICKS = 3;
 
 
         // the art sprays to the right, it gets flipped to follow the bullet
@@ -98,15 +95,12 @@ namespace ms
 
             float   bravery{}; // how likely to go running away
             int32_t flee_dist{};
-            int8_t  facing{ -1 }; // the art faces left
-            int8_t  shot_dir{};   // which way the bullet that killed it was going, 0 for straight up or down
 
             float jump_velocity{};
 
             uint8_t  pressure{};
             uint16_t grenade_cd{};
             uint16_t wander_ticks{};
-            uint16_t corpse_ticks{};
 
             RebelAnim  transition{}; // what Transition and Air play
             RebelState resume{};     // and where they go after
@@ -114,9 +108,7 @@ namespace ms
             ivec2 body_offset{}; // the collider's, kept while the knife box replaces it
 
             bool in_reach{ false }; // set by the sense box, read and cleared the tick after
-            bool shot{ false };
-            bool burning{ false };
-            bool acted{ false }; // jumped or threw already
+            bool acted{ false };    // jumped or threw already
         };
 
         struct Sense final
@@ -138,37 +130,10 @@ namespace ms
 
 
         Data&   rebel(const RebelSM::Ctx& c) { return c.scene.get<Data>(c.entity); }
+        Enemy&  enemy(const RebelSM::Ctx& c) { return c.scene.get<Enemy>(c.entity); }
         Random& rng() { return App::ctx().rng; }
 
-        ivec2 feet(const Scene& scene, const entity_id e)
-        {
-            const aabb b = scene.get<Collider>(e).bounds(scene.get<Transform>(e));
-            return { (b.min.x + b.max.x) / 2, b.max.y };
-        }
-
-        // puts the sprite on the box, the box stays where it is, it's what stands on the floor
-        void anchor(Scene& scene, const entity_id e)
-        {
-            Transform& tr  = scene.get<Transform>(e);
-            Collider&  col = scene.get<Collider>(e);
-            Sprite&    spr = scene.get<Sprite>(e);
-
-            spr.flip_x = scene.get<Data>(e).facing > 0;
-
-            ivec2 origin = data(spr.anim<RebelAnim>()).origin;
-            if (spr.flip_x) origin.x = -origin.x;
-
-            const ivec2 shift = feet(scene, e) + origin - tr.position;
-            tr.position += shift;
-            col.offset  -= shift;
-        }
-
-        void play(const RebelSM::Ctx& c, const RebelAnim a)
-        {
-            const RebelAnimData d = data(a);
-            c.scene.get<Sprite>(c.entity).play(a, d.ticks, is_reversed::no, d.loop, restart_if_same::yes);
-            anchor(c.scene, c.entity);
-        }
+        void play(const RebelSM::Ctx& c, const RebelAnim a) { play_anchored(c.scene, c.entity, a, data(a)); }
 
         ivec2 map_origin(const Scene& scene)
         {
@@ -211,15 +176,16 @@ namespace ms
         {
             Scene&        scene  = c.scene;
             Data&         d      = rebel(c);
+            const int8_t  facing = enemy(c).facing;
             const Player& player = MetalSlug::user_ctx().player;
 
             const ivec2 me = feet(scene, c.entity);
 
             Senses s{};
-            s.to_player = feet(scene, player.legs()) - me;
+            s.to_player = to_player(scene, c.entity);
             s.dist      = glm::abs(s.to_player.x);
             s.alive     = player.alive(scene);
-            s.behind    = s.dist > DEADZONE && (s.to_player.x > 0) != (d.facing > 0);
+            s.behind    = s.dist > DEADZONE && (s.to_player.x > 0) != (facing > 0);
 
             const float vx     = scene.get<Collider>(player.legs()).velocity.x;
             const bool  coming = vx != 0.0f && (vx > 0.0f) == (s.to_player.x < 0);
@@ -234,18 +200,18 @@ namespace ms
             s.in_reach = d.in_reach && s.alive;
             d.in_reach = false;
 
-            s.ledge = ledge_ahead(scene, me, d.facing);
+            s.ledge = ledge_ahead(scene, me, facing);
 
             if (d.grenade_cd > 0) --d.grenade_cd;
 
             // a tick behind the rebel, a pixel or two
-            scene.get<Transform>(d.sense).position = me + ivec2{ d.facing * SENSE_X, -(int32_t)SENSE_SIZE.y / 2 };
+            scene.get<Transform>(d.sense).position = me + ivec2{ facing * SENSE_X, -(int32_t)SENSE_SIZE.y / 2 };
 
             return s;
         }
 
 
-        RebelState killed(const RebelSM::Ctx& c) { return rebel(c).burning ? RebelState::Dying : RebelState::Dead; }
+        RebelState killed(const RebelSM::Ctx& c) { return enemy(c).burning ? RebelState::Dying : RebelState::Dead; }
 
         RebelState transition(const RebelSM::Ctx& c, const RebelAnim a, const RebelState next)
         {
@@ -270,7 +236,7 @@ namespace ms
         // the speed to jump over the wall in front, 0 if it's too high
         float jump_over(const RebelSM::Ctx& c)
         {
-            const int32_t h = glm::max(wall_ahead(c.scene, feet(c.scene, c.entity), rebel(c).facing), 0);
+            const int32_t h = glm::max(wall_ahead(c.scene, feet(c.scene, c.entity), enemy(c).facing), 0);
             if (h > JUMP_MAX) return 0.0f;
 
             return glm::sqrt(2.0f * GRAVITY * (float)(h + JUMP_MARGIN));
@@ -348,7 +314,7 @@ namespace ms
         RebelState on_idle(const RebelSM::Ctx& c)
         {
             const Senses s = sense(c);
-            if (rebel(c).shot) return killed(c);
+            if (enemy(c).shot) return killed(c);
 
             if (c.scene.get<Sprite>(c.entity).anim_done()) play(c, random_idle());
 
@@ -373,13 +339,14 @@ namespace ms
         {
             const Senses s = sense(c);
             Data&        d = rebel(c);
-            if (d.shot) return killed(c);
+            if (enemy(c).shot) return killed(c);
 
             if (!c.scene.get<Sprite>(c.entity).anim_done()) return RebelState::Transition;
 
             if (is_turn(d.transition))
             {
-                d.facing = (int8_t)-d.facing;
+                Enemy& en = enemy(c);
+                en.facing = (int8_t)-en.facing;
                 return d.resume;
             }
 
@@ -397,13 +364,13 @@ namespace ms
         {
             const Senses s = sense(c);
             Data&        d = rebel(c);
-            if (d.shot) return killed(c);
+            if (enemy(c).shot) return killed(c);
 
             Collider& col = c.scene.get<Collider>(c.entity);
 
             // the tile map zeroes the velocity on a wall
             const bool cornered = c.state.ticks > 1 && col.velocity.x == 0.0f;
-            col.velocity.x      = (float)d.facing * FLEE_SPEED;
+            col.velocity.x      = (float)enemy(c).facing * FLEE_SPEED;
 
             if (!col.grounded) return air(c, RebelAnim::Falling, RebelState::RunAway);
 
@@ -438,13 +405,12 @@ namespace ms
         RebelState on_sneak(const RebelSM::Ctx& c)
         {
             const Senses s = sense(c);
-            Data&        d = rebel(c);
-            if (d.shot) return killed(c);
+            if (enemy(c).shot) return killed(c);
 
             Collider& col = c.scene.get<Collider>(c.entity);
 
             const bool blocked = c.state.ticks > 1 && col.velocity.x == 0.0f;
-            col.velocity.x     = (float)d.facing * SNEAK_SPEED;
+            col.velocity.x     = (float)enemy(c).facing * SNEAK_SPEED;
 
             if (!col.grounded) return air(c, RebelAnim::Falling, RebelState::Sneak);
             if (s.in_reach) return RebelState::Slash;
@@ -473,12 +439,12 @@ namespace ms
         {
             const Senses s = sense(c);
             Data&        d = rebel(c);
-            if (d.shot) return killed(c);
+            if (enemy(c).shot) return killed(c);
 
             Collider& col = c.scene.get<Collider>(c.entity);
 
             const bool blocked = c.state.ticks > 1 && col.velocity.x == 0.0f;
-            col.velocity.x     = (float)d.facing * RUN_SPEED;
+            col.velocity.x     = (float)enemy(c).facing * RUN_SPEED;
 
             if (!col.grounded) return air(c, RebelAnim::Falling, RebelState::Attack);
             if (!s.alive) return give_up(c, s);
@@ -511,12 +477,12 @@ namespace ms
         {
             const Senses s = sense(c);
             Data&        d = rebel(c);
-            if (d.shot) return killed(c);
+            if (enemy(c).shot) return killed(c);
 
             Collider& col = c.scene.get<Collider>(c.entity);
 
             const bool blocked = c.state.ticks > 1 && col.velocity.x == 0.0f;
-            col.velocity.x     = (float)d.facing * SNEAK_SPEED;
+            col.velocity.x     = (float)enemy(c).facing * SNEAK_SPEED;
 
             if (!col.grounded) return air(c, RebelAnim::Falling, RebelState::Wander);
             if (s.in_reach) return RebelState::Slash;
@@ -558,7 +524,7 @@ namespace ms
         {
             sense(c);
             Data& d = rebel(c);
-            if (d.shot) return killed(c);
+            if (enemy(c).shot) return killed(c);
 
             Collider& col = c.scene.get<Collider>(c.entity);
 
@@ -574,7 +540,7 @@ namespace ms
                 }
 
                 // every tick, a wall it's going over zeroes it until it's above it
-                col.velocity.x = (float)d.facing * RUN_SPEED;
+                col.velocity.x = (float)enemy(c).facing * RUN_SPEED;
             }
 
             return col.grounded ? d.resume : RebelState::Air;
@@ -602,7 +568,7 @@ namespace ms
             }
 
             ivec2 center = KNIFE_MIN + ivec2(KNIFE_SIZE / 2u);
-            if (d.facing > 0) center.x = -center.x;
+            if (enemy(c).facing > 0) center.x = -center.x;
 
             col.offset                = d.body_offset + ivec2{ 0, (int32_t)BOX.y / 2 } + center;
             col.size                  = KNIFE_SIZE;
@@ -625,7 +591,7 @@ namespace ms
         RebelState on_slash(const RebelSM::Ctx& c)
         {
             const Senses s = sense(c);
-            if (rebel(c).shot) return killed(c);
+            if (enemy(c).shot) return killed(c);
 
             const Sprite& spr = c.scene.get<Sprite>(c.entity);
             knife(c, spr.frame() >= KNIFE_FIRST && spr.frame() <= KNIFE_LAST);
@@ -651,12 +617,12 @@ namespace ms
         {
             const Senses s = sense(c);
             Data&        d = rebel(c);
-            if (d.shot) return killed(c);
+            if (enemy(c).shot) return killed(c);
 
             if (!d.acted && c.scene.get<Sprite>(c.entity).frame() >= THROW_FRAME)
             {
                 const ivec2 me = feet(c.scene, c.entity);
-                const ivec2 hand{ d.facing < 0 ? HAND.x : -HAND.x, HAND.y };
+                const ivec2 hand{ enemy(c).facing < 0 ? HAND.x : -HAND.x, HAND.y };
 
                 // creates an entity, no component references across this
                 launch_grenade(c.scene, me + hand, me + s.to_player);
@@ -670,14 +636,9 @@ namespace ms
         }
 
 
-        // not something anything collides with any more, but it still falls
         void die(const RebelSM::Ctx& c)
         {
-            Collider& col    = c.scene.get<Collider>(c.entity);
-            col.layer        = 0;
-            col.target_layer = 0;
-            col.velocity.x   = 0.0f;
-
+            stop_colliding(c.scene, c.entity);
             c.scene.destroy_entity(rebel(c).sense);
         }
 
@@ -694,12 +655,12 @@ namespace ms
 
         void splash_blood(const RebelSM::Ctx& c)
         {
-            const BloodSplash& b = BLOOD[(size_t)rng().range(0, (int32_t)std::size(BLOOD) - 1)];
-            const Data&        d = rebel(c);
+            const BloodSplash& b  = BLOOD[(size_t)rng().range(0, (int32_t)std::size(BLOOD) - 1)];
+            const Enemy&       en = enemy(c);
 
             // where it comes out of is fixed to the rebel, which way it sprays follows the bullet
-            const ivec2   chest = feet(c.scene, c.entity) + ivec2{ d.facing < 0 ? b.chest.x : -b.chest.x, b.chest.y };
-            const int8_t  dir   = d.shot_dir != 0 ? d.shot_dir : (int8_t)-d.facing;
+            const ivec2   chest = feet(c.scene, c.entity) + ivec2{ en.facing < 0 ? b.chest.x : -b.chest.x, b.chest.y };
+            const int8_t  dir   = en.shot_dir != 0 ? en.shot_dir : (int8_t)-en.facing;
             const int32_t layer = c.scene.get<Sprite>(c.entity).layer + 1;
 
             const entity_id splash = MetalSlug::user_ctx().vfx.create(c.scene, {}, b.anim, BLOOD_TICKS, layer);
@@ -718,7 +679,7 @@ namespace ms
         {
             die(c);
 
-            if (rebel(c).burning)
+            if (enemy(c).burning)
             {
                 play(c, RebelAnim::DeathFireBig);
                 return;
@@ -749,24 +710,10 @@ namespace ms
                 return RebelState::Dead;
             }
 
-            Data& d    = rebel(c);
-            spr.hidden = (++d.corpse_ticks / BLINK_TICKS) % 2 != 0;
-
-            if (d.corpse_ticks >= CORPSE_TICKS) c.scene.destroy_entity(c.entity);
+            blink_out(c.scene, c.entity);
             return RebelState::Dead;
         }
 
-
-        void on_shot(Scene& scene, const entity_id self, const entity_id other, uint32_t)
-        {
-            Data& d = scene.get<Data>(self);
-            d.shot  = true;
-
-            const float vx = scene.get<Collider>(other).velocity.x;
-            d.shot_dir     = (int8_t)(vx == 0.0f ? 0 : vx < 0.0f ? -1 : 1);
-
-            if (scene.get<Projectile>(other).type == ProjectileType::Fireball) d.burning = true;
-        }
 
         // the legs only, the body's box sticks out with the gun and it'd stab at the air in front of him
         void on_sense(Scene& scene, const entity_id self, const entity_id other, uint32_t)
@@ -803,8 +750,10 @@ namespace ms
         Data& d      = scene.set<Data>(e);
         d.bravery    = rng().real();
         d.flee_dist  = FLEE_FAR - (int32_t)((float)(FLEE_FAR - FLEE_NEAR) * d.bravery);
-        d.grenade_cd = (uint16_t)rng().range(0, GRENADE_CD_MAX);  // so they don't all throw on the same tick
-        d.facing     = (int8_t)(rng().range(0, 2) == 0 ? 1 : -1); // a third look away from where the player comes from
+        d.grenade_cd = (uint16_t)rng().range(0, GRENADE_CD_MAX); // so they don't all throw on the same tick
+
+        // a third look away from where the player comes from
+        scene.set<Enemy>(e).facing = (int8_t)(rng().range(0, 2) == 0 ? 1 : -1);
 
         const ivec2 box_center = pos - ivec2{ 0, (int32_t)BOX.y / 2 };
         Collider&   col        = scene.set<Collider>(e, box_center - scene.get<Transform>(e).position, ivec2(BOX));
@@ -812,7 +761,7 @@ namespace ms
         col.gravity      = GRAVITY;
         col.layer        |= Layer::Enemy;
         col.target_layer |= Layer::PlayerProjectile;
-        col.callback     = on_shot;
+        col.callback     = on_enemy_shot;
 
         // knife reach, follows the rebel in sense()
         d.sense = scene.create_entity();

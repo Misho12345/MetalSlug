@@ -14,6 +14,7 @@ namespace ms
         void late_update(mse::Scene& scene) const;
 
         mse::entity_id legs() const { return legs_; }
+        mse::entity_id body() const { return body_; }
 
         bool   alive(const mse::Scene& scene) const;
         bool   shooting(const mse::Scene& scene) const;

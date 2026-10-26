@@ -1,18 +1,12 @@
 #pragma once
 #include "mse/mse.hpp"
+#include "enemy.hpp"
 
 namespace ms
 {
     using RebelAnim = mse::anim::enemy::Rebel;
 
-    struct RebelAnimData final
-    {
-        uint8_t    ticks;
-        mse::ivec2 origin; // sprite center from the bottom middle of the body box
-        bool       loop{ false };
-    };
-
-    constexpr RebelAnimData data(const RebelAnim a)
+    constexpr EnemyAnimData data(const RebelAnim a)
     {
         switch (a)
         {
