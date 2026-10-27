@@ -6,6 +6,7 @@
 #include "layer.hpp"
 
 #include "player/components.hpp"
+#include "hud/number.hpp"
 
 using namespace mse;
 using namespace mse::literals;
@@ -118,6 +119,19 @@ namespace ms
                 }
             }
         }
+
+        void clear_scene(Scene& scene, const entity_id app)
+        {
+            for (const entity_id owner : scene.pool<Transform>().owners())
+            {
+                if (owner != scene.camera() && owner != app)
+                    scene.destroy_entity(owner);
+            }
+        }
+
+        constexpr const char* INTRO_TEXT = "PRESS SPACE TO PLAY";
+        constexpr ivec2       INTRO_TEXT_POS{ (RESOLUTION_i.x - 19 * 8) / 2, 190 };
+        constexpr int32_t     INTRO_TEXT_LAYER = 101;
     }
 
     void MetalSlug::init()
@@ -136,9 +150,19 @@ namespace ms
         sm.start(scene, app_, GameState::Intro);
     }
 
-    void MetalSlug::intro_enter(const SM::Ctx& ctx) { ctx.scene.set<Sprite>(ctx.entity, anim::Screen::Intro); }
+    void MetalSlug::intro_enter(const SM::Ctx& ctx)
+    {
+        ctx.scene.set<Sprite>(ctx.entity, anim::Screen::Intro);
+        create_hud_text(ctx.scene, anim::Hud::MediumFont, INTRO_TEXT, INTRO_TEXT_POS, INTRO_TEXT_LAYER);
+    }
+
     GameState MetalSlug::on_intro(const SM::Ctx&) { return Input::down(Key::Space) ? GameState::Gameplay : GameState::Intro; }
-    void MetalSlug::intro_exit(const SM::Ctx& ctx) { ctx.scene.get<Sprite>(ctx.entity).hidden = true; }
+
+    void MetalSlug::intro_exit(const SM::Ctx& ctx)
+    {
+        ctx.scene.get<Sprite>(ctx.entity).hidden = true;
+        clear_scene(ctx.scene, ctx.entity); // the text
+    }
 
 
     void MetalSlug::gameplay_enter(const SM::Ctx& ctx)
@@ -160,11 +184,7 @@ namespace ms
     void MetalSlug::gameplay_exit(const SM::Ctx& ctx)
     {
         Scene& scene = ctx.scene;
-        for (const entity_id owner : scene.pool<Transform>().owners())
-        {
-            if (owner != scene.camera() && owner != ctx.entity)
-                scene.destroy_entity(owner);
-        }
+        clear_scene(scene, ctx.entity);
 
         scene.set<Transform>(scene.camera()); // reset camera
     }
