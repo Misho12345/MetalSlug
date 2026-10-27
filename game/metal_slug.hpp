@@ -8,8 +8,8 @@ namespace ms
     {
         Intro,
         Gameplay,
+        Debrief,
         GameOver,
-        Scoreboard,
         COUNT
     };
 
@@ -33,20 +33,19 @@ namespace ms
         static void intro_exit(const SM::Ctx& ctx);
 
         static void gameplay_enter(const SM::Ctx& ctx);
-        static void gameplay_exit(const SM::Ctx& ctx);
+
+        static void debrief_enter(const SM::Ctx& ctx);
+        static GameState on_debrief(const SM::Ctx& ctx);
 
         static void game_over_enter(const SM::Ctx& ctx);
         static GameState on_game_over(const SM::Ctx& ctx);
 
-        static void scoreboard_enter(const SM::Ctx& ctx);
-        static GameState on_scoreboard(const SM::Ctx& ctx);
-
         static constexpr SM sm
         {
             B{ intro_enter, on_intro, intro_exit }, // Intro
-            B{ gameplay_enter, nullptr, gameplay_exit }, // Gameplay
-            B{ game_over_enter, on_game_over, nullptr }, // GameOver
-            B{ scoreboard_enter, on_scoreboard, nullptr }  // Scoreboard
+            B{ gameplay_enter, nullptr, nullptr }, // Gameplay
+            B{ debrief_enter, on_debrief, nullptr }, // Debrief
+            B{ game_over_enter, on_game_over, nullptr } // GameOver
         };
 
         UserCtx user_ctx_;

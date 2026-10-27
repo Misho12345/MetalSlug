@@ -24,11 +24,15 @@ namespace ms
         uint32_t score() const { return score_; }
         void     add_score(const uint32_t points) { score_ += points; }
 
+        uint32_t pows_freed() const { return pows_freed_; }
+        void     free_pow() { ++pows_freed_; }
+
     private:
         mse::entity_id legs_;
         mse::entity_id body_;
 
         // here and not in BodyData, the body is destroyed on the way to the game over screen
         uint32_t score_{};
+        uint32_t pows_freed_{};
     };
 }

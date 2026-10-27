@@ -103,7 +103,7 @@ foreach (dir IN LISTS leaf_dirs)
     list(APPEND sprites_paths ${images})
     list(LENGTH images num_images)
 
-    # screen.nomask -> leaf_name "screen", leaf_ext ".nomask"
+    # hud.nomask -> leaf_name "hud", leaf_ext ".nomask"
     cmake_path(GET dir FILENAME leaf_full)
     cmake_path(GET dir STEM LAST_ONLY leaf_name)
     cmake_path(GET dir EXTENSION LAST_ONLY leaf_ext)

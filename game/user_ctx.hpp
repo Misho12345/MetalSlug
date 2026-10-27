@@ -5,6 +5,7 @@
 #include "pow/pow.hpp"
 #include "enemy/enemies.hpp"
 #include "hud/hud.hpp"
+#include "hud/debrief.hpp"
 
 namespace ms
 {
@@ -16,6 +17,7 @@ namespace ms
         POWManager pows;
         Enemies    enemies;
 
-        Hud hud;
+        Hud     hud;
+        Debrief debrief;
     };
 }

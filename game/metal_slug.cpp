@@ -120,6 +120,8 @@ namespace ms
             }
         }
 
+        // everything but the camera and the app entity. Done on entering the states that need an empty scene
+        // and not on leaving gameplay, the debrief draws over the level
         void clear_scene(Scene& scene, const entity_id app)
         {
             for (const entity_id owner : scene.pool<Transform>().owners())
@@ -127,6 +129,8 @@ namespace ms
                 if (owner != scene.camera() && owner != app)
                     scene.destroy_entity(owner);
             }
+
+            scene.set<Transform>(scene.camera()); // reset camera
         }
 
         constexpr const char* INTRO_TEXT = "PRESS SPACE TO PLAY";
@@ -152,7 +156,7 @@ namespace ms
 
     void MetalSlug::intro_enter(const SM::Ctx& ctx)
     {
-        ctx.scene.set<Sprite>(ctx.entity, anim::Screen::Intro);
+        ctx.scene.set<Sprite>(ctx.entity, anim::Hud::Intro);
         create_hud_text(ctx.scene, anim::Hud::MediumFont, INTRO_TEXT, INTRO_TEXT_POS, INTRO_TEXT_LAYER);
     }
 
@@ -160,13 +164,15 @@ namespace ms
 
     void MetalSlug::intro_exit(const SM::Ctx& ctx)
     {
+        // the text goes with gameplay_enter's clear
         ctx.scene.get<Sprite>(ctx.entity).hidden = true;
-        clear_scene(ctx.scene, ctx.entity); // the text
     }
 
 
     void MetalSlug::gameplay_enter(const SM::Ctx& ctx)
     {
+        clear_scene(ctx.scene, ctx.entity);
+
         if (!App::ctx().tile_map.load("assets/tile_maps/mission1_collision.csv"))
         {
             printf("failed to load collision tile data\n");
@@ -181,20 +187,23 @@ namespace ms
         user_ctx().hud.create(ctx.scene);
     }
 
-    void MetalSlug::gameplay_exit(const SM::Ctx& ctx)
-    {
-        Scene& scene = ctx.scene;
-        clear_scene(scene, ctx.entity);
 
-        scene.set<Transform>(scene.camera()); // reset camera
+    void MetalSlug::debrief_enter(const SM::Ctx& ctx) { user_ctx().debrief.create(ctx.scene); }
+
+    GameState MetalSlug::on_debrief(const SM::Ctx& ctx)
+    {
+        user_ctx().debrief.update(ctx.scene, ctx.state.ticks);
+        return Debrief::done(ctx.state.ticks) ? GameState::GameOver : GameState::Debrief;
     }
 
 
     void MetalSlug::game_over_enter(const SM::Ctx& ctx)
     {
+        clear_scene(ctx.scene, ctx.entity);
+
         Sprite& s = ctx.scene.get<Sprite>(ctx.entity);
         s.hidden = false;
-        s.play(anim::Screen::GameOver);
+        s.play(anim::Hud::GameOver);
         s.color = 0_rgb;
     }
 
@@ -204,46 +213,47 @@ namespace ms
         c = c * 255 / TRANSITION_DUR;
 
         ctx.scene.get<Sprite>(ctx.entity).color.data = { c, c, c, 255 };
+        // back to the title, like an arcade cabinet
         return ctx.state.ticks >= TRANSITION_DUR
-                   ? GameState::Scoreboard
+                   ? GameState::Intro
                    : GameState::GameOver;
-    }
-
-
-    void MetalSlug::scoreboard_enter(const SM::Ctx& ctx)
-    {
-        ctx.scene.get<Sprite>(ctx.entity).play(anim::Screen::Scoreboard);
-    }
-
-    GameState MetalSlug::on_scoreboard(const SM::Ctx& ctx)
-    {
-        if (ctx.state.ticks >= TRANSITION_DUR) return GameState::Scoreboard;
-
-        const uint32_t c = ctx.state.ticks * 255u / TRANSITION_DUR;
-        ctx.scene.get<Sprite>(ctx.entity).color.data = { c, c, c, 255 };
-
-        return GameState::Scoreboard;
     }
 
 
     void MetalSlug::update()
     {
         Scene& scene = ctx().scene;
-        if (scene.get<State<GameState>>(app_).current != GameState::Gameplay) return;
-        user_ctx_.player.update(scene);
+        const GameState state = scene.get<State<GameState>>(app_).current;
+
+        if (state == GameState::Gameplay)
+        {
+            user_ctx_.player.update(scene);
+        }
+        else if (state == GameState::Debrief)
+        {
+            // the level keeps going under the debrief, but the player stops instead of
+            // keeping whatever was held on the last gameplay tick
+            scene.set<Intent>(user_ctx_.player.legs());
+        }
     }
 
     void MetalSlug::late_update()
     {
         Scene& scene = ctx().scene;
 
-        if (scene.get<State<GameState>>(app_).current == GameState::Gameplay)
+        const GameState state = scene.get<State<GameState>>(app_).current;
+
+        if (state == GameState::Gameplay)
         {
             user_ctx_.player.late_update(scene);
             user_ctx_.hud.update(scene);
 
             if (Input::just_pressed(Key::Esc) || user_ctx_.player.out_of_lives(scene))
-                sm.force(scene, app_, GameState::GameOver);
+                sm.force(scene, app_, GameState::Debrief);
+        }
+        else if (state == GameState::Debrief)
+        {
+            user_ctx_.hud.update(scene); // for the bonus going into the score
         }
 
         if (Input::down(Key::LCtrl) && Input::just_pressed(Key::R))

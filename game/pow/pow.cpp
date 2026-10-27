@@ -41,7 +41,8 @@ namespace ms
             Data& d  = c.scene.get<Data>(c.entity);
             d.base.y = c.scene.get<Sprite>(c.entity).bounds(c.scene.get<Transform>(c.entity)).max.y;
 
-            MetalSlug::user_ctx().player.add_score(FREE_POINTS);
+            // the points come at the debrief, 1000 each
+            MetalSlug::user_ctx().player.free_pow();
 
             const bool s = sitting(c);
             play_at(c, s ? Pow::SittingFree : Pow::TreeFree, FREE_TICKS, s ? SITTING_FREE_X : TREE_FREE_X);
