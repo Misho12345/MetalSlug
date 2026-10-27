@@ -9,6 +9,12 @@ namespace mse
             MA_SOUND_FLAG_NO_SPATIALIZATION |
             MA_SOUND_FLAG_NO_PITCH;
 
+    // a few minutes of song decoded up front would be tens of MB
+    static constexpr ma_uint32 MUSIC_FLAGS =
+            MA_SOUND_FLAG_STREAM |
+            MA_SOUND_FLAG_NO_SPATIALIZATION |
+            MA_SOUND_FLAG_NO_PITCH;
+
     bool Audio::init()
     {
         initialised_ = ma_engine_init(nullptr, &engine_) == MA_SUCCESS;
@@ -19,6 +25,7 @@ namespace mse
     {
         if (!initialised_) return;
 
+        stop_music();
         unload_all_sfx();
         ma_engine_uninit(&engine_);
         initialised_ = false;
@@ -76,6 +83,30 @@ namespace mse
         ma_sound_set_volume(&s, volume);
         ma_sound_seek_to_pcm_frame(&s, 0);
         ma_sound_start(&s);
+    }
+
+    bool Audio::play_music(const char* path, const loop_music loop, const float volume)
+    {
+        stop_music();
+        if (!initialised_) return false;
+
+        if (ma_sound_init_from_file(&engine_, path, MUSIC_FLAGS, nullptr, nullptr, &music_) != MA_SUCCESS)
+            return false;
+
+        music_loaded_ = true;
+
+        ma_sound_set_looping(&music_, loop ? MA_TRUE : MA_FALSE);
+        ma_sound_set_volume(&music_, volume);
+        ma_sound_start(&music_);
+        return true;
+    }
+
+    void Audio::stop_music()
+    {
+        if (!music_loaded_) return;
+
+        ma_sound_uninit(&music_);
+        music_loaded_ = false;
     }
 
     void Audio::unload_all_sfx()

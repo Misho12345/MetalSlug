@@ -195,6 +195,7 @@ namespace ms
             if (feet(c.scene, c.entity).y < aqua(c).water) c.scene.get<Collider>(c.entity).gravity = GRAVITY;
 
             play(c, AquaAnim::Death);
+            MetalSlug::user_ctx().sounds.rebel_death();
         }
 
         AquaRebelState on_dead(const AquaSM::Ctx& c)

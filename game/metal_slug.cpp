@@ -80,8 +80,14 @@ namespace ms
 
             col.callback = +[](Scene& scene, const entity_id self, entity_id, uint32_t)
             {
+                if (!scene.get<Collider>(self).enabled) return;
+
                 scene.get<Collider>(self).enabled = false;
                 scene.get<Sprite>(self).hidden = true;
+
+                const Sounds& snd = MetalSlug::user_ctx().sounds;
+                snd.play(Sfx::Pickup);
+                snd.play(scene.get<WeaponUpgrade>(self).type == WeaponType::RifleFireball ? Sfx::FlameShot : Sfx::HeavyMachineGun);
             };
         }
 
@@ -149,6 +155,8 @@ namespace ms
         user_ctx_.enemies.register_machines();
         user_ctx_.vfx.register_machine();
 
+        user_ctx_.sounds.load();
+
         app_ = scene.create_entity();
         scene.set<Transform>(app_);
         sm.start(scene, app_, GameState::Intro);
@@ -157,6 +165,10 @@ namespace ms
     void MetalSlug::intro_enter(const SM::Ctx& ctx)
     {
         ctx.scene.set<Sprite>(ctx.entity, anim::Hud::Intro);
+
+        user_ctx().sounds.stop_music();
+        user_ctx().sounds.play(Sfx::Title);
+
         create_hud_text(ctx.scene, anim::Hud::MediumFont, INTRO_TEXT, INTRO_TEXT_POS, INTRO_TEXT_LAYER);
     }
 
@@ -185,10 +197,17 @@ namespace ms
 
         user_ctx().vfx.init(ctx.scene);
         user_ctx().hud.create(ctx.scene);
+
+        user_ctx().sounds.music(Music::Gameplay);
+        user_ctx().sounds.play(Sfx::MissionStart);
     }
 
 
-    void MetalSlug::debrief_enter(const SM::Ctx& ctx) { user_ctx().debrief.create(ctx.scene); }
+    void MetalSlug::debrief_enter(const SM::Ctx& ctx)
+    {
+        user_ctx().debrief.create(ctx.scene);
+        user_ctx().sounds.music(Music::Debrief);
+    }
 
     GameState MetalSlug::on_debrief(const SM::Ctx& ctx)
     {
@@ -205,6 +224,9 @@ namespace ms
         s.hidden = false;
         s.play(anim::Hud::GameOver);
         s.color = 0_rgb;
+
+        user_ctx().sounds.music(Music::GameOver);
+        user_ctx().sounds.play(Sfx::GameOver);
     }
 
     GameState MetalSlug::on_game_over(const SM::Ctx& ctx)

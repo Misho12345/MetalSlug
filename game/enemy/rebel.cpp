@@ -586,6 +586,8 @@ namespace ms
 
             play(c, RebelAnim::KnifeSlash);
             rebel(c).body_offset = col.offset;
+
+            MetalSlug::user_ctx().sounds.play(Sfx::Knife);
         }
 
         RebelState on_slash(const RebelSM::Ctx& c)
@@ -646,6 +648,8 @@ namespace ms
         {
             die(c);
             play(c, RebelAnim::OnFireBig);
+
+            MetalSlug::user_ctx().sounds.rebel_death();
         }
 
         RebelState on_dying(const RebelSM::Ctx& c)
@@ -679,11 +683,14 @@ namespace ms
         {
             die(c);
 
+            // burning ones come through Dying, they've screamed already
             if (enemy(c).burning)
             {
                 play(c, RebelAnim::DeathFireBig);
                 return;
             }
+
+            MetalSlug::user_ctx().sounds.rebel_death();
 
             // 6 normal deaths and 2 bloody ones, the bloody ones have the blood drawn in already
             const int32_t r = rng().range(0, 7);

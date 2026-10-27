@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mse/api.hpp"
+#include "mse/pch.hpp"
 
 #include <miniaudio.h>
 
@@ -8,6 +9,8 @@ namespace mse
 {
     using sfx_id = uint32_t;
     static constexpr sfx_id NO_SFX = 0xFFFFFFFF;
+
+    using loop_music = bool_value<struct loop_music_tag>;
 
     struct GameCtx;
 
@@ -22,6 +25,11 @@ namespace mse
 
         sfx_id load_sfx(const char* path, uint32_t voice_count = 4);
         void play(sfx_id id, float volume = 1.0f);
+
+        // one track at a time, streamed from disk instead of decoded up front like the sfx.
+        // Starting one stops whatever was playing
+        bool play_music(const char* path, loop_music loop = loop_music::yes, float volume = 1.0f);
+        void stop_music();
 
         ma_engine& engine() { return engine_; }
 
@@ -45,6 +53,9 @@ namespace mse
 
         ma_engine engine_{};
         bool initialised_ = false;
+
+        ma_sound music_{};
+        bool music_loaded_ = false;
 
         vector<unique_ptr<SfxPool>> pools_{ nullptr };
         vector<DecodedClip> decoded_{ nullptr };

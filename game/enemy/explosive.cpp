@@ -31,5 +31,7 @@ namespace ms
 
         align(scene, boom, at);
         scene.destroy_entity(e);
+
+        MetalSlug::user_ctx().sounds.explosion();
     }
 }

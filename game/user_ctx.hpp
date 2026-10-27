@@ -6,6 +6,7 @@
 #include "enemy/enemies.hpp"
 #include "hud/hud.hpp"
 #include "hud/debrief.hpp"
+#include "sound.hpp"
 
 namespace ms
 {
@@ -19,5 +20,7 @@ namespace ms
 
         Hud     hud;
         Debrief debrief;
+
+        Sounds sounds;
     };
 }

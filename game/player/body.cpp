@@ -1,5 +1,6 @@
 #include "body.hpp"
 #include "bullets.hpp"
+#include "metal_slug.hpp"
 
 namespace ms
 {
@@ -154,6 +155,11 @@ namespace ms
             bd.fire_queued = false;
             bd.burst_left  = WEAPONS[(size_t)bd.weapon].burst;
             bd.burst_shot  = 0;
+
+            // once per burst, the machine gun's sound already is a whole burst
+            constexpr Sfx SHOT_SFX[]{ Sfx::Pistol, Sfx::MachineGun, Sfx::FireShot }; // indexed by WeaponType
+            static_assert(std::size(SHOT_SFX) == (size_t)WeaponType::COUNT);
+            MetalSlug::user_ctx().sounds.play(SHOT_SFX[(size_t)bd.weapon]);
 
             fire(c);
             c.state.ticks = 0;
