@@ -45,6 +45,15 @@ namespace mse
         frame_ = 0;
     }
 
+    void Sprite::force_frame(const uint32_t frame)
+    {
+        assert(frame < anim::frame_count(info_) && "Sprite::force_frame: frame out of range");
+
+        paused = true;
+        time_  = 0;
+        frame_ = frame;
+    }
+
 
 
     uvec2 Sprite::size() const

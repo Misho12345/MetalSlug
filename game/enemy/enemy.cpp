@@ -10,6 +10,8 @@ namespace ms
     {
         constexpr uint16_t CORPSE_TICKS = 24;
         constexpr uint16_t BLINK_TICKS  = 2;
+
+        constexpr uint32_t KILL_POINTS = 100;
     }
 
 
@@ -41,7 +43,10 @@ namespace ms
     void on_enemy_shot(Scene& scene, const entity_id self, const entity_id other, uint32_t)
     {
         Enemy& en = scene.get<Enemy>(self);
-        en.shot   = true;
+
+        // two bullets can land on the same tick, before its state machine gets to stop_colliding
+        if (!en.shot) MetalSlug::user_ctx().player.add_score(KILL_POINTS);
+        en.shot = true;
 
         const float vx = scene.get<Collider>(other).velocity.x;
         en.shot_dir    = (int8_t)(vx == 0.0f ? 0 : vx < 0.0f ? -1 : 1);

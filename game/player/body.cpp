@@ -242,7 +242,6 @@ namespace ms
             bd.restart   = true;
 
             --bd.lives;
-            printf("lives left: %u\n", (uint32_t)bd.lives);
         }
 
         // after the last life he stays down, the game over comes from MetalSlug::late_update

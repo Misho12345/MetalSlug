@@ -29,6 +29,8 @@ namespace ms
         static constexpr uint8_t FADE_TICKS = 6;
         static constexpr uint8_t TREE_TICKS = 6;
 
+        static constexpr uint32_t FREE_POINTS = 1000;
+
         static constexpr uint32_t FADE_TOTAL_TICKS = FADE_TICKS * mse::anim::frame_count(mse::anim::info(mse::anim::Pow::FadeOut));
 
         // middle of each strip in px, from the idle one's.

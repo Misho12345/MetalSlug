@@ -28,8 +28,9 @@ namespace ms
 
     void Player::create(Scene& scene)
     {
-        legs_ = scene.create_entity();
-        body_ = scene.create_entity();
+        legs_  = scene.create_entity();
+        body_  = scene.create_entity();
+        score_ = 0;
 
         scene.set<Transform>(legs_, ivec2{ 100, -50 });
         scene.set<Transform>(body_);

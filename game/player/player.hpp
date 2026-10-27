@@ -21,8 +21,14 @@ namespace ms
         int8_t facing(const mse::Scene& scene) const;
         bool   out_of_lives(const mse::Scene& scene) const;
 
+        uint32_t score() const { return score_; }
+        void     add_score(const uint32_t points) { score_ += points; }
+
     private:
         mse::entity_id legs_;
         mse::entity_id body_;
+
+        // here and not in BodyData, the body is destroyed on the way to the game over screen
+        uint32_t score_{};
     };
 }

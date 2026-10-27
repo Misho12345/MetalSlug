@@ -116,6 +116,13 @@ namespace mse
 
         void stop();
 
+        /**
+         * @brief Shows a specific frame of the current animation and keeps it there
+         * @param frame Frame index, must be less than the current animation's frame count
+         * @note Pauses the sprite. play() with the same animation carries on from this frame
+         */
+        void force_frame(uint32_t frame);
+
         [[nodiscard]] uvec2 size() const;
         [[nodiscard]] aabb bounds(const Transform& tr) const;
         [[nodiscard]] aabb screen_bounds(const Transform& tr, ivec2 cam_pos) const;

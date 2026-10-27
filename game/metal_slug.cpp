@@ -154,6 +154,7 @@ namespace ms
         load_spawables(ctx.scene);
 
         user_ctx().vfx.init(ctx.scene);
+        user_ctx().hud.create(ctx.scene);
     }
 
     void MetalSlug::gameplay_exit(const SM::Ctx& ctx)
@@ -219,6 +220,7 @@ namespace ms
         if (scene.get<State<GameState>>(app_).current == GameState::Gameplay)
         {
             user_ctx_.player.late_update(scene);
+            user_ctx_.hud.update(scene);
 
             if (Input::just_pressed(Key::Esc) || user_ctx_.player.out_of_lives(scene))
                 sm.force(scene, app_, GameState::GameOver);
