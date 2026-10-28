@@ -94,7 +94,7 @@ namespace mse
             priv_ctx_->debug_ui.begin_frame();
             #endif
 
-            priv_ctx_->post_processor.bind();
+            priv_ctx_->post_processor.bind(ctx_.scene.backdrop);
 
             uint32_t c = 0;
 

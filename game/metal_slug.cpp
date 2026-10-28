@@ -89,6 +89,7 @@ namespace ms
             }
 
             scene.set<Transform>(scene.camera()); // reset camera
+            scene.backdrop = { 0, 0, 0 };          // the game over picture fades in from black
         }
 
         constexpr const char* INTRO_TEXT = "PRESS SPACE TO PLAY";

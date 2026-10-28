@@ -15,9 +15,12 @@ namespace ms
             int32_t nudge_x;
         };
 
-        constexpr int32_t SKY_LAYER  = -200;
         constexpr int32_t FAR_LAYER  = -120; // behind bg.1, it shows where the white sky was cut out
         constexpr int32_t BACK_LAYER = -98;
+
+        // the rock at trees-2's jagged right end, the arch the ship sits in past the village is this colour,
+        // and the last few px of the level show it
+        constexpr color_t BACKDROP{ 74, 73, 49 };
 
         // over the player and anyone wading, under the aqua rebels and explosions on 3
         constexpr int32_t FRONT_WATER_LAYER = 2;
@@ -28,9 +31,11 @@ namespace ms
 
         // the far layer's Parallax Factor in Tiled, and the map's Parallax Origin (map px). Tiled draws a layer
         // (view center - origin) * (1 - factor) away from where it is, so with the same numbers here the far layer
-        // looks in the editor like it does in the game, and the ship can be dragged around until it fits
-        constexpr float   FAR_PARALLAX      = 0.1f;
-        constexpr int32_t PARALLAX_ORIGIN_X = 2560;
+        // looks in the editor like it does in the game.
+        // 0.75 is from a longplay, trees-2 moves 3 px for every 4 the camera does. The origin is picked so the
+        // spot it was measured at lands on a whole tile
+        constexpr float   FAR_PARALLAX      = 0.75f;
+        constexpr int32_t PARALLAX_ORIGIN_X = 2568;
 
         // indexed by the tile ids in props.tsx. The nudges are there because the water's first frame
         // is painted into bg.1 off the 8 px grid
@@ -44,13 +49,17 @@ namespace ms
             { Bg::WaterFront3, WATER_TICKS, FRONT_WATER_LAYER, 3 },
             { Bg::WaterfallBack, FALL_TICKS, BACK_LAYER - 1, 0 },
             { Bg::WaterfallFront, FALL_TICKS, BACK_LAYER, 0 },
-            { Bg::WaterfallPar, FALL_TICKS, FAR_LAYER, 0 },
+            { Bg::WaterfallPar, FALL_TICKS, FAR_LAYER + 1, 0 }, // its palm covers the ship's empty left edge
             { Bg::Ship, FALL_TICKS, FAR_LAYER, 0 },
-            { Bg::MetalFrame, 0, FOREGROUND_LAYER, 0 },
+            { Bg::MetalFrame, 0, FOREGROUND_LAYER, 5 }, // right leg on the hull opening's right edge
+            {},                                         // FAR_FROM
+            {},                                         // FAR_TO
+            { Bg::Trees1, 0, FAR_LAYER, 0 },
+            { Bg::Trees2, 0, FAR_LAYER, 0 },
         };
 
-        // markers on the props layer, not sprites. The far layer is only drawn while the screen overlaps the stretch
-        // between them, at 0.1 it would show through every bit of cut out sky, even above the submarine
+        // markers on the props layer, not sprites. The far layer is only drawn while the screen overlaps
+        // the stretch between them, so it can't show through cut out sky anywhere else
         constexpr int32_t FAR_FROM = 11;
         constexpr int32_t FAR_TO   = 12;
 
@@ -60,19 +69,6 @@ namespace ms
             int32_t to{ INT32_MAX };
         };
 
-
-        // 8 px wide and scaled to the screen, no point in a 304 px png of a vertical gradient
-        void create_sky(Scene& scene)
-        {
-            const entity_id e = scene.create_entity();
-            Transform&      tr = scene.set<Transform>(e, HALF_RESOLUTION_i);
-
-            Sprite& s = scene.set<Sprite>(e, Bg::Sky);
-            s.parallax_factor = { 0.0f, 0.0f };
-            s.layer           = SKY_LAYER;
-
-            tr.scale = { Target::RESOLUTION.x / s.size().x, 1 };
-        }
 
         // marker is the bottom left cell and not the top left like the rock, the ship is 230 px tall
         // and its top would be above the map. Tiled draws tiles bigger than the grid the same way
@@ -123,7 +119,7 @@ namespace ms
 
     void load_props(Scene& scene)
     {
-        create_sky(scene);
+        scene.backdrop = BACKDROP;
 
         FarProp window;
 

@@ -70,6 +70,9 @@ namespace mse
 
         entity_id bg_entity{};
 
+        // what shows where no sprite is drawn, like the Neo Geo's backdrop colour (the last entry of its palette RAM)
+        color_t backdrop{ 0, 0, 0 };
+
 
     private:
         vector<unique_ptr<IComponentPool>> pools_;

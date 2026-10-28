@@ -40,11 +40,12 @@ namespace mse
         return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
     }
 
-    void PostProcessor::bind() const
+    void PostProcessor::bind(const color_t clear) const
     {
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glViewport(0, 0, RESOLUTION_i.x, RESOLUTION_i.y);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+        glClearColor((float)clear.r / 255.0f, (float)clear.g / 255.0f, (float)clear.b / 255.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
     }
 

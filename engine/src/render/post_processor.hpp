@@ -38,7 +38,7 @@ namespace mse
 
         [[nodiscard]]
         bool init(string_view vertex_path, string_view fragment_path);
-        void bind() const;
+        void bind(color_t clear) const;
         void render(const Window& window) const;
 
         bool crt_enabled = true;
