@@ -3,7 +3,7 @@
 
 #include "user_ctx.hpp"
 
-#include "layer.hpp"
+#include "props.hpp"
 
 #include "player/components.hpp"
 #include "hud/number.hpp"
@@ -48,49 +48,6 @@ namespace ms
         }
 
 
-        void create_upgrade(Scene& scene, const ivec2 pos, WeaponType type)
-        {
-
-            static constexpr uvec2 CRATE_SIZE{ 2, 2 }; // in tiles
-            static constexpr ivec2 crate_off = ivec2(CRATE_SIZE) * TILE_SIZE_i / 2;
-
-            const entity_id upgrade = scene.create_entity();
-            scene.set<WeaponUpgrade>(upgrade, type);
-            scene.set<Transform>(upgrade, pos + crate_off);
-            scene.set<Sprite>(upgrade, [type]() -> anim::Other
-            {
-                switch (type)
-                {
-                    case WeaponType::RifleSpray: return anim::Other::RifleSprayPickup;
-                    case WeaponType::RifleFireball: return anim::Other::RifleFireballPickup;
-                    default: assert(!"not implemented");
-                }
-
-                return {};
-            }());
-
-
-            Collider& col = scene.set<Collider>(upgrade);
-
-            col.gravity = 0.0f;
-            col.collide_with_tile_map = false;
-
-            col.layer |= Layer::WeaponUpgrade;
-            col.target_layer |= Layer::Player;
-
-            col.callback = +[](Scene& scene, const entity_id self, entity_id, uint32_t)
-            {
-                if (!scene.get<Collider>(self).enabled) return;
-
-                scene.get<Collider>(self).enabled = false;
-                scene.get<Sprite>(self).hidden = true;
-
-                const Sounds& snd = MetalSlug::user_ctx().sounds;
-                snd.play(Sfx::Pickup);
-                snd.play(scene.get<WeaponUpgrade>(self).type == WeaponType::RifleFireball ? Sfx::FlameShot : Sfx::HeavyMachineGun);
-            };
-        }
-
         void load_spawables(Scene& scene)
         {
             const UserCtx& u = MetalSlug::user_ctx();
@@ -114,12 +71,7 @@ namespace ms
                         case 2: u.enemies.spawn(scene, pos, EnemyKind::Rebel); break;
                         case 3: u.enemies.spawn(scene, pos, EnemyKind::AquaRebel); break;
                         case 4: create_rock(scene, pos, { x, y }); break;
-                        case 5:
-                            // TODO: replace with crate
-                            create_upgrade(scene, pos, WeaponType::RifleSpray);
-                            create_upgrade(scene, pos - 20, WeaponType::RifleFireball);
-                            create_upgrade(scene, pos - 40, WeaponType::RifleSpray);
-                            break;
+                        case 5: u.pickups.spawn_crate(scene, pos); break;
                         default: assert(!"not implemented"); return;
                     }
                 }
@@ -192,6 +144,7 @@ namespace ms
         }
 
         create_bg(ctx.scene);
+        load_props(ctx.scene);
         user_ctx().player.create(ctx.scene);
         load_spawables(ctx.scene);
 
@@ -268,6 +221,7 @@ namespace ms
         if (state == GameState::Gameplay)
         {
             user_ctx_.player.late_update(scene);
+            user_ctx_.pickups.update(scene);
             user_ctx_.hud.update(scene);
 
             if (Input::just_pressed(Key::Esc) || user_ctx_.player.out_of_lives(scene))

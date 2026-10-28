@@ -111,7 +111,7 @@ namespace ms
             Collider& col    = scene.set<Collider>(bullet);
             col.enabled      = false;
             col.gravity      = 0.0f;
-            col.target_layer |= Layer::TileMap | Layer::POW | Layer::Enemy;
+            col.target_layer |= Layer::TileMap | Layer::POW | Layer::Enemy | Layer::Crate;
             col.layer        |= Layer::PlayerProjectile;
 
             col.callback = +[](Scene& scene, const entity_id self, entity_id, const uint32_t layer)

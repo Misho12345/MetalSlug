@@ -17,6 +17,9 @@ namespace ms
 
         EnemyKnife = 1 << 6,
 
+        Crate        = 1 << 7,
+        PointsPickup = 1 << 8, // not in the player's target_layer, unlike WeaponUpgrade the pickup scores itself
+
         TileMap = mse::Collider::TILE_MAP_LAYER
     };
 

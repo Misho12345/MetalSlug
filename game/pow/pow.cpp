@@ -47,6 +47,10 @@ namespace ms
 
             const bool s = sitting(c);
             play_at(c, s ? Pow::SittingFree : Pow::TreeFree, FREE_TICKS, s ? SITTING_FREE_X : TREE_FREE_X);
+
+            // last, it creates entities
+            const ivec2 at = c.scene.get<Data>(c.entity).base + ivec2{ DROP_X, 0 };
+            MetalSlug::user_ctx().pickups.drop_random(c.scene, at);
         }
 
         static PowState on_free(const PowSM::Ctx& c)

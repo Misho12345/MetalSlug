@@ -39,6 +39,9 @@ namespace ms
         static constexpr int32_t TREE_FADE_X    = 0;
         static constexpr int32_t TREE_DESTROY_X = 24;
 
+        // left, the tree falls apart to the right (TREE_DESTROY_X)
+        static constexpr int32_t DROP_X = -20;
+
 
         struct Data final
         {
