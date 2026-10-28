@@ -15,9 +15,10 @@ namespace ms
         constexpr uint8_t CRATE_TICKS[]{ 70, 4, 4, 4, 4, 4 };
 
         constexpr uint8_t EXPLOSION_TICKS = 2;
-        constexpr int32_t EXPLOSION_LAYER = 2;
+        constexpr int32_t EXPLOSION_LAYER = 3;
 
-        constexpr int32_t DROP_LAYER = -1; // behind the player and the POW handing it over
+        constexpr int32_t CRATE_LAYER = -1; // behind the player
+        constexpr int32_t DROP_LAYER  = 3;  // over the front water, on the riverbed the points would be under it
 
         constexpr int32_t POINTS_DIGITS = 3; // 500
         constexpr int32_t GLYPH         = 8;
@@ -121,7 +122,7 @@ namespace ms
 
         Sprite& s = scene.get<Sprite>(crate);
         s.play(anim::Other::Crate, CRATE_TICKS, is_reversed::no, should_loop::yes);
-        s.layer = DROP_LAYER;
+        s.layer = CRATE_LAYER;
 
         scene.set<Crate>(crate);
 

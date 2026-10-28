@@ -222,6 +222,7 @@ namespace ms
         {
             user_ctx_.player.late_update(scene);
             user_ctx_.pickups.update(scene);
+            update_props(scene);
             user_ctx_.hud.update(scene);
 
             if (Input::just_pressed(Key::Esc) || user_ctx_.player.out_of_lives(scene))

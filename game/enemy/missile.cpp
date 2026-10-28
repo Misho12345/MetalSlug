@@ -62,7 +62,7 @@ namespace ms
 
         Sprite& spr = scene.set<Sprite>(m, anim::Projectile::AquaRebelMissile, FLAME_TICKS, should_loop::yes);
         spr.flip_x  = dir > 0;
-        spr.layer   = 1;
+        spr.layer   = 3;
 
         Collider& col = scene.set<Collider>(m, ivec2{ dir < 0 ? BOX_X : -BOX_X, 0 }, ivec2(BOX));
 

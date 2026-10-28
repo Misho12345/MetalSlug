@@ -9,7 +9,7 @@ namespace ms
     namespace
     {
         constexpr uint8_t EXPLOSION_TICKS = 2;
-        constexpr int32_t EXPLOSION_LAYER = 2;
+        constexpr int32_t EXPLOSION_LAYER = 3;
     }
 
 

@@ -35,6 +35,8 @@ namespace ms
         constexpr int32_t JUMP_MIN = 16; // it still has to come out of the water with the player down low
         constexpr int32_t JUMP_MAX = 120;
 
+        constexpr int32_t SPRITE_LAYER = 3; // over the front water, under it the idle head is gone
+
 
         struct AquaData final
         {
@@ -224,6 +226,7 @@ namespace ms
     entity_id AquaRebelManager::spawn(Scene& scene, const ivec2 pos) const
     {
         const entity_id e = spawn_standing(scene, pos, AquaAnim::Idle);
+        scene.get<Sprite>(e).layer = SPRITE_LAYER;
 
         scene.set<Enemy>(e);
 

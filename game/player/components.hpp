@@ -31,7 +31,7 @@ namespace ms
     // could've made it extracted at runtime, but it's completely unnecessary
     constexpr uvec2 LEGS_SIZE{ 21, 16 };
 
-    constexpr uint8_t  START_LIVES        = 3;
+    constexpr uint8_t  START_LIVES        = 30; // TODO: change back to 3 later
     constexpr uint16_t DEAD_TICKS         = 150; // the death animation and lying there for a bit
     constexpr uint16_t INVULNERABLE_TICKS = 90; // after respawning
 

@@ -104,7 +104,10 @@ namespace ms
             const entity_id bullet = scene.create_entity();
 
             scene.set<Transform>(bullet);
-            scene.set<Sprite>(bullet, anim::Projectile::Pistol).hidden = true;
+            // over the front water, crouching in it the gun is under the surface
+            Sprite& spr = scene.set<Sprite>(bullet, anim::Projectile::Pistol);
+            spr.hidden  = true;
+            spr.layer   = 3;
             scene.set<PlayerBullet>(bullet, WeaponType::Pistol);
             scene.set<Projectile>(bullet, ProjectileType::Bullet);
 
