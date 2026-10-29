@@ -15,7 +15,6 @@ namespace ms
         using FxAnim     = anim::boss::CannonFx;
         using BossSM     = StateMachine<BossState>;
 
-        // from waterfall-front's top left. The ship's base is painted into its right end, at this offset the two
         // rips match pixel for pixel
         constexpr ivec2 SHIP_FROM_FRONT{ 448, -64 };
 
@@ -520,13 +519,13 @@ namespace ms
         for (size_t i = 0; i < std::size(tied); ++i) d.pows[i] = tied[i];
         scene.set<Sprite>(cannon_, CannonAnim::Move).layer = CANNON_LAYER;
 
-        Collider& col             = scene.set<Collider>(cannon_, ivec2{ 0 }, ivec2(BOX_SIZE));
-        col.gravity               = 0.0f;
+        Collider& col = scene.set<Collider>(cannon_, ivec2{ 0 }, ivec2(BOX_SIZE));
+        col.gravity = 0.0f;
         col.collide_with_tile_map = false;
-        col.enabled               = false; // until it turns around
-        col.layer                 |= Layer::Enemy;
-        col.target_layer          |= Layer::PlayerProjectile;
-        col.callback              = on_cannon_shot;
+        col.enabled = false; // until it turns around
+        col.layer |= Layer::Enemy;
+        col.target_layer |= Layer::PlayerProjectile;
+        col.callback = on_cannon_shot;
 
         boss_sm.start(scene, cannon_, BossState::Asleep);
     }
