@@ -1,7 +1,7 @@
 include_guard(GLOBAL)
 
 if (MSVC AND MSE_ENABLE_ASAN)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL" CACHE STRING "" FORCE)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
     string(REGEX REPLACE "/RTC[1su]+" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
 endif ()
 
@@ -86,15 +86,17 @@ function(mse_apply_flags target)
 
 
     if (MSE_ENABLE_ASAN)
+        set(_asan_cfg "$<CONFIG:Debug,RelWithDebInfo>")
+
         if (CLANG_CL)
-            target_compile_options(${target} PRIVATE -fsanitize=address)
+            target_compile_options(${target} PRIVATE $<${_asan_cfg}:-fsanitize=address>)
         elseif (MSVC)
-            target_compile_options(${target} PRIVATE /fsanitize=address)
-            target_link_options(${target} PRIVATE /INCREMENTAL:NO)
+            target_compile_options(${target} PRIVATE $<${_asan_cfg}:/fsanitize=address>)
+            target_link_options(${target} PRIVATE $<${_asan_cfg}:/INCREMENTAL:NO>)
         else ()
             # GCC/GNU Clang
-            target_compile_options(${target} PRIVATE -fsanitize=address -fno-omit-frame-pointer)
-            target_link_options(${target} PRIVATE -fsanitize=address)
+            target_compile_options(${target} PRIVATE $<${_asan_cfg}:-fsanitize=address -fno-omit-frame-pointer>)
+            target_link_options(${target} PRIVATE $<${_asan_cfg}:-fsanitize=address>)
         endif ()
     endif ()
 

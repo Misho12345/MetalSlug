@@ -23,17 +23,17 @@ function(add_mse_executable target)
     file(WRITE ${main} "
         #include \"${target}.hpp\"
 
-        // #if !defined(NDEBUG) && defined(_MSC_VER)
-        // #include <crtdbg.h>
-        // #endif
+        #if defined(_MSC_VER) && defined(_DEBUG)
+        #include <crtdbg.h>
+        #endif
 
         int main()
         {
-            // #if !defined(NDEBUG) && defined(_MSC_VER)
-            // _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-            // _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-            // _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDOUT);
-            // #endif
+            #if defined(_MSC_VER) && defined(_DEBUG)
+            _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+            _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
+            _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDOUT);
+            #endif
 
             ${pascal_name} game;
             game.setup();
