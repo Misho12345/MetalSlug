@@ -4,6 +4,7 @@
 #include "ecs/scene.hpp"
 #include "collision/tile_map.hpp"
 #include "mse/audio/audio.hpp"
+#include "mse/particles/particle_system.hpp"
 
 #include "mse/random/random.hpp"
 
@@ -21,6 +22,8 @@ namespace mse
         Scene   scene;
         TileMap tile_map;
         Audio   audio;
+
+        ParticleSystem particles;
 
         Random rng;
 

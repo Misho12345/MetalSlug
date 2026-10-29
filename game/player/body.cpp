@@ -8,6 +8,12 @@ namespace ms
     {
         constexpr int32_t SHOOT_OFFSET = 10;
 
+        // the spray's casings, thrown back over the shoulder
+        constexpr ivec2    SHELL_OFFSET{ 4, 6 }; // top of the gun, from the body facing right
+        constexpr float    SHELL_GRAVITY = 500.0f;
+        constexpr uint16_t SHELL_LIFE    = 30;   // about down to the feet when standing
+        constexpr int32_t  SHELL_LAYER   = 2;    // over the body, under the bullets
+
 
         // raising and lowering the gun. Not while crouching, down is held then
         bool look_changed(const BodySM::Ctx& c)
@@ -117,6 +123,21 @@ namespace ms
             return vel;
         }
 
+        void eject_shell(const ivec2 body, const int8_t facing)
+        {
+            const Random& rng = App::ctx().rng;
+
+            App::ctx().particles.emit(anim::Vfx::Shell, {
+                .position = vec2(body + ivec2{ facing * SHELL_OFFSET.x, SHELL_OFFSET.y }),
+                .velocity = { (float)-facing * rng.range(30.0f, 70.0f), -rng.range(70.0f, 110.0f) },
+                .gravity  = SHELL_GRAVITY,
+                // right angles only, a 2x1 quad turned to anything else can miss every pixel centre and blink out
+                .rotation = (float)rng.range(0, 1) * 90.0_deg,
+                .life     = SHELL_LIFE,
+                .layer    = SHELL_LAYER
+            });
+        }
+
         void fire(const BodySM::Ctx& c)
         {
             const bool air = in_air(c);
@@ -140,7 +161,10 @@ namespace ms
             bd.restart = true;
 
             const ivec2 dir = aim_dir(bd.aim, ld.facing);
-            fire_bullet(c.scene, bd.weapon, c.scene.get<Transform>(c.entity).position + dir * SHOOT_OFFSET, vel, ld.facing);
+            const ivec2 pos = c.scene.get<Transform>(c.entity).position;
+
+            fire_bullet(c.scene, bd.weapon, pos + dir * SHOOT_OFFSET, vel, ld.facing);
+            if (bd.weapon == WeaponType::RifleSpray) eject_shell(pos, ld.facing);
 
             ++bd.burst_shot;
             --bd.burst_left;

@@ -5,6 +5,7 @@
 #include "gl/shader.hpp"
 #include "gl/texture_2d.hpp"
 #include "mse/ecs/scene.hpp"
+#include "mse/render/instance_data.hpp"
 
 namespace mse
 {
@@ -12,7 +13,7 @@ namespace mse
 
     /**
      * @brief Renderer class
-     * @details It manages the rendering of sprites,
+     * @details It manages the rendering of sprites and particles,
      * the SpriteAnimationData buffers, InstanceData, CameraData and sprite atlases
      * @note Owned by PrivCtx, not constructable by anything else and not movable or copyable
      */
@@ -38,25 +39,9 @@ namespace mse
             vec2 camera_pos;
         };
 
-        /// @brief struct for InstanceData SSBO
-        struct alignas(8) InstanceData final
-        {
-            vec2 parallax_factor;
-
-            ivec2 position;
-            ivec2 scale;
-            float rotation;
-
-            uint32_t anim_idx;
-            uint32_t frame_idx;
-
-            uint32_t flip_x;
-
-            uint32_t color;
-        };
-
         void update_camera_data(const Scene& scene) const;
         void update_instances_buffer(const Scene& scene);
+        size_t layer_slot(int32_t layer);
 
         void init_camera_data(const Scene& scene);
         void init_instance_data(const Scene& scene);
@@ -76,6 +61,7 @@ namespace mse
 
         vector<vector<InstanceData>> instances_{};
         vector<int32_t> layers_{};
+        vector<const vector<InstanceData>*> particles_{}; // ParticleSystem's buffer per layer, if it has one
         vector<size_t>  order_{};
 
         friend ::mse::PrivCtx;

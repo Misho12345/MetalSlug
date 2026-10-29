@@ -14,6 +14,14 @@ namespace ms
         return shift;
     }
 
+    // where a particle goes for the bottom middle of its frame to be on to, what align does for entities
+    template <mse::anim::sprite_enum E>
+    mse::vec2 standing_on(const E animation, const mse::ivec2 to)
+    {
+        const int32_t h = (int32_t)mse::ParticleSystem::frame_size(animation).y;
+        return mse::vec2(to.x, to.y - (h - h / 2));
+    }
+
     // what everything placed on the spawn layer starts as, standing on pos
     template <mse::anim::sprite_enum E>
     mse::entity_id spawn_standing(mse::Scene& scene, const mse::ivec2 pos, const E idle)

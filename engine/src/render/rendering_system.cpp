@@ -156,7 +156,7 @@ namespace mse
         size_t acc_size = 0;
         for (const size_t layer_idx : order_)
         {
-            const vector<InstanceData>& layer = instances_[layer_idx];
+            const size_t count = instances_[layer_idx].size() + (particles_[layer_idx] ? particles_[layer_idx]->size() : 0);
 
             // there are 6 hardcoded vertices in the vertex shader for the quad
             // with depth testing there would be only alpha discarding, which is not what the assignment asks for
@@ -165,9 +165,9 @@ namespace mse
 
             glDrawArraysInstancedBaseInstance(GL_TRIANGLES,
                 0, 6,
-                (GLsizei)layer.size(), acc_size);
+                (GLsizei)count, acc_size);
 
-            acc_size += layer.size();
+            acc_size += count;
         }
     }
 
@@ -191,6 +191,7 @@ namespace mse
 
         for (vector<InstanceData>& instances_layer : instances_) instances_layer.clear();
         layers_.clear();
+        particles_.clear();
 
         assert(sprites.size() == entities.size());
 
@@ -206,22 +207,7 @@ namespace mse
 
             if (!(sprite.screen_bounds(tr, cam_pos) & aabb::screen)) continue;
 
-            size_t idx = layers_.find(sprite.layer);
-
-            if (idx == vector<>::npos)
-            {
-                layers_.emplace_back(sprite.layer);
-
-                if (instances_.size() < layers_.size())
-                {
-                    instances_.emplace_back();
-                    instances_.back().reserve(25);
-                }
-
-                idx = layers_.size() - 1;
-            }
-
-            instances_[idx].emplace_back(
+            instances_[layer_slot(sprite.layer)].emplace_back(
                     sprite.parallax_factor,
                     tr.position,
                     tr.scale,
@@ -232,10 +218,18 @@ namespace mse
                     sprite.color.data_u32);
         }
 
+        // not culled, they're few and short lived, and culling would mean copying them one by one
+        // instead of handing over the whole buffer
+        for (const ParticleSystem::Layer& l : App::ctx().particles.layers_)
+        {
+            if (!l.instances.empty()) particles_[layer_slot(l.layer)] = &l.instances;
+        }
+
 
         // transfer the data into the persistent buffer
         size_t total_size = 0;
         for (const vector<InstanceData>& instances_layer : instances_) total_size += instances_layer.size();
+        for (const vector<InstanceData>* p : particles_) total_size += p ? p->size() : 0;
         instance_data_.increase_size<InstanceData>(total_size);
 
 
@@ -243,7 +237,7 @@ namespace mse
         order_.clear();
         for (size_t i = 0; i < layers_.size(); ++i)
         {
-            if (instances_[i].empty()) continue;
+            if (instances_[i].empty() && !particles_[i]) continue;
             order_.emplace_back(i);
         }
 
@@ -265,10 +259,36 @@ namespace mse
         {
             const vector<InstanceData>& instances_layer = instances_[layer_idx];
 
-            if (instances_layer.empty()) continue;
-            memcpy(ptr, instances_layer.data(), instances_layer.size() * sizeof(InstanceData));
-            ptr += instances_layer.size();
+            if (!instances_layer.empty())
+            {
+                memcpy(ptr, instances_layer.data(), instances_layer.size() * sizeof(InstanceData));
+                ptr += instances_layer.size();
+            }
+
+            // after the sprites, a particle is never under a sprite on its own layer
+            if (const vector<InstanceData>* p = particles_[layer_idx])
+            {
+                memcpy(ptr, p->data(), p->size() * sizeof(InstanceData));
+                ptr += p->size();
+            }
         }
+    }
+
+    size_t RenderingSystem::layer_slot(const int32_t layer)
+    {
+        size_t idx = layers_.find(layer);
+        if (idx != vector<>::npos) return idx;
+
+        layers_.emplace_back(layer);
+        particles_.emplace_back(nullptr);
+
+        if (instances_.size() < layers_.size())
+        {
+            instances_.emplace_back();
+            instances_.back().reserve(25);
+        }
+
+        return layers_.size() - 1;
     }
 
 

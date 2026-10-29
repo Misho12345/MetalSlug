@@ -132,10 +132,8 @@ namespace ms
 
 
         enum class ShotState : uint8_t { Flying, COUNT };
-        enum class TrailState : uint8_t { Fading, COUNT };
 
-        using ShotSM  = StateMachine<ShotState>;
-        using TrailSM = StateMachine<TrailState>;
+        using ShotSM = StateMachine<ShotState>;
 
 
         ivec2 ship_pos(const ivec2 front) { return front + SHIP_FROM_FRONT; }
@@ -193,28 +191,6 @@ namespace ms
         bool anim_done(const BossSM::Ctx& c) { return c.scene.get<Sprite>(c.entity).anim_done(); }
 
 
-        TrailState on_fading(const TrailSM::Ctx& c)
-        {
-            return c.scene.get<Sprite>(c.entity).anim_done() ? TrailState::COUNT : TrailState::Fading;
-        }
-
-        void trail_end(const TrailSM::Ctx& c) { c.scene.destroy_entity(c.entity); }
-
-        constexpr TrailSM trail_sm
-        {
-            TrailSM::Behaviour{ nullptr, on_fading, trail_end }, // Fading
-        };
-
-        void drop_trail(Scene& scene, const ivec2 at)
-        {
-            const entity_id e = scene.create_entity();
-            scene.set<Transform>(e, at);
-            scene.set<Sprite>(e, FxAnim::Trail, TRAIL_TICKS).layer = SHOT_LAYER - 1;
-
-            trail_sm.start(scene, e, TrailState::Fading);
-        }
-
-
         ShotState on_flying(const ShotSM::Ctx& c)
         {
             if (c.scene.get<Explosive>(c.entity).exploded || c.state.ticks >= SHOT_LIFE) return ShotState::COUNT;
@@ -228,8 +204,11 @@ namespace ms
                 const vec2  v    = c.scene.get<Collider>(c.entity).velocity;
                 const ivec2 tail = tr.position - ivec2(glm::normalize(v) * (float)SHOT_BOX.x);
 
-                // creates an entity, no component references across this
-                drop_trail(c.scene, tail);
+                App::ctx().particles.emit(FxAnim::Trail, {
+                    .position  = vec2(tail),
+                    .frame_dur = TRAIL_TICKS,
+                    .layer     = SHOT_LAYER - 1
+                });
             }
 
             return ShotState::Flying;
@@ -451,7 +430,7 @@ namespace ms
             const ivec2 at   = ship + ivec2{ rng.range(120, 360), rng.range(60, 230) };
 
             const anim::Vfx a = t % (3 * BLAST_EVERY) == 0 ? anim::Vfx::BigExplosion : anim::Vfx::SmallExplosion;
-            MetalSlug::user_ctx().vfx.create(c.scene, at, a, BLAST_TICKS, SHOT_LAYER);
+            App::ctx().particles.emit(a, { .position = vec2(at), .frame_dur = BLAST_TICKS, .layer = SHOT_LAYER });
             MetalSlug::user_ctx().sounds.explosion();
 
             return BossState::Dying;
@@ -478,7 +457,6 @@ namespace ms
         StateMachineSystem& sms = App::ctx().state_machines;
         sms.add(boss_sm);
         sms.add(shot_sm);
-        sms.add(trail_sm);
     }
 
     void Boss::create(Scene& scene, const ivec2 front)

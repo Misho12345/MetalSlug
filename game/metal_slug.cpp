@@ -88,6 +88,8 @@ namespace ms
                     scene.destroy_entity(owner);
             }
 
+            App::ctx().particles.clear();
+
             scene.set<Transform>(scene.camera()); // reset camera
             scene.backdrop = { 0, 0, 0 };          // the game over picture fades in from black
         }
@@ -107,7 +109,6 @@ namespace ms
         user_ctx_.pows.register_machine();
         user_ctx_.enemies.register_machines();
         user_ctx_.boss.register_machines();
-        user_ctx_.vfx.register_machine();
 
         user_ctx_.sounds.load();
 
@@ -150,7 +151,6 @@ namespace ms
         user_ctx().player.create(ctx.scene);
         load_spawables(ctx.scene);
 
-        user_ctx().vfx.init(ctx.scene);
         user_ctx().hud.create(ctx.scene);
 
         user_ctx().sounds.music(Music::Gameplay);

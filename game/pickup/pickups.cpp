@@ -172,10 +172,11 @@ namespace ms
 
             scene.destroy_entity(crate);
 
-            // no component references across these, both create entities
-            const entity_id boom = MetalSlug::user_ctx().vfx.create(
-                scene, {}, anim::Vfx::SmallExplosion, EXPLOSION_TICKS, EXPLOSION_LAYER);
-            align(scene, boom, floor);
+            App::ctx().particles.emit(anim::Vfx::SmallExplosion, {
+                .position  = standing_on(anim::Vfx::SmallExplosion, floor),
+                .frame_dur = EXPLOSION_TICKS,
+                .layer     = EXPLOSION_LAYER
+            });
 
             MetalSlug::user_ctx().sounds.explosion();
 

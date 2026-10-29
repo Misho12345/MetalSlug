@@ -665,18 +665,18 @@ namespace ms
             // where it comes out of is fixed to the rebel, which way it sprays follows the bullet
             const ivec2   chest = feet(c.scene, c.entity) + ivec2{ en.facing < 0 ? b.chest.x : -b.chest.x, b.chest.y };
             const int8_t  dir   = en.shot_dir != 0 ? en.shot_dir : (int8_t)-en.facing;
-            const int32_t layer = c.scene.get<Sprite>(c.entity).layer + 1;
-
-            const entity_id splash = MetalSlug::user_ctx().vfx.create(c.scene, {}, b.anim, BLOOD_TICKS, layer);
-
-            Sprite& spr = c.scene.get<Sprite>(splash);
-            spr.flip_x  = dir < 0;
+            const bool    flip  = dir < 0;
+            const ivec2   size  = ivec2(ParticleSystem::frame_size(b.anim));
 
             ivec2 source = b.source;
-            if (spr.flip_x) source.x = (int32_t)spr.size().x - 1 - source.x;
+            if (flip) source.x = size.x - 1 - source.x;
 
-            Transform& tr = c.scene.get<Transform>(splash);
-            tr.position   += chest - (spr.bounds(tr).min + source);
+            App::ctx().particles.emit(b.anim, {
+                .position  = vec2(chest + size / 2 - source),
+                .frame_dur = BLOOD_TICKS,
+                .layer     = c.scene.get<Sprite>(c.entity).layer + 1,
+                .flip_x    = flip
+            });
         }
 
         void dead_enter(const RebelSM::Ctx& c)

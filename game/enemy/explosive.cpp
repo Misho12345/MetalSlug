@@ -26,10 +26,12 @@ namespace ms
 
     void explode(Scene& scene, const entity_id e, const ivec2 at)
     {
-        const entity_id boom = MetalSlug::user_ctx().vfx.create(
-            scene, {}, anim::Vfx::SmallExplosion, EXPLOSION_TICKS, EXPLOSION_LAYER);
+        App::ctx().particles.emit(anim::Vfx::SmallExplosion, {
+            .position  = standing_on(anim::Vfx::SmallExplosion, at),
+            .frame_dur = EXPLOSION_TICKS,
+            .layer     = EXPLOSION_LAYER
+        });
 
-        align(scene, boom, at);
         scene.destroy_entity(e);
 
         MetalSlug::user_ctx().sounds.explosion();

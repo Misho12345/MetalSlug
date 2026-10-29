@@ -103,6 +103,7 @@ namespace mse
                 update();
                 ctx_.state_machines.update(ctx_.scene);
                 priv_ctx_->animation_system.update(ctx_.scene);
+                ctx_.particles.update();
                 priv_ctx_->collision_system.step(ctx_.scene);
                 late_update();
 

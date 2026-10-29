@@ -62,12 +62,13 @@ namespace ms
         // TreeFree still draws the whole tree, so the falling apart one only takes over here
         static void spawn_tree(const PowSM::Ctx& c)
         {
-            // read before set<Sprite>, which can move the pool
-            const int32_t layer = c.scene.get<Sprite>(c.entity).layer - 1;
-            const ivec2   at    = c.scene.get<Data>(c.entity).base + ivec2{ TREE_DESTROY_X, 0 };
+            const ivec2 at = c.scene.get<Data>(c.entity).base + ivec2{ TREE_DESTROY_X, 0 };
 
-            const entity_id tree = MetalSlug::user_ctx().vfx.create(c.scene, {}, anim::Vfx::TreeDestroy, TREE_TICKS, layer);
-            align(c.scene, tree, at);
+            App::ctx().particles.emit(anim::Vfx::TreeDestroy, {
+                .position  = standing_on(anim::Vfx::TreeDestroy, at),
+                .frame_dur = TREE_TICKS,
+                .layer     = c.scene.get<Sprite>(c.entity).layer - 1
+            });
         }
 
         static void fade_out_enter(const PowSM::Ctx& c)
