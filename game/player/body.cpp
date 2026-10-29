@@ -100,7 +100,8 @@ namespace ms
             return up ? Aim::DiagUp : Aim::DiagDown;
         }
 
-        // per bullet rather than per burst, so a turn can start mid burst and carry over into the next one
+        // per bullet and not per burst as it used to be
+        // so a turn can start mid burst and carry over into the next one
         vec2 spray(BodyData& bd, const int8_t facing, const bool air, const int32_t to)
         {
             // landed mid burst
@@ -131,8 +132,6 @@ namespace ms
                 .position = vec2(body + ivec2{ facing * SHELL_OFFSET.x, SHELL_OFFSET.y }),
                 .velocity = { (float)-facing * rng.range(30.0f, 70.0f), -rng.range(70.0f, 110.0f) },
                 .gravity  = SHELL_GRAVITY,
-                // right angles only, a 2x1 quad turned to anything else can miss every pixel centre and blink out
-                .rotation = (float)rng.range(0, 1) * 90.0_deg,
                 .life     = SHELL_LIFE,
                 .layer    = SHELL_LAYER
             });

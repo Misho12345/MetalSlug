@@ -11,11 +11,9 @@ namespace mse
 
     struct ParticleDesc final
     {
-        vec2 position{};  // centre of the frame, like Transform
-        vec2 velocity{};  // px/s
+        vec2  position{}; // centre of the frame, like Transform
+        vec2  velocity{}; // px/s
         float gravity{};  // px/s^2
-        float rotation{};
-        float spin{};     // rad/s
 
         uvec2 scale{ 1 };
         vec2  parallax_factor{ 1.0f, 1.0f };
@@ -30,7 +28,7 @@ namespace mse
     };
 
     /**
-     * @brief Sprites that only move, spin and animate, without being entities
+     * @brief Sprites that only move and animate, without being entities
      * @details Each particle is kept as the InstanceData the sprite shader reads, so drawing them is a copy
      * into the instance buffer. What the shader doesn't need (velocity, life, animation timing) sits in a
      * second array at the same index. Dead particles are swapped with the last one and popped
@@ -68,7 +66,6 @@ namespace mse
             vec2  position; // sub-pixel, InstanceData::position is this floored
             vec2  velocity;
             float gravity;
-            float spin;
 
             uint16_t life;
             uint8_t  frame_dur;

@@ -26,8 +26,6 @@ namespace mse
         sfx_id load_sfx(const char* path, uint32_t voice_count = 4);
         void play(sfx_id id, float volume = 1.0f);
 
-        // one track at a time, streamed from disk instead of decoded up front like the sfx.
-        // Starting one stops whatever was playing
         bool play_music(const char* path, loop_music loop = loop_music::yes, float volume = 1.0f);
         void stop_music();
 

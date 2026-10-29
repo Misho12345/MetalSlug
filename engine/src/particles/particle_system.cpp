@@ -35,7 +35,7 @@ namespace mse
             .parallax_factor = desc.parallax_factor,
             .position        = ivec2(glm::floor(desc.position)),
             .scale           = ivec2(desc.scale),
-            .rotation        = desc.rotation,
+            .rotation        = 0.0f,
             .anim_idx        = anim::global_anim_id(info),
             .frame_idx       = 0,
             .flip_x          = desc.flip_x,
@@ -46,7 +46,6 @@ namespace mse
             .position    = desc.position,
             .velocity    = desc.velocity,
             .gravity     = desc.gravity,
-            .spin        = desc.spin,
             .life        = desc.life,
             .frame_dur   = desc.frame_dur,
             .time        = 0,
@@ -90,7 +89,6 @@ namespace mse
                 m.position   += m.velocity * dt;
 
                 inst.position = ivec2(glm::floor(m.position));
-                inst.rotation += m.spin * dt;
             }
         }
     }

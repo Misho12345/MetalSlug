@@ -116,7 +116,7 @@ namespace ms
             case Body::DeathByStabbing: return { 4, { -3, -24 }, End::Hold, true };
             case Body::DeathByGrenade:  return { 4, { -1, -20 }, End::Hold, true };
 
-            // TODO: knife, throw, drink, reload
+            // TODO: knife, throw, drink, reload if time
             default: assert(!"not implemented"); return {};
         }
     }

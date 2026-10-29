@@ -6,11 +6,7 @@
 #include "vector.hpp"
 #include "span.hpp"
 
-#include "list.hpp"
-
 #include "unique_ptr.hpp"
-
-#include "optional.hpp"
 
 #include "memory.hpp"
 #include "algorithm.hpp"
