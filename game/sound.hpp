@@ -21,12 +21,16 @@ namespace ms
         PowFreed,
         Knife,
 
+        CannonShot,
+        MissionComplete,
+
         COUNT
     };
 
     enum class Music : uint8_t
     {
         Gameplay,
+        Boss,
         Debrief,
         GameOver,
         COUNT

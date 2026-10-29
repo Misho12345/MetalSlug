@@ -62,8 +62,8 @@ namespace ms
         constexpr uint16_t CAUTION_TICKS    = 30;
         constexpr float    TURN_BACK_CHANCE = 0.5f;
 
-        constexpr int32_t  GRENADE_CD_MIN = 120;
-        constexpr int32_t  GRENADE_CD_MAX = 240;
+        constexpr int32_t  GRENADE_CD_MIN = 180;
+        constexpr int32_t  GRENADE_CD_MAX = 300;
         constexpr uint32_t MAX_GRENADES   = 3;
 
         constexpr int32_t WANDER_MIN = 60; // ticks

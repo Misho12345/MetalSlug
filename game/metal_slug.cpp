@@ -106,6 +106,7 @@ namespace ms
         user_ctx_.player.register_machines();
         user_ctx_.pows.register_machine();
         user_ctx_.enemies.register_machines();
+        user_ctx_.boss.register_machines();
         user_ctx_.vfx.register_machine();
 
         user_ctx_.sounds.load();
@@ -221,12 +222,13 @@ namespace ms
 
         if (state == GameState::Gameplay)
         {
+            user_ctx_.boss.late_update(scene); // before the player's sprites and the camera are placed
             user_ctx_.player.late_update(scene);
             user_ctx_.pickups.update(scene);
             update_props(scene);
             user_ctx_.hud.update(scene);
 
-            if (Input::just_pressed(Key::Esc) || user_ctx_.player.out_of_lives(scene))
+            if (Input::just_pressed(Key::Esc) || user_ctx_.player.out_of_lives(scene) || user_ctx_.boss.defeated(scene))
                 sm.force(scene, app_, GameState::Debrief);
         }
         else if (state == GameState::Debrief)

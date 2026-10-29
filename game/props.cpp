@@ -1,4 +1,5 @@
 #include "props.hpp"
+#include "metal_slug.hpp"
 
 namespace ms
 {
@@ -47,8 +48,8 @@ namespace ms
             { Bg::WaterFront1, WATER_TICKS, FRONT_WATER_LAYER, 4 },
             { Bg::WaterFront2, WATER_TICKS, FRONT_WATER_LAYER, 1 },
             { Bg::WaterFront3, WATER_TICKS, FRONT_WATER_LAYER, 3 },
-            { Bg::WaterfallBack, FALL_TICKS, BACK_LAYER - 1, 0 },
-            { Bg::WaterfallFront, FALL_TICKS, BACK_LAYER, 0 },
+            { Bg::WaterfallBack, FALL_TICKS, BACK_LAYER - 1, 4 },
+            { Bg::WaterfallFront, FALL_TICKS, BACK_LAYER + 1, 1 }, // its own water covers the back water strips' ends
             { Bg::WaterfallPar, FALL_TICKS, FAR_LAYER + 1, 0 }, // its palm covers the ship's empty left edge
             { Bg::Ship, FALL_TICKS, FAR_LAYER, 0 },
             { Bg::MetalFrame, 0, FOREGROUND_LAYER, 5 }, // right leg on the hull opening's right edge
@@ -127,7 +128,18 @@ namespace ms
         {
             if (id == FAR_FROM) window.from = at.x;
             else if (id == FAR_TO) window.to = at.x + TILE_SIZE_i.x;
-            else create_prop(scene, prop(id), at, 1.0f);
+            else
+            {
+                const PropData& p = prop(id);
+                const entity_id e = create_prop(scene, p, at, 1.0f);
+
+                // the boss's base is painted into its right end, so the arena goes where it is
+                if (p.anim == Bg::WaterfallFront)
+                {
+                    const Transform& tr = scene.get<Transform>(e);
+                    MetalSlug::user_ctx().boss.create(scene, scene.get<Sprite>(e).bounds(tr).min);
+                }
+            }
         });
 
         for_each_marker(scene, "assets/tile_maps/mission1_far.csv", [&](const int32_t id, const ivec2 at)

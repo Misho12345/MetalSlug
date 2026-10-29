@@ -21,6 +21,12 @@ namespace ms
 
         mse::entity_id spawn(mse::Scene& scene, mse::ivec2 pos, Kind kind) const;
 
+        // one that sits somewhere with no floor, it doesn't fall and what it drops goes down to floor_y
+        mse::entity_id spawn(mse::Scene& scene, mse::ivec2 pos, Kind kind, int32_t floor_y) const;
+
+        // frees it like a shot would, if it's still tied up
+        void release(mse::Scene& scene, mse::entity_id pow) const;
+
     private:
         using PowSM = mse::StateMachine<PowState>;
 
@@ -48,6 +54,7 @@ namespace ms
             Kind kind;
             mse::ivec2 base;
             bool shot{ false };
+            int32_t drop_y{ INT32_MAX }; // INT32_MAX drops it where it stands
         };
 
 

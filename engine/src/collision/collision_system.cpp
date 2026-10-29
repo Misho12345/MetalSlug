@@ -14,6 +14,14 @@ namespace mse
 
         // how far a body can be lifted onto the surface under its center
         constexpr int max_step = TILE_SIZE_i.y / 2;
+
+        // the sprite whose mask the narrow phase tests, null when it goes by the box. A .nomask sprite has
+        // nothing to test, so it counts the same as a hidden one
+        const Sprite* mask_sprite(const Scene& scene, const entity_id e)
+        {
+            const Sprite* s = scene.try_get<Sprite>(e);
+            return s && !s->hidden && anim::has_mask(s->info().sprite_id) ? s : nullptr;
+        }
     }
 
     CollisionSystem::CollisionSystem() : counter_(X_GRID_SIZE + 1)
@@ -75,9 +83,10 @@ namespace mse
                 continue;
             }
 
-            // what the narrow phase tests: the mask when there's a visible sprite, the box otherwise
-            aabb bounds = sprite && !sprite->hidden
-                              ? sprite->screen_bounds(tr, camera_pos)
+            // what the narrow phase tests: the mask when there's one, the box otherwise
+            const Sprite* masked = mask_sprite(scene, entity);
+            aabb bounds = masked
+                              ? masked->screen_bounds(tr, camera_pos)
                               : col.bounds(tr) - camera_pos;
 
             bounds |= bounds + col.move;
@@ -171,14 +180,11 @@ namespace mse
 
 
         Transform& tr_a = scene.get<Transform>(a);
-        const Sprite* sprite_a = scene.try_get<Sprite>(a);
-
         const Transform& tr_b = scene.get<Transform>(b);
-        const Sprite* sprite_b = scene.try_get<Sprite>(b);
 
         const Auto check = [&,
-            has_a = sprite_a && !sprite_a->hidden,
-            has_b = sprite_b && !sprite_b->hidden]
+            has_a = mask_sprite(scene, a) != nullptr,
+            has_b = mask_sprite(scene, b) != nullptr]
         {
             const aabb bounds_a = col_a.bounds(tr_a);
             const aabb bounds_b = col_b.bounds(tr_b);

@@ -27,8 +27,8 @@ namespace ms
             case RebelAnim::Falling: return { 4, {  0, -22 } };
             case RebelAnim::Jumping: return { 3, { -6, -20 } };
 
-            case RebelAnim::KnifeSlash:      return { 2, { -12, -19 } };
-            case RebelAnim::ThrowingGrenade: return { 3, {  -3, -21 } };
+            case RebelAnim::KnifeSlash:      return { 3, { -12, -19 } };
+            case RebelAnim::ThrowingGrenade: return { 4, {  -3, -21 } };
 
             case RebelAnim::Death1:       return { 4, {  2, -19 } };
             case RebelAnim::Death2:       return { 4, {  1, -20 } };

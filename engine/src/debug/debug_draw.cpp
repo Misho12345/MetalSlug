@@ -56,7 +56,7 @@ namespace mse
                 colliders[i].enabled ? HITBOX_COLOR : HITBOX_DISABLED_COLOR,
                 5.0f);
 
-            if (!s || s->hidden) continue;
+            if (!s || s->hidden || !anim::has_mask(s->info().sprite_id)) continue;
 
             const aabb bounds = s->bounds(t);
             FrameMask  mask   = App::priv_ctx().sprite_data_registry.mask(s->info(), s->frame(), s->flip_x);

@@ -15,11 +15,11 @@ namespace ms
 
         constexpr uvec2 SIZE{ 10, 10 };
 
-        constexpr float GRAVITY        = 900.0f;
+        constexpr float GRAVITY        = 500.0f;
         constexpr float MAX_FALL_SPEED = 1000.0f; // the default 300 would clamp the way down and miss the target
 
         // seconds, longer the further it goes, so far throws aren't flat and near ones don't go up like a rocket
-        constexpr float   FLIGHT_TIME    = 0.5f;
+        constexpr float   FLIGHT_TIME    = 0.6f;
         constexpr float   FLIGHT_TIME_PX = 1.0f / 400.0f;
         constexpr int32_t AIM_ERROR      = 16;
 

@@ -49,7 +49,7 @@ namespace ms
             play_at(c, s ? Pow::SittingFree : Pow::TreeFree, FREE_TICKS, s ? SITTING_FREE_X : TREE_FREE_X);
 
             // last, it creates entities
-            const ivec2 at = c.scene.get<Data>(c.entity).base + ivec2{ DROP_X, 0 };
+            const ivec2 at{ d.base.x + DROP_X, d.drop_y == INT32_MAX ? d.base.y : d.drop_y };
             MetalSlug::user_ctx().pickups.drop_random(c.scene, at);
         }
 
@@ -127,5 +127,24 @@ namespace ms
 
         sm().start(scene, pow, PowState::Idle);
         return pow;
+    }
+
+    entity_id POWManager::spawn(Scene& scene, const ivec2 pos, const Kind kind, const int32_t floor_y) const
+    {
+        const entity_id pow = spawn(scene, pos, kind);
+        scene.get<Data>(pow).drop_y = floor_y;
+
+        Collider& col             = scene.get<Collider>(pow);
+        col.gravity               = 0.0f;
+        col.collide_with_tile_map = false;
+        return pow;
+    }
+
+    void POWManager::release(Scene& scene, const entity_id pow) const
+    {
+        if (!scene.valid(pow) || scene.get<State<PowState>>(pow).current != PowState::Idle) return;
+
+        scene.get<Data>(pow).shot        = true;
+        scene.get<Collider>(pow).enabled = false;
     }
 }

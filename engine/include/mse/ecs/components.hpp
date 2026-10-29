@@ -154,8 +154,8 @@ namespace mse
 
 
     /**
-     * @note Without a visible Sprite on the same entity, the box itself is used for sprite collision.
-     * Two colliders without one only need their boxes to overlap
+     * @note Without a visible Sprite on the same entity, or with one from a .nomask folder, the box itself is used
+     * for sprite collision. Two colliders without one only need their boxes to overlap
      */
     struct MSE_API Collider final
     {

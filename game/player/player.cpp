@@ -4,6 +4,7 @@
 #include "bullets.hpp"
 #include "animation.hpp"
 #include "layer.hpp"
+#include "metal_slug.hpp"
 
 namespace ms
 {
@@ -124,19 +125,7 @@ namespace ms
         const bool blink = (bd.invulnerable / BLINK_TICKS) % 2 != 0;
         scene.get<Sprite>(legs_).color.a = scene.get<Sprite>(body_).color.a = (uint8_t)(blink ? 0 : 255);
 
-        ivec2 off = center + CAMERA_OFFSET;
-
-        // clamp camera to bg sprite
-        const aabb bg = scene.get<Sprite>(scene.bg_entity).bounds(scene.get<Transform>(scene.bg_entity));
-        const aabb sc = aabb::screen + (off - HALF_RESOLUTION_i);
-
-        if (sc.min.x < bg.min.x) off.x += bg.min.x - sc.min.x;
-        if (sc.min.y < bg.min.y) off.y += bg.min.y - sc.min.y;
-
-        if (sc.max.x > bg.max.x) off.x -= sc.max.x - bg.max.x;
-        if (sc.max.y > bg.max.y) off.y -= sc.max.y - bg.max.y;
-
-        scene.get<Transform>(scene.camera()).position = off;
+        scene.get<Transform>(scene.camera()).position = MetalSlug::user_ctx().boss.camera(scene, center + CAMERA_OFFSET);
 
         update_bullets(scene);
     }

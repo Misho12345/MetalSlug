@@ -27,6 +27,8 @@ namespace ms
             { "assets/audio/sfx/Magazine.wav", 2, 0.6f },        // Pickup
             { "assets/audio/sfx/Prisioner.mp3", 2, 1.2f },       // PowFreed
             { "assets/audio/sfx/knife1.wav", 3, 0.6f },          // Knife
+            { "assets/audio/sfx/rocketlauncher.mp3", 2, 0.6f },  // CannonShot
+            { "assets/audio/sfx/missioncomplete.mp3", 1, 1.0f }, // MissionComplete
         };
 
         static_assert(std::size(SFX) == (size_t)Sfx::COUNT);
@@ -44,6 +46,7 @@ namespace ms
         constexpr Track MUSIC[]
         {
             { "assets/audio/bgm/MainTheme.mp3", loop_music::yes },       // Gameplay
+            { "assets/audio/bgm/SteelBeast5.mp3", loop_music::yes },     // Boss
             { "assets/audio/bgm/CarryOut.mp3", loop_music::no },         // Debrief
             { "assets/audio/bgm/1-12. Gravestone.mp3", loop_music::no }, // GameOver
         };
