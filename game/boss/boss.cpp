@@ -46,10 +46,10 @@ namespace ms
         constexpr int32_t FIGHT_SCROLL = 64;
         constexpr int32_t FIGHT_RISE   = 16;
 
-        // waterfall-par moves with the ship in the original, it's the waterfall and the palm behind the fight
-        constexpr ivec2   PAR_FROM_SHIP{ -21, 16 };
-        constexpr int32_t PAR_LAYER = -119; // behind bg.1, like the rest of the far stuff
-        constexpr uint8_t PAR_TICKS = 4;
+        // boss-waterfall moves with the ship in the original, it's the waterfall and the palm behind the fight
+        constexpr ivec2   WATERFALL_FROM_SHIP{ -21, 16 };
+        constexpr int32_t WATERFALL_LAYER = -119; // behind bg.1, like the rest of the far stuff
+        constexpr uint8_t WATERFALL_TICKS = 4;
 
         // the walkable top of the ledge, from waterfall-front's top left. What the POWs' drops land on
         constexpr int32_t LEDGE_Y = 160;
@@ -479,11 +479,11 @@ namespace ms
         hull_col.collide_with_tile_map = false;
         hull_col.layer                 |= Layer::Enemy;
 
-        const entity_id par = scene.create_entity();
-        Transform&      par_tr  = scene.set<Transform>(par);
-        Sprite&         par_spr = scene.set<Sprite>(par, anim::Bg::WaterfallPar, PAR_TICKS, should_loop::yes);
-        par_spr.layer   = PAR_LAYER;
-        par_tr.position = ship_pos(front) + PAR_FROM_SHIP + ivec2(par_spr.size() / 2u);
+        const entity_id waterfall = scene.create_entity();
+        Transform&      waterfall_tr  = scene.set<Transform>(waterfall);
+        Sprite&         waterfall_spr = scene.set<Sprite>(waterfall, anim::Bg::BossWaterfall, WATERFALL_TICKS, should_loop::yes);
+        waterfall_spr.layer   = WATERFALL_LAYER;
+        waterfall_tr.position = ship_pos(front) + WATERFALL_FROM_SHIP + ivec2(waterfall_spr.size() / 2u);
 
         const POWManager& pows = MetalSlug::user_ctx().pows;
         entity_id         tied[std::size(POW_FEET)];

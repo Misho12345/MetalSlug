@@ -50,7 +50,7 @@ namespace ms
             { Bg::WaterFront3, WATER_TICKS, FRONT_WATER_LAYER, 3 },
             { Bg::WaterfallBack, FALL_TICKS, BACK_LAYER - 1, 4 },
             { Bg::WaterfallFront, FALL_TICKS, BACK_LAYER + 1, 1 }, // its own water covers the back water strips' ends
-            { Bg::WaterfallPar, FALL_TICKS, FAR_LAYER + 1, 0 }, // its palm covers the ship's empty left edge
+            { Bg::BossWaterfall, FALL_TICKS, FAR_LAYER + 1, 0 }, // its palm covers the ship's empty left edge
             { Bg::Ship, FALL_TICKS, FAR_LAYER, 0 },
             { Bg::MetalFrame, 0, FOREGROUND_LAYER, 5 }, // right leg on the hull opening's right edge
             {},                                         // FAR_FROM
