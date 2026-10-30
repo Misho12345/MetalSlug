@@ -54,7 +54,7 @@ namespace mse
             pool->voice_count++;
         }
 
-        pools_.push_back(std::move(pool));
+        pools_.emplace_back(std::move(pool));
         return (sfx_id)(pools_.size() - 1);
     }
 
